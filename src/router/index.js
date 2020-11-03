@@ -42,18 +42,67 @@ export const constantRoutes = [
     component: () => import('@/views/404'),
     hidden: true
   },
-
   {
     path: '/',
     component: Layout,
-    redirect: '/dashboard',
+    redirect: '/home',
     children: [{
-      path: 'dashboard',
-      name: 'Dashboard',
-      component: () => import('@/views/dashboard/index'),
-      meta: { title: 'Dashboard', icon: 'dashboard' }
+      path: 'home',
+      name: 'Home',
+      component: () => import('@/views/home/index'),
+      meta: { title: '首页', icon: 'dashboard' }
     }]
   },
+  {
+    path: '/assetManage',
+    component: Layout,
+    redirect: '/assetManage/assetInfoManage',
+    name: 'AssetManage',
+    meta: { title: '资产管理', icon: 'el-icon-s-help' },
+    children: [
+      {
+        path: 'assetInfoManage',
+        name: 'AssetInfoManage',
+        component: () => import('@/views/assetManage/assetInfoManage/index'),
+        meta: { title: '资产信息管理', icon: 'table' }
+      },
+      {
+        path: 'assetReceiving',
+        name: 'AssetReceiving',
+        component: () => import('@/views/assetManage/assetReceiving/index'),
+        meta: { title: '资产领用', icon: 'table' }
+      },
+      {
+        path: 'assetInfoTrace',
+        name: 'AssetInfoTrace',
+        component: () => import('@/views/assetManage/assetInfoTrace/index'),
+        meta: { title: '资产信息回溯', icon: 'table' }
+      }
+    ]
+  },
+  {
+    path: '/assetTransferManage',
+    component: Layout,
+    redirect: '/assetTransferManage/index',
+    children: [{
+      path: 'assetTransferManage',
+      name: 'AssetTransferManage',
+      component: () => import('@/views/assetTransferManage/index'),
+      meta: { title: '资产调拨管理', icon: 'dashboard' }
+    }]
+  },
+
+  // {
+  //   path: '/',
+  //   component: Layout,
+  //   redirect: '/dashboard',
+  //   children: [{
+  //     path: 'dashboard',
+  //     name: 'Dashboard',
+  //     component: () => import('@/views/dashboard/index'),
+  //     meta: { title: 'Dashboard', icon: 'dashboard' }
+  //   }]
+  // },
 
   {
     path: '/example',
