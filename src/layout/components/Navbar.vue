@@ -64,10 +64,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-<<<<<<< HEAD
 .logo{ float: left; width: 210px; height: 50px; line-height: 50px; text-align: center; font-size: 16px; font-weight: 800; background: #3f5d82; color: #fff;}
-=======
->>>>>>> ae05b157af80d80867c0baa5011082e2b07c9e58
 .navbar {
   height: 50px;
   overflow: hidden;
