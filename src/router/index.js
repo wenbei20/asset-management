@@ -91,6 +91,61 @@ export const constantRoutes = [
       meta: { title: '资产调拨管理', icon: 'dashboard' }
     }]
   },
+  {
+    path: '/assetDisposalManage',
+    component: Layout,
+    redirect: '/assetDisposalManage/index',
+    children: [{
+      path: 'assetDisposalManage',
+      name: 'AssetDisposalManage',
+      component: () => import('@/views/assetDisposalManage/index'),
+      meta: { title: '资产处置管理', icon: 'dashboard' }
+    }]
+  },
+  {
+    path: '/assetMaintenanceManage',
+    component: Layout,
+    redirect: '/assetMaintenanceManage/index',
+    children: [{
+      path: 'assetMaintenanceManage',
+      name: 'AssetMaintenanceManage',
+      component: () => import('@/views/assetMaintenanceManage/index'),
+      meta: { title: '资产维修管理', icon: 'dashboard' }
+    }]
+  },
+  {
+    path: '/assetLoanManage',
+    component: Layout,
+    redirect: '/assetLoanManage/index',
+    children: [{
+      path: 'assetLoanManage',
+      name: 'AssetLoanManage',
+      component: () => import('@/views/assetLoanManage/index'),
+      meta: { title: '资产借还管理', icon: 'dashboard' }
+    }]
+  },
+  {
+    path: '/assetInventoryManage',
+    component: Layout,
+    redirect: '/assetInventoryManage/index',
+    children: [{
+      path: 'assetInventoryManage',
+      name: 'AssetInventoryManage',
+      component: () => import('@/views/assetInventoryManage/index'),
+      meta: { title: '资产盘点管理', icon: 'dashboard' }
+    }]
+  },
+  {
+    path: '/statisticalAnalysis',
+    component: Layout,
+    redirect: '/statisticalAnalysis/index',
+    children: [{
+      path: 'statisticalAnalysis',
+      name: 'StatisticalAnalysis',
+      component: () => import('@/views/statisticalAnalysis/index'),
+      meta: { title: '统计分析', icon: 'dashboard' }
+    }]
+  },
 
   // {
   //   path: '/',
