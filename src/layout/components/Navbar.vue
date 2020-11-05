@@ -8,7 +8,7 @@
     <div class="right-menu">
       <el-dropdown class="avatar-container" trigger="click">
         <div class="avatar-wrapper">
-          <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
+          <el-avatar>王</el-avatar>
           <i class="el-icon-caret-bottom" />
         </div>
         <el-dropdown-menu slot="dropdown" class="user-dropdown">
@@ -61,13 +61,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.logo{ float: left; width: 210px; height: 50px; line-height: 50px; text-align: center; font-size: 16px; font-weight: 800; background: #3f5d82; color: #fff;}
-.navbar {
-  height: 50px;
-  overflow: hidden;
-  position: relative;
-  background: #fff;
-  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+.logo{ float: left; width: 210px; height: 50px; line-height: 50px; text-align: center; font-size: 16px; font-weight: 800; color: #fff; background: rgba(0, 0, 0, .2);}
+.navbar { height: 50px; overflow: hidden; position: relative; background: #324aa5; box-shadow: 0 1px 4px rgba(0,21,41,.08); color: #fff;
 
   .hamburger-container {
     line-height: 46px;
@@ -126,13 +121,14 @@ export default {
           height: 40px;
           border-radius: 10px;
         }
-
+        .el-avatar{ background: rgba(0, 0, 0, .3);}
         .el-icon-caret-bottom {
           cursor: pointer;
           position: absolute;
-          right: -20px;
-          top: 25px;
+          right: -15px;
+          top: 15px;
           font-size: 12px;
+          color: rgba(0, 0, 0, .3);
         }
       }
     }

@@ -1,15 +1,20 @@
 <template>
   <div class="app-container">
     <el-row :gutter="20">
-      <el-col v-for="(item, index) in statisGroup" :key="item.name" :span="4">
-        <el-card :class="['statis', `s${index + 1}`]" shadow="never" :body-style="{ padding: 10 }">
-          <h4 class="title">{{ item.name }}</h4>
-          <p class="count">{{ item.count }}</p>
+      <el-col :span="16">
+        <el-card>
+          <h4 style="margin: 10px 0;">我的工作台</h4>
+          <el-row :gutter="20">
+            <el-col v-for="(item, index) in statisGroup" :key="item.name" :span="8" :style="{ marginTop: '20px' }">
+              <el-card :class="['statis', `s${index + 1}`]" shadow="never" :body-style="{ padding: 10 }">
+                <h4 class="title">{{ item.name }}</h4>
+                <p class="count">{{ item.count }}</p>
+              </el-card>
+            </el-col>
+          </el-row>
         </el-card>
       </el-col>
-    </el-row>
-    <el-row :gutter="20" :style="{ marginTop: '20px' }">
-      <el-col :span="12">
+      <el-col :span="8">
         <el-card>
           <el-row type="flex" justify="space-between">
             <el-col :span="8">
@@ -30,7 +35,9 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="12">
+    </el-row>
+    <el-row :gutter="20" :style="{ marginTop: '20px' }">
+      <el-col :span="8">
         <el-card>
           <el-row type="flex" justify="space-between">
             <el-col :span="8">
@@ -51,9 +58,7 @@
           </div>
         </el-card>
       </el-col>
-    </el-row>
-    <el-row :gutter="20" :style="{ marginTop: '20px' }">
-      <el-col :span="12">
+      <el-col :span="8">
         <el-card>
           <el-row type="flex" justify="space-between">
             <el-col :span="8">
@@ -74,7 +79,7 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="12">
+      <el-col :span="8">
         <el-card>
           <el-row type="flex" justify="space-between">
             <el-col :span="8">
@@ -276,8 +281,8 @@ export default {
 
 <style lang="scss" scoped>
 .statis{ background: url('~@/assets/wave.png') center bottom -50px no-repeat; background-size: auto 100px;
-  .title{ margin: 0 0 10px; font-size: 14px; color: rgba(255, 255, 255, .5);}
-  .count{ font-size: 30px; line-height: 1.5; margin: 10px 0; color: #fff;}
+  .title{ margin: 0 0 10px; font-size: 15px; color: rgba(255, 255, 255, .5);}
+  .count{ font-size: 35px; line-height: 1.66; margin: 10px 0; color: #fff;}
   &.s1{ background-color: #3c78f9;}
   &.s2{ background-color: #fd4c3a;}
   &.s3{ background-color: #7a46fb;}

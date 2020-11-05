@@ -16,7 +16,7 @@
         </el-form>
       </el-col>
       <el-col :span="17">
-        <el-button type="primary" icon="el-icon-plus">新建</el-button>
+        <el-button type="primary" icon="el-icon-plus" @click="xjzyxxVisible = true">新建</el-button>
         <el-dropdown :style="{ marginLeft: '5px' }">
           <el-button type="default" icon="el-icon-edit" plain>
             编辑<i class="el-icon-arrow-down el-icon--right" />
@@ -217,77 +217,179 @@
     </vxe-table>
 
     <!-- 模态框 -->
+    <el-dialog title="新建资源信息" :visible.sync="xjzyxxVisible" width="1200px">
+      <el-form :model="xjzyxxForm" label-position="left">
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="资产类别" :label-width="formLabelWidth" required>
+              <el-col :span="24">
+                <el-select v-model="xjzyxxForm.assetCategory" placeholder="请选择资产类别" :style="{ width: '100%' }">
+                  <el-option label="资产类别" value="1" />
+                </el-select>
+              </el-col>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="标准型号" :label-width="formLabelWidth">
+              <el-col :span="24">
+                <el-select v-model="xjzyxxForm.standardModel" placeholder="请选择标准型号" :style="{ width: '100%' }">
+                  <el-option label="标准型号" value="1" />
+                </el-select>
+              </el-col>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="资产编码" :label-width="formLabelWidth" required>
+              <el-col :span="24">
+                <el-input v-model="xjzyxxForm.assetCoding" placeholder="请输入资产编码" disabled />
+              </el-col>
+            </el-form-item>
+          </el-col>
+          <el-col :span="16">
+            <el-form-item label="备注" :label-width="formLabelWidth" required>
+              <el-col :span="24">
+                <el-input
+                  type="textarea"
+                  :rows="2"
+                  placeholder="请输入内容"
+                  v-model="xjzyxxForm.remark">
+                </el-input>
+              </el-col>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <div :style="{ background: '#e8ebf9', padding: '10px', margin: '10px 0' }">维保信息</div>
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="供应商" :label-width="formLabelWidth" required>
+              <el-col :span="24">
+                <el-input v-model="xjzyxxForm.assetCoding" placeholder="请输入供应商" />
+              </el-col>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="联系人" :label-width="formLabelWidth" required>
+              <el-col :span="24">
+                <el-input v-model="xjzyxxForm.contactUser" placeholder="请输入联系人" />
+              </el-col>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="联系方式" :label-width="formLabelWidth" required>
+              <el-col :span="24">
+                <el-input v-model="xjzyxxForm.contactInfomation" placeholder="请输入联系方式" />
+              </el-col>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="负责人" :label-width="formLabelWidth" required>
+              <el-col :span="24">
+                <el-select v-model="gjssForm.chargePerson" placeholder="请选择负责人" :style="{ width: '100%' }">
+                  <el-option label="负责人" value="1" />
+                </el-select>
+              </el-col>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="维保到期" :label-width="formLabelWidth" required>
+              <el-col :span="24">
+                <el-input v-model="xjzyxxForm.maintenanceDate" placeholder="请输入维保到期日期" />
+              </el-col>
+            </el-form-item>
+          </el-col>
+          <el-col :span="16">
+            <el-form-item label="维保说明" :label-width="formLabelWidth" required>
+              <el-col :span="24">
+                <el-input
+                  type="textarea"
+                  :rows="2"
+                  placeholder="请输入维保说明"
+                  v-model="xjzyxxForm.maintenanceInstructions">
+                </el-input>
+              </el-col>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="xjzyxxVisible = false">取 消</el-button>
+        <el-button type="primary" @click="xjzyxxVisible = false">确 定</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 模态框 高级搜索-->
     <el-dialog title="高级搜索" :visible.sync="gjssVisible" width="600px">
-      <el-form :model="form" label-position="left">
+      <el-form :model="gjssForm" label-position="left">
         <el-form-item label="状态" :label-width="formLabelWidth">
           <el-col :span="24">
-            <el-select v-model="form.status" placeholder="请选择状态" :style="{ width: '100%' }">
+            <el-select v-model="gjssForm.status" placeholder="请选择状态" :style="{ width: '100%' }">
               <el-option label="状态一" value="1" />
             </el-select>
           </el-col>
         </el-form-item>
         <el-form-item label="签字状态" :label-width="formLabelWidth">
           <el-col :span="24">
-            <el-select v-model="form.signStatus" placeholder="请选择签字状态" :style="{ width: '100%' }">
+            <el-select v-model="gjssForm.signStatus" placeholder="请选择签字状态" :style="{ width: '100%' }">
               <el-option label="签字状态" value="1" />
             </el-select>
           </el-col>
         </el-form-item>
         <el-form-item label="资产编码" :label-width="formLabelWidth">
           <el-col :span="10">
-            <el-select v-model="form.assetCoding" placeholder="请选择条件" :style="{ width: '100%' }">
+            <el-select v-model="gjssForm.assetCoding" placeholder="请选择条件" :style="{ width: '100%' }">
               <el-option label="资产编码" value="1" />
             </el-select>
           </el-col>
           <el-col :span="13" :offset="1">
-            <el-input v-model="form.assetCodingInput" placeholder="请输入资产编码" />
+            <el-input v-model="gjssForm.assetCodingInput" placeholder="请输入资产编码" />
           </el-col>
         </el-form-item>
         <el-form-item label="资产名称" :label-width="formLabelWidth">
           <el-col :span="10">
-            <el-select v-model="form.assetName" placeholder="请选择条件" :style="{ width: '100%' }">
+            <el-select v-model="gjssForm.assetName" placeholder="请选择条件" :style="{ width: '100%' }">
               <el-option label="资产名称" value="1" />
             </el-select>
           </el-col>
           <el-col :span="13" :offset="1">
-            <el-input v-model="form.assetNameInput" placeholder="请输入资产名称" />
+            <el-input v-model="gjssForm.assetNameInput" placeholder="请输入资产名称" />
           </el-col>
         </el-form-item>
         <el-form-item label="RFID" :label-width="formLabelWidth">
           <el-col :span="10">
-            <el-select v-model="form.rfidName" placeholder="请选择条件" :style="{ width: '100%' }">
+            <el-select v-model="gjssForm.rfidName" placeholder="请选择条件" :style="{ width: '100%' }">
               <el-option label="RFID" value="1" />
             </el-select>
           </el-col>
           <el-col :span="13" :offset="1">
-            <el-input v-model="form.rfidNameInput" placeholder="请输入RFID" />
+            <el-input v-model="gjssForm.rfidNameInput" placeholder="请输入RFID" />
           </el-col>
         </el-form-item>
         <el-form-item label="资产类别" :label-width="formLabelWidth">
           <el-col :span="24">
-            <el-select v-model="form.assetCategory" placeholder="请选择资产类别" :style="{ width: '100%' }">
+            <el-select v-model="gjssForm.assetCategory" placeholder="请选择资产类别" :style="{ width: '100%' }">
               <el-option label="资产类别" value="1" />
             </el-select>
           </el-col>
         </el-form-item>
         <el-form-item label="规格型号" :label-width="formLabelWidth">
           <el-col :span="10">
-            <el-select v-model="form.specificationModel" placeholder="请选择条件" :style="{ width: '100%' }">
+            <el-select v-model="gjssForm.specificationModel" placeholder="请选择条件" :style="{ width: '100%' }">
               <el-option label="规格型号" value="1" />
             </el-select>
           </el-col>
           <el-col :span="13" :offset="1">
-            <el-input v-model="form.specificationModelInput" placeholder="请输入规格型号" />
+            <el-input v-model="gjssForm.specificationModelInput" placeholder="请输入规格型号" />
           </el-col>
         </el-form-item>
         <el-form-item label="SN号" :label-width="formLabelWidth">
           <el-col :span="10">
-            <el-select v-model="form.snNumber" placeholder="请选择条件" :style="{ width: '100%' }">
+            <el-select v-model="gjssForm.snNumber" placeholder="请选择条件" :style="{ width: '100%' }">
               <el-option label="SN号" value="1" />
             </el-select>
           </el-col>
           <el-col :span="13" :offset="1">
-            <el-input v-model="form.snNumberInput" placeholder="请输入SN号" />
+            <el-input v-model="gjssForm.snNumberInput" placeholder="请输入SN号" />
           </el-col>
         </el-form-item>
       </el-form>
@@ -327,6 +429,7 @@ export default {
       ],
       companyValue: '',
       input1: '',
+      xjzyxxVisible: false,
       gjssVisible: false,
       settingVisible: false,
       popoverSwitchList: [
@@ -344,7 +447,19 @@ export default {
         { name: '计量单位', active: true, disabled: false },
         { name: '金额', active: true, disabled: false }
       ],
-      form: {
+      xjzyxxForm: {
+        assetCategory: '',
+        standardModel: '',
+        assetCoding: '',
+        remark: '',
+        supplier: '',
+        contactUser: '',
+        contactInformation: '',
+        chargePerson: '',
+        maintenanceDate: '',
+        maintenanceInstructions: ''
+      },
+      gjssForm: {
         name: '',
         status: '',
         signStatus: '',
