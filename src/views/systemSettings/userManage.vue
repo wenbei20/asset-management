@@ -4,8 +4,9 @@
       title="公司组织架构"
       class="navtree"
       @show="hidenavtree"
+      @operation="navTreeOperation"
     />
-    <div class="container">
+    <div :class="['container' , !navTreeShow ? 'hidetree' : '']">
       <el-row style="height:40px; margin-left:20px;padding-top:10px;">
         <el-button type="primary" icon="el-icon-plus" @click="showAddDialog=true">新建</el-button>
 
@@ -80,6 +81,31 @@
             <el-button type="primary" @click="showAddDialog=false">确 定</el-button>
           </div>
         </el-dialog>
+
+        <el-dialog :title="editDialogTitle" :visible.sync="showEditDialog" width="600px">
+          <el-form :model="DialogData" label-position="right">
+            <el-form-item v-if="editDialogStatus !== 'setPrincipal'" label="部门名称" :label-width="formLabelWidth" required>
+              <el-input v-model="DialogData.name" />
+            </el-form-item>
+            <el-form-item v-else label="部门负责人" :label-width="formLabelWidth">
+              <el-autocomplete
+                v-model="DialogData.name"
+                :fetch-suggestions="querySearchAsync"
+                placeholder="请输入内容"
+                @select="handleSelect"
+              >
+                <template slot-scope="{ item }">
+                  <div class="name">{{ item.value }}</div>
+                </template>
+              </el-autocomplete>
+            </el-form-item>
+          </el-form>
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="showEditDialog=false">取 消</el-button>
+            <el-button type="primary" @click="showEditDialog=false">确 定</el-button>
+          </div>
+        </el-dialog>
+
       </el-row>
     </div>
   </div>
@@ -90,7 +116,16 @@ export default {
   components: { navTree },
   data() {
     return {
+      navTreeShow: true,
       showAddDialog: false,
+
+      showEditDialog: false,
+      editDialogTitle: '',
+      editDialogStatus: '',
+      DialogData: {
+        name: ''
+      },
+      timeout: null,
       formLabelWidth: '140px',
       addUserInfo: {
         mobile: '',
@@ -351,8 +386,47 @@ export default {
     }
   },
   methods: {
-    hidenavtree() {
+    hidenavtree(e) {
+      this.navTreeShow = e
+    },
+    navTreeOperation(operate) {
+      console.log('operate', operate)
+      if (operate !== 'addperson') {
+        this.DialogData.name = ''
+        this.editDialogStatus = operate
+        this.showEditDialog = true
 
+        switch (operate) {
+          case 'addSonDepartment' :
+            this.editDialogTitle = '添加子部门'
+            break
+          case 'setPrincipal':
+            this.editDialogTitle = '设置负责人'
+            break
+          case 'changeName':
+            this.editDialogTitle = '修改名称'
+            break
+        }
+      } else {
+        this.showAddDialog = true
+      }
+    },
+    querySearchAsync(queryString, cb) {
+      const resArr = []
+      if (!queryString) {
+        cb([])
+        return
+      }
+      for (let i = 0; i < 5; i++) {
+        resArr.push({ value: queryString + i })
+      }
+      clearTimeout(this.timeout)
+      this.timeout = setTimeout(() => {
+        cb(resArr)
+      }, 1000 * Math.random())
+    },
+    handleSelect(e) {
+      console.log('点击', e)
     }
   }
 }
@@ -370,6 +444,14 @@ export default {
     margin-left: 275px;
     box-shadow: 0 0 10px rgba(128, 145, 165, 0.2);
     box-sizing:border-box;
+}
+.container.hidetree {
+  transition: all linear 0.2s;
+  margin-left:20px;
+  width: calc(100% - 20px);
+}
+.navtree >>> .deletePart {
+  color: #999;
 }
 </style>
 

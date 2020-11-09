@@ -63,3 +63,93 @@ div:focus {
 .app-container {
   padding: 20px;
 }
+
+
+// vxe-table
+.vxetable {
+  .el-icon-remove-outline , .el-icon-circle-plus-outline{
+      font-size: 16px;
+  }
+  .el-icon-more {
+      transform: rotateZ(90deg);
+  }
+  .moreOuter {
+      i {
+          display: none;
+          cursor: pointer;
+      }
+  }
+  .editmenu {
+      position: absolute;
+      top: 40px;
+      box-shadow: 0 0 10px rgba(63,74,86,0.3);
+      padding: 5px 0;
+      background-color: #fff;
+      z-index: 999;
+      width: 114px;
+      .item {
+          height: 28px;
+          padding: 0 15px;
+          line-height: 28px;
+          cursor: pointer;
+      }
+      .item:hover{
+          color: #5d9bfc;
+          background-color: #eaf2ff;
+      }
+      .item.create {
+          border-top: 1px solid #dfe6ee;
+      }
+  }
+  .vxe-body--row:hover {
+      .moreOuter {
+          i {
+              display: block;
+          }
+      }
+  }
+  .biaotiicon {
+      cursor: pointer;
+  }
+  .edityouxian {
+      position: absolute;
+      width: 150px;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(63,74,86,0.3);
+      padding: 15px;
+      border: 1px solid #b0bac5;
+      z-index: 999;
+      ul {
+          padding: 0;
+          margin: 0;
+          list-style: none;
+      }
+      li {
+          width: 100px;
+          height: 24px;
+          line-height: 24px;
+          padding: 0 10px;
+          cursor: pointer;
+          border-radius: 4px;
+          background-color: #f8f8f8;
+          margin-bottom: 10px;
+          transition: width linear 0.1s;
+      }
+      li:not(.empty) {
+          color: #fff;
+      }
+      .high {
+          background-color: #f85e5e;
+      }
+      .middle {
+          background-color: #93c36b;
+      }
+      .low , .nice{
+          background-color: #97afd0;
+      }
+      li:hover {
+          width: 120px;
+      }
+
+  }
+}

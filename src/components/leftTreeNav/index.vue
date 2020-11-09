@@ -1,37 +1,9 @@
 <template>
   <div class="navTree" :class="{'hide':!show}">
     <div class="title">{{ title }}</div>
-    <!-- <el-menu
-      v-if="TreeData.length === 0"
-      default-active="1-1"
-      :default-openeds="['1']"
-      class="el-menu-vertical"
-      @open="handleOpen"
-      @close="handleClose"
-    >
-      <el-submenu index="1">
-        <template slot="title">
-          <span>所有的</span>
-        </template>
-        <el-menu-item-group>
-          <el-menu-item index="1-1">未分类<span class="num">274</span></el-menu-item>
-        </el-menu-item-group>
-        <el-submenu index="1-2">
-          <template slot="title">产品需求<span class="num">105</span></template>
-          <el-menu-item index="1-2-1">新功能<span class="num">75</span></el-menu-item>
-          <el-menu-item index="1-2-2">优化需求<span class="num">14</span></el-menu-item>
-        </el-submenu>
-        <el-menu-item-group>
-          <el-menu-item index="1-3">技术需求<span class="num">3</span></el-menu-item>
-        </el-menu-item-group>
-
-      </el-submenu>
-
-    </el-menu> -->
-
     <el-tree
       v-if="show"
-      :data="TreeData"
+      :data="treeData"
       :props="defaultProps"
       node-key="id"
       :default-expanded-keys="['1-1']"
@@ -42,16 +14,16 @@
         <i :class="['custom-icon', data.icon]" />
         <span>{{ data.label }}</span>
         <span class="selfNum">{{ data.num }}</span>
-        <span class="selfIcon el-icon-more" @click="moreClick(data)" />
+        <span class="selfIcon el-icon-more" @click.stop="moreClick(data)" />
 
-        <drapDown :show.sync="data.showTopMenu" :width="106">
-          <div v-for="(item , idx ) in dropDownData[data.position]" :key="idx" :class="item.className">{{ item.name }}</div>
+        <drapDown v-if="data.position" :show.sync="data.showTopMenu" :width="116" :left="222">
+          <div v-for="(item , idx ) in dropDownData[data.position]" :key="idx" :class="item.className" @click.stop="operationNode(item, data)">{{ item.name }}</div>
         </drapDown>
       </div>
     </el-tree>
 
     <div v-if="isAbleClose" class="hideBtn" @click="hidemenu">
-      <i :class="{'el-icon-arrow-left':!show ,'el-icon-arrow-right':show }" />
+      <i :class="[show ? 'el-icon-arrow-left': 'el-icon-arrow-right' ]" />
     </div>
 
   </div>
@@ -64,9 +36,10 @@ export default {
   components: { drapDown },
   props: {
     title: {
-      type: String
+      type: String,
+      default: '公司组织架构'
     },
-    TreeData: {
+    treeData: {
       type: Array,
       default: () => [
         { label: '所有的',
@@ -84,20 +57,20 @@ export default {
             {
               label: '产品需求',
               num: '7',
-              position: 'third',
+              position: 'sub',
               showTopMenu: false,
               children: [
                 {
                   label: '新功能',
                   num: '3',
-                  position: 'third',
+                  position: 'sub',
                   showTopMenu: false,
                   children: []
                 },
                 {
                   label: '优化需求',
                   num: '4',
-                  position: 'third',
+                  position: 'sub',
                   showTopMenu: false,
                   children: []
                 }
@@ -106,7 +79,7 @@ export default {
             {
               label: '技术需求',
               num: '',
-              position: 'third',
+              position: 'sub',
               showTopMenu: false,
               children: []
             }
@@ -122,9 +95,9 @@ export default {
       type: Object,
       default: () => {
         return {
-          top: [{ name: '创建子分类', className: '' }],
-          sub: [{ name: '创建需求', className: '' }],
-          third: [{ name: '创建需求', className: 'border_bottom' }, { name: '创建子分类', className: '' }, { name: '修改分类', className: '' }, { name: '删除分类', className: '' }]
+          top: [{ name: '添加成员', className: '', operate: 'addperson' }, { name: '添加(子)分公司', className: '', operate: '' }, { name: '添加子部门', className: '', operate: 'addSonDepartment' }],
+          sub: [{ name: '添加成员', className: '', operate: 'addperson' }, { name: '添加(子)分公司', className: '', operate: '' }, { name: '添加子部门', className: '', operate: 'addSonDepartment' }, { name: '设置负责人', className: '', operate: 'setPrincipal' }, { name: '修改名称', className: '', operate: 'changeName' }, { name: '删除部门', className: 'deletePart' }]
+          // third: [{ name: '创建需求', className: 'border_bottom' }, { name: '创建子分类', className: '' }, { name: '修改分类', className: '' }, { name: '删除分类', className: '' }]
         }
       }
     }
@@ -155,8 +128,13 @@ export default {
 
     },
     moreClick(data) {
-      console.log('wqewqe', data)
-    //   data.showTopMenu = true
+      data.showTopMenu = true
+    },
+    operationNode(e, data) {
+      if (e.operate) {
+        this.$emit('operation', e.operate)
+      }
+      data.showTopMenu = false
     }
   }
 }
