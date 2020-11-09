@@ -2,15 +2,15 @@
   <div class="app-container">
     <el-row>
       <el-col :span="18">
-        <el-button type="primary" icon="el-icon-plus">新建</el-button>
-        <el-dropdown>
+        <el-button type="primary" icon="el-icon-plus" @click="addNew">新建</el-button>
+        <el-dropdown @command="editClick">
           <el-button type="default" icon="el-icon-edit" :style="{ marginLeft: '5px' }" plain>
             编辑<i class="el-icon-arrow-down el-icon--right" />
           </el-button>
           <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item>修改</el-dropdown-item>
-            <el-dropdown-item>复制</el-dropdown-item>
-            <el-dropdown-item>删除</el-dropdown-item>
+            <el-dropdown-item :command="1">修改</el-dropdown-item>
+            <el-dropdown-item :command="2">复制</el-dropdown-item>
+            <el-dropdown-item :command="3">删除</el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
         <el-button type="default" icon="el-icon-printer" :style="{ marginLeft: '5px' }" plain>
@@ -55,7 +55,7 @@
           </div>
           <el-button slot="reference" type="text" :style="{ marginLeft: '10px' }"><i class="el-icon-setting" /></el-button>
         </el-popover>
-        <el-button type="text" :style="{ marginLeft: '10px' }"><i class="el-icon-lock" /></el-button>
+      <!--  <el-button type="text" :style="{ marginLeft: '10px' }"><i class="el-icon-lock" /></el-button> -->
       </el-col>
     </el-row>
     <el-table
@@ -161,14 +161,109 @@
         <el-button type="primary" @click="gjssVisible = false">确 定</el-button>
       </div>
     </el-dialog>
+    <Dialog
+      :visible.sync="showAddOrEdit"
+      :title="showAddOrEditTitle"
+    >
+      <el-form :model="addOption" label-position="right">
+        <el-row>
+          <el-col :span="11">
+            <el-form-item label="领用人" :label-width="addOptionWidth">
+              <el-select v-model="addOption.receivePerson" placeholder="请选择领用人" :style="{ width: '100%' }">
+                <el-option label="领用人一" value="1" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="领用日期" :label-width="addOptionWidth">
+              <el-date-picker
+                v-model="addOption.receiveDate"
+                type="date"
+                placeholder="请选择领用日期"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row>
+          <el-col :span="11">
+            <el-form-item label="领用后使用公司" :label-width="addOptionWidth">
+              <el-select v-model="addOption.receiveCompany" placeholder="请选择使用公司" :style="{ width: '100%' }">
+                <el-option label="公司一" value="1" />
+                <el-option label="公司2" value="2" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="领用后使用部门" :label-width="addOptionWidth">
+              <el-select v-model="addOption.receiveDepartment" placeholder="请选择使用部门" :style="{ width: '100%' }">
+                <el-option label="部门一" value="1" />
+                <el-option label="部门2" value="2" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row>
+          <el-col :span="11">
+            <el-form-item label="领用后区域" :label-width="addOptionWidth">
+              <el-select v-model="addOption.receiveArea" placeholder="请选择区域" :style="{ width: '100%' }">
+                <el-option label="区域一" value="1" />
+                <el-option label="区域2" value="2" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="领用后存放地点" :label-width="addOptionWidth">
+              <el-input v-model="addOption.receivePosition" placeholder="请输入存放地点" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row>
+          <el-col :span="11">
+            <el-form-item label="领用处理人" :label-width="addOptionWidth">
+
+              <el-input v-model="addOption.receiveHandler" :disabled="true" />
+            </el-form-item>
+          </el-col>
+
+        </el-row>
+        <el-row>
+          <el-col :span="24">
+            <el-form-item label="说明" :label-width="addOptionWidth">
+
+              <el-input v-model="addOption.receiveMemo" placeholder="说明" />
+            </el-form-item>
+          </el-col>
+
+        </el-row>
+
+      </el-form>
+    </Dialog>
   </div>
 </template>
 
 <script>
+import Dialog from '@/components/Dialog/index'
 export default {
   name: 'AssetInfoManage',
+  components: { Dialog },
   data() {
     return {
+      showAddOrEditTitle: '',
+      showAddOrEdit: false,
+      addOptionWidth: '160px',
+      addOption: {
+        receivePerson: '',
+        receiveDate: '',
+        receiveCompany: '',
+        receiveDepartment: '',
+        receiveArea: '',
+        receivePosition: '',
+        receiveHandler: 'admin',
+        receiveMemo: ''
+      },
       gjssVisible: false,
       settingVisible: false,
       popoverSwitchList: [
@@ -218,6 +313,7 @@ export default {
         snNumberInput: ''
       },
       formLabelWidth: '100px'
+
     }
   },
   methods: {
@@ -232,6 +328,16 @@ export default {
     },
     handleSelectionChange(val) {
       this.multipleSelection = val
+    },
+    addNew() {
+      this.showAddOrEditTitle = '新增'
+      this.showAddOrEdit = true
+    },
+    editClick(e) {
+      if (e === 1) {
+        this.showAddOrEditTitle = '编辑'
+        this.showAddOrEdit = true
+      }
     }
   }
 }
