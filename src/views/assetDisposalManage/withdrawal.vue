@@ -2,7 +2,6 @@
   <div class="app-container">
     <el-row>
       <el-button type="primary" icon="el-icon-plus" @click="showAddDialog=true">新建</el-button>
-      <el-button icon="el-icon-printer" disabled>归还</el-button>
       <el-dropdown :style="{ marginLeft: '5px' }">
         <el-button type="default" icon="el-icon-edit" plain>
           编辑<i class="el-icon-arrow-down el-icon--right" />
@@ -13,8 +12,15 @@
           <el-dropdown-item>删除</el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
-      <el-button icon="el-icon-printer" :style="{ marginLeft: '10px' }">打印</el-button>
-
+      <el-dropdown :style="{ marginLeft: '5px' }">
+        <el-button type="default" icon="el-icon-printer" plain>
+          打印<i class="el-icon-arrow-down el-icon--right" />
+        </el-button>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item>打印资产标签</el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
+      <el-button icon="el-icon-receiving" style="margin-left:5px">导出</el-button>
     </el-row>
     <el-row style="padding-top:20px;">
       <vxe-table
@@ -24,23 +30,123 @@
         :auto-resize="true"
         stripe
         class="vxetable"
+        :tree-config="{children: 'children',iconOpen: 'el-icon-remove-outline', iconClose: 'el-icon-circle-plus-outline',expandAll:true}"
         :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
         :data="tableData"
       >
         <vxe-table-column type="checkbox" width="40" :resizable="false" />
-        <vxe-table-column field="eventID" title="借还单号" />
-        <vxe-table-column field="person" title="借用人" />
-        <vxe-table-column field="date" title="借出时间" />
-        <vxe-table-column field="diedai" title="维修花费" />
-        <vxe-table-column field="status" title="状态" />
-
-        <vxe-table-column field="name" title="报修人" />
-        <vxe-table-column field="title" title="维修内容" />
-        <vxe-table-column title="备注">
-          <template #default>
-            --
+        <vxe-table-column field="person" title="退库处理人">
+          <template #default="{ row }">
+            {{ row.person ? row.person : '--' }}
           </template>
+
+          <template slot="edit" slot-scope="scope">
+            <el-input v-model="scope.row.person" size="mini" />
+          </template>
+
         </vxe-table-column>
+        <vxe-table-column field="date" title="实际退库时间" />
+        <vxe-table-column field="youxian" title="业务所属单位" />
+        <vxe-table-column field="status" title="退库后使用公司" />
+        <vxe-table-column field="eventID" title="退库后区域" />
+        <!-- <vxe-table-column width="32" class="meuntd" :resizable="false" :edit-render="{}">
+          <template>
+            <div class="moreOuter">
+              <i class="el-icon-more" />
+
+            </div>
+          </template>
+          <template slot="edit">
+            <i class="el-icon-more" style="position:relative;top:-2px;" />
+
+            <div class="editmenu">
+              <div class="item">编辑</div>
+              <div class="item">复制</div>
+              <div class="item">关注</div>
+              <div class="item">删除</div>
+              <div class="item create">创建子需求</div>
+            </div>
+          </template>
+        </vxe-table-column> -->
+        <!-- <vxe-table-column field="eventID" title="ID" /> -->
+        <vxe-table-column field="title" title="退库后存放地点" tree-node width="300">
+          <template slot="header">
+            <i v-if="isAllExpand" class="el-icon-remove-outline biaotiicon" />
+            <i v-else class="el-icon-circle-plus-outline biaotiicon" />
+
+            退库后存放地点
+          </template>
+
+          <template #default="{ row }">
+            <span class="titleText"><i /> {{ row.title }}</span>
+          </template>
+
+        </vxe-table-column>
+        <!-- <vxe-table-column field="youxian" title="优先级" :edit-render="{}">
+
+          <template #default="{ row }">
+            <span class="youxianspan" :class="row.youxian">{{ row.youxian }}</span>
+          </template>
+
+          <template slot="edit" slot-scope="scope">
+            <span>{{ scope.row.youxian }}</span>
+            <div class="edityouxian">
+              <ul>
+                <li class="empty">--空--</li>
+                <li class="high">High</li>
+                <li class="middle">Middle</li>
+                <li class="low">Low</li>
+                <li class="nice">Nice to Have</li>
+              </ul>
+            </div>
+          </template>
+
+        </vxe-table-column> -->
+
+        <!-- <vxe-table-column field="diedai" title="迭代">
+          <template #default="{ row }">
+            <span>{{ row.diedai ? row.diedai : '--' }}</span>
+          </template>
+
+        </vxe-table-column> -->
+
+        <!-- <vxe-table-column field="status" title="状态">
+          <template #default="{ row }">
+            <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
+          </template>
+
+        </vxe-table-column> -->
+
+        <vxe-table-column field="startTime" title="退库说明" :edit-render="{}">
+          <template #default="{ row }">
+            {{ row.startTime ? row.startTime : '--' }}
+          </template>
+
+          <template slot="edit" slot-scope="scope">
+
+            <el-date-picker
+              v-model="scope.row.startTime"
+              type="date"
+              placeholder="选择日期"
+            />
+          </template>
+
+        </vxe-table-column>
+
+        <!-- <vxe-table-column field="endTime" title="预计结束" :edit-render="{}">
+          <template #default="{ row }">
+            {{ row.endTime ? row.endTime : '--' }}
+          </template>
+          <template slot="edit" slot-scope="scope">
+
+            <el-date-picker
+              v-model="scope.row.endTime"
+              type="date"
+              placeholder="选择日期"
+            />
+          </template>
+
+        </vxe-table-column> -->
 
       </vxe-table>
 
@@ -54,14 +160,29 @@
     <add-dialog :visible.sync="showAddDialog" />
   </div>
 </template>
-
 <script>
-import addDialog from './components/addnew'
+import addDialog from './components/addNewDialog'
 export default {
-  name: 'AssetLoanManage',
   components: { addDialog },
+  filters: {
+    statusClass(e) {
+      switch (e) {
+        case '已实现':
+          return 'gray'
+        case '实现中':
+          return 'blue'
+        case '规划中':
+          return 'green'
+        case '已拒绝':
+          return 'blue'
+        default :
+          return 'green'
+      }
+    }
+  },
   data() {
     return {
+      isAllExpand: false,
       showAddDialog: false,
       tableData: [
         {
@@ -314,7 +435,3 @@ export default {
   }
 }
 </script>
-
-<style lang="scss" scoped>
-
-</style>

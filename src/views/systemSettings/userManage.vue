@@ -1,68 +1,141 @@
 <template>
   <div class="app-container">
-    <el-row>
-      <el-button type="primary" icon="el-icon-plus" @click="showAddDialog=true">新建</el-button>
-      <el-button icon="el-icon-printer" disabled>归还</el-button>
-      <el-dropdown :style="{ marginLeft: '5px' }">
-        <el-button type="default" icon="el-icon-edit" plain>
-          编辑<i class="el-icon-arrow-down el-icon--right" />
-        </el-button>
-        <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item>修改</el-dropdown-item>
-          <el-dropdown-item>复制</el-dropdown-item>
-          <el-dropdown-item>删除</el-dropdown-item>
-        </el-dropdown-menu>
-      </el-dropdown>
-      <el-button icon="el-icon-printer" :style="{ marginLeft: '10px' }">打印</el-button>
+    <nav-tree
+      title="公司组织架构"
+      class="navtree"
+      @show="hidenavtree"
+      @operation="navTreeOperation"
+    />
+    <div :class="['container' , !navTreeShow ? 'hidetree' : '']">
+      <el-row style="height:40px; margin-left:20px;padding-top:10px;">
+        <el-button type="primary" icon="el-icon-plus" @click="showAddDialog=true">新建</el-button>
 
-    </el-row>
-    <el-row style="padding-top:20px;">
-      <vxe-table
-        ref="xTree"
-        resizable
-        highlight-hover-row
-        :auto-resize="true"
-        stripe
-        class="vxetable"
-        :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
-        :data="tableData"
-      >
-        <vxe-table-column type="checkbox" width="40" :resizable="false" />
-        <vxe-table-column field="eventID" title="借还单号" />
-        <vxe-table-column field="person" title="借用人" />
-        <vxe-table-column field="date" title="借出时间" />
-        <vxe-table-column field="diedai" title="维修花费" />
-        <vxe-table-column field="status" title="状态" />
+      </el-row>
+      <el-row style="padding-top:20px;">
+        <vxe-table
+          ref="xTree"
+          resizable
+          highlight-hover-row
+          :auto-resize="true"
+          stripe
+          class="vxetable"
+          :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
+          :data="tableData"
+        >
+          <vxe-table-column type="checkbox" width="40" :resizable="false" />
+          <vxe-table-column field="eventID" title="序号" />
+          <vxe-table-column field="person" title="用户名" />
+          <vxe-table-column field="date" title="姓名" />
+          <vxe-table-column field="diedai" title="手机号" />
+          <vxe-table-column field="name" title="邮箱" />
+          <vxe-table-column field="status" title="停用状态" />
 
-        <vxe-table-column field="name" title="报修人" />
-        <vxe-table-column field="title" title="维修内容" />
-        <vxe-table-column title="备注">
-          <template #default>
-            --
-          </template>
-        </vxe-table-column>
+          <vxe-table-column field="title" title="所属部门" />
+          <vxe-table-column title="操作">
+            <el-link type="primary" :underline="false">编辑</el-link>
+            |
+            <el-link type="primary" :underline="false">删除</el-link>
+          </vxe-table-column>
 
-      </vxe-table>
+        </vxe-table>
 
-      <el-pagination
-        background
-        layout="prev, pager, next, jumper"
-        style="text-align:right;margin-top:20px;"
-        :total="1000"
-      />
-    </el-row>
-    <add-dialog :visible.sync="showAddDialog" />
+        <el-pagination
+          background
+          layout="prev, pager, next, jumper"
+          style="text-align:right;margin-top:20px;height: 30px;"
+          :total="1000"
+        />
+        <el-dialog title="添加成员" :visible.sync="showAddDialog" width="600px">
+          <el-form :model="addUserInfo" label-position="right">
+            <el-form-item label="手机号" :label-width="formLabelWidth" required>
+              <el-input v-model="addUserInfo.mobile" />
+            </el-form-item>
+            <el-form-item label="邮箱" :label-width="formLabelWidth">
+              <el-input v-model="addUserInfo.email" />
+            </el-form-item>
+            <el-form-item label="账号" :label-width="formLabelWidth">
+              <el-input v-model="addUserInfo.account" />
+            </el-form-item>
+            <el-form-item label="真实姓名" :label-width="formLabelWidth">
+              <el-input v-model="addUserInfo.realName" />
+            </el-form-item>
+            <el-form-item label="启用/停用" :label-width="formLabelWidth">
+              <el-radio-group v-model="addUserInfo.status">
+                <el-radio :label="1">启用</el-radio>
+                <el-radio :label="2">停用</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item label="单位/部门" :label-width="formLabelWidth">
+              <el-input v-model="addUserInfo.Unit" />
+            </el-form-item>
+            <el-form-item label="允许补充资产字段" :label-width="formLabelWidth">
+              <el-radio-group v-model="addUserInfo.allowSupplement">
+                <el-radio :label="1">允许</el-radio>
+                <el-radio :label="2">不允许</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-form>
+
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="showAddDialog=false">取 消</el-button>
+            <el-button type="primary" @click="showAddDialog=false">确 定</el-button>
+          </div>
+        </el-dialog>
+
+        <el-dialog :title="editDialogTitle" :visible.sync="showEditDialog" width="600px">
+          <el-form :model="DialogData" label-position="right">
+            <el-form-item v-if="editDialogStatus !== 'setPrincipal'" label="部门名称" :label-width="formLabelWidth" required>
+              <el-input v-model="DialogData.name" />
+            </el-form-item>
+            <el-form-item v-else label="部门负责人" :label-width="formLabelWidth">
+              <el-autocomplete
+                v-model="DialogData.name"
+                :fetch-suggestions="querySearchAsync"
+                placeholder="请输入内容"
+                @select="handleSelect"
+              >
+                <template slot-scope="{ item }">
+                  <div class="name">{{ item.value }}</div>
+                </template>
+              </el-autocomplete>
+            </el-form-item>
+          </el-form>
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="showEditDialog=false">取 消</el-button>
+            <el-button type="primary" @click="showEditDialog=false">确 定</el-button>
+          </div>
+        </el-dialog>
+
+      </el-row>
+    </div>
   </div>
 </template>
-
 <script>
-import addDialog from './components/addnew'
+import navTree from '@/components/leftTreeNav'
 export default {
-  name: 'AssetLoanManage',
-  components: { addDialog },
+  components: { navTree },
   data() {
     return {
+      navTreeShow: true,
       showAddDialog: false,
+
+      showEditDialog: false,
+      editDialogTitle: '',
+      editDialogStatus: '',
+      DialogData: {
+        name: ''
+      },
+      timeout: null,
+      formLabelWidth: '140px',
+      addUserInfo: {
+        mobile: '',
+        email: '',
+        account: '',
+        realName: '',
+        status: '',
+        Unit: '',
+        allowSupplement: ''
+      },
       tableData: [
         {
           id: 1,
@@ -311,10 +384,74 @@ export default {
         }
       ]
     }
+  },
+  methods: {
+    hidenavtree(e) {
+      this.navTreeShow = e
+    },
+    navTreeOperation(operate) {
+      console.log('operate', operate)
+      if (operate !== 'addperson') {
+        this.DialogData.name = ''
+        this.editDialogStatus = operate
+        this.showEditDialog = true
+
+        switch (operate) {
+          case 'addSonDepartment' :
+            this.editDialogTitle = '添加子部门'
+            break
+          case 'setPrincipal':
+            this.editDialogTitle = '设置负责人'
+            break
+          case 'changeName':
+            this.editDialogTitle = '修改名称'
+            break
+        }
+      } else {
+        this.showAddDialog = true
+      }
+    },
+    querySearchAsync(queryString, cb) {
+      const resArr = []
+      if (!queryString) {
+        cb([])
+        return
+      }
+      for (let i = 0; i < 5; i++) {
+        resArr.push({ value: queryString + i })
+      }
+      clearTimeout(this.timeout)
+      this.timeout = setTimeout(() => {
+        cb(resArr)
+      }, 1000 * Math.random())
+    },
+    handleSelect(e) {
+      console.log('点击', e)
+    }
   }
 }
 </script>
-
-<style lang="scss" scoped>
-
+<style scoped>
+.app-container {
+    min-height:  calc(100vh - 50px);
+}
+.navtree {
+  margin-left: 20px;
+  height:calc(100vh - 90px);
+}
+.container {
+    width: calc(100% - 275px);
+    margin-left: 275px;
+    box-shadow: 0 0 10px rgba(128, 145, 165, 0.2);
+    box-sizing:border-box;
+}
+.container.hidetree {
+  transition: all linear 0.2s;
+  margin-left:20px;
+  width: calc(100% - 20px);
+}
+.navtree >>> .deletePart {
+  color: #999;
+}
 </style>
+

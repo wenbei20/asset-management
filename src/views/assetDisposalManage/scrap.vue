@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-row>
       <el-button type="primary" icon="el-icon-plus" @click="showAddDialog=true">新建</el-button>
-      <el-button icon="el-icon-printer" disabled>归还</el-button>
+      <el-button icon="el-icon-plus">还原</el-button>
       <el-dropdown :style="{ marginLeft: '5px' }">
         <el-button type="default" icon="el-icon-edit" plain>
           编辑<i class="el-icon-arrow-down el-icon--right" />
@@ -13,8 +13,14 @@
           <el-dropdown-item>删除</el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
-      <el-button icon="el-icon-printer" :style="{ marginLeft: '10px' }">打印</el-button>
-
+      <el-dropdown :style="{ marginLeft: '5px' }">
+        <el-button type="default" icon="el-icon-printer" plain>
+          打印/导出<i class="el-icon-arrow-down el-icon--right" />
+        </el-button>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item>打印资产标签</el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
     </el-row>
     <el-row style="padding-top:20px;">
       <vxe-table
@@ -28,19 +34,12 @@
         :data="tableData"
       >
         <vxe-table-column type="checkbox" width="40" :resizable="false" />
-        <vxe-table-column field="eventID" title="借还单号" />
-        <vxe-table-column field="person" title="借用人" />
-        <vxe-table-column field="date" title="借出时间" />
-        <vxe-table-column field="diedai" title="维修花费" />
-        <vxe-table-column field="status" title="状态" />
+        <vxe-table-column field="eventID" title="报废单号" />
 
-        <vxe-table-column field="name" title="报修人" />
-        <vxe-table-column field="title" title="维修内容" />
-        <vxe-table-column title="备注">
-          <template #default>
-            --
-          </template>
-        </vxe-table-column>
+        <vxe-table-column field="date" title="清理日期" />
+        <vxe-table-column field="person" title="清理人" />
+        <vxe-table-column field="status" title="业务所属单位" />
+        <vxe-table-column field="title" title="清理说明" />
 
       </vxe-table>
 
@@ -56,12 +55,28 @@
 </template>
 
 <script>
-import addDialog from './components/addnew'
+import addDialog from './components/addScrap'
 export default {
-  name: 'AssetLoanManage',
   components: { addDialog },
+  filters: {
+    statusClass(e) {
+      switch (e) {
+        case '已实现':
+          return 'gray'
+        case '实现中':
+          return 'blue'
+        case '规划中':
+          return 'green'
+        case '已拒绝':
+          return 'blue'
+        default :
+          return 'green'
+      }
+    }
+  },
   data() {
     return {
+      isAllExpand: false,
       showAddDialog: false,
       tableData: [
         {

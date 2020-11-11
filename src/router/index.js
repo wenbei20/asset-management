@@ -76,7 +76,7 @@ export const constantRoutes = [
         path: 'assetInfoTrace',
         name: 'AssetInfoTrace',
         component: () => import('@/views/assetManage/assetInfoTrace/index'),
-        meta: { title: '资产信息回溯', icon: 'table' }
+        meta: { title: '资产信息追溯', icon: 'table' }
       }
     ]
   },
@@ -94,13 +94,22 @@ export const constantRoutes = [
   {
     path: '/assetDisposalManage',
     component: Layout,
-    redirect: '/assetDisposalManage/index',
-    children: [{
-      path: 'assetDisposalManage',
-      name: 'AssetDisposalManage',
-      component: () => import('@/views/assetDisposalManage/index'),
-      meta: { title: '资产处置管理', icon: 'dashboard' }
-    }]
+    // redirect: '/assetDisposalManage/index',
+    meta: { title: '资产处置管理', icon: 'nested' },
+    children: [
+      {
+        path: 'withdrawal',
+        name: 'Withdrawal',
+        component: () => import('@/views/assetDisposalManage/withdrawal'),
+        meta: { title: '退运', icon: 'dashboard' }
+      },
+      {
+        path: 'scrap',
+        name: 'Scrap',
+        component: () => import('@/views/assetDisposalManage/scrap'),
+        meta: { title: '报废', icon: 'dashboard' }
+      }
+    ]
   },
   {
     path: '/assetMaintenanceManage',
@@ -158,7 +167,49 @@ export const constantRoutes = [
   //     meta: { title: 'Dashboard', icon: 'dashboard' }
   //   }]
   // },
-
+  {
+    path: '/systemSetting',
+    component: Layout,
+    meta: { title: '系统设置', icon: 'el-icon-s-help' },
+    children: [
+      {
+        path: 'systemUser',
+        name: 'systemUser',
+        component: () => import('@/views/systemSettings/systemUser'),
+        meta: { title: '系统用户管理', icon: 'table' }
+      },
+      {
+        path: 'commercialUser',
+        name: 'commercialUser',
+        component: () => import('@/views/systemSettings/commercialUser'),
+        meta: { title: '商户管理', icon: 'tree' }
+      },
+      {
+        path: 'userManage',
+        name: 'userManage',
+        component: () => import('@/views/systemSettings/userManage'),
+        meta: { title: '用户管理', icon: 'tree' }
+      },
+      {
+        path: 'userPower',
+        name: 'userPower',
+        component: () => import('@/views/systemSettings/power/user'),
+        meta: { title: '注册用户权限配置', icon: 'tree' }
+      },
+      {
+        path: 'sysUserPower',
+        name: 'sysUserPower',
+        component: () => import('@/views/systemSettings/power/systemUser'),
+        meta: { title: '系统用户权限配置', icon: 'tree' }
+      },
+      {
+        path: 'comUserPower',
+        name: 'comUserPower',
+        component: () => import('@/views/systemSettings/power/commercial'),
+        meta: { title: '商户权限配置', icon: 'tree' }
+      }
+    ]
+  },
   {
     path: '/example',
     component: Layout,

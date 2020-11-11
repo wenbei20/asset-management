@@ -1,60 +1,32 @@
 <template>
   <div class="app-container">
     <el-row>
-      <el-col :span="7">
-        <el-form>
-          <el-form-item label="使用公司/部门">
-            <el-select v-model="companyValue" placeholder="请选择公司/部门">
-              <el-option
-                v-for="item in companyOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              />
-            </el-select>
-          </el-form-item>
-        </el-form>
-      </el-col>
       <el-col :span="17">
-        <el-button type="primary" icon="el-icon-plus" @click="xjzyxxVisible = true">新建</el-button>
-        <el-dropdown :style="{ marginLeft: '5px' }">
-          <el-button type="default" icon="el-icon-edit" plain>
-            编辑<i class="el-icon-arrow-down el-icon--right" />
-          </el-button>
-          <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item>修改</el-dropdown-item>
-            <el-dropdown-item>复制</el-dropdown-item>
-            <el-dropdown-item>删除</el-dropdown-item>
-          </el-dropdown-menu>
-        </el-dropdown>
+        <span style="font-size:14px;">使用公司/部门</span>
+        <el-select v-model="companyValue" placeholder="请选择公司/部门" style="padding:0 6px;">
+          <el-option
+            v-for="item in companyOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+        <el-button type="primary" icon="el-icon-plus" @click="addNew">新建</el-button>
         <el-dropdown :style="{ marginLeft: '5px' }">
           <el-button type="default" icon="el-icon-receiving" plain>
-            导入/导出<i class="el-icon-arrow-down el-icon--right" />
+            操作<i class="el-icon-arrow-down el-icon--right" />
           </el-button>
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item>下载导入模板</el-dropdown-item>
             <el-dropdown-item>批量导入资产</el-dropdown-item>
             <el-dropdown-item>导出资产</el-dropdown-item>
-          </el-dropdown-menu>
-        </el-dropdown>
-        <el-dropdown :style="{ marginLeft: '5px' }">
-          <el-button type="default" icon="el-icon-printer" plain>
-            打印<i class="el-icon-arrow-down el-icon--right" />
-          </el-button>
-          <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item>打印资产标签</el-dropdown-item>
-          </el-dropdown-menu>
-        </el-dropdown>
-        <el-dropdown :style="{ marginLeft: '5px' }">
-          <el-button type="default" icon="el-icon-files" plain>
-            RFID管理<i class="el-icon-arrow-down el-icon--right" />
-          </el-button>
-          <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item>发卡</el-dropdown-item>
+            <el-dropdown-item style="border-top:1px solid #dfe6ee;">批量打印标签</el-dropdown-item>
             <el-dropdown-item>批量发卡</el-dropdown-item>
-            <el-dropdown-item>换卡</el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
+      </el-col>
+      <el-col :span="7">
+
         <el-input
           v-model="input1"
           :style="{ width: '200px', float: 'right' }"
@@ -64,160 +36,141 @@
       </el-col>
     </el-row>
     <el-row type="flex" justify="space-between" align="middle" :style="{ fontSize: '12px' }">
-      <el-col :span="8">金额合计：0.00</el-col>
-      <el-col :span="8" :style="{ textAlign: 'right' }">
+      <!-- <el-col :span="8">金额合计：0.00</el-col> -->
+      <el-col :span="8" :offset="16" :style="{ textAlign: 'right' }">
         <el-button type="text" @click="gjssVisible = true">高级搜索</el-button>
         <el-popover
           v-model="settingVisible"
           placement="bottom-end"
           width="200"
+          @show="showTableColSetting"
+          @hide="hideTableColSetting"
         >
           <h4 :style="{ margin: '0', paddingBottom: '10px', borderBottom: '#eee solid 1px' }">列设置</h4>
           <div class="popoverSwitchList">
             <div v-for="item in popoverSwitchList" :key="item.name" class="item">
               <el-switch
-                v-model="item.active"
+                v-model="tableShowColumn[item.model]"
                 :active-text="item.name"
                 :disabled="item.disabled"
               />
             </div>
           </div>
           <div style="text-align: right; margin: 0">
-            <el-button size="mini" type="text" @click="settingVisible = false">取消</el-button>
-            <el-button type="primary" size="mini" @click="settingVisible = false">确定</el-button>
+            <el-button size="mini" type="text" @click="cancalColSetting">取消</el-button>
+            <el-button type="primary" size="mini" @click="confirmColSetting">确定</el-button>
           </div>
           <el-button slot="reference" type="text" :style="{ marginLeft: '10px' }"><i class="el-icon-setting" /></el-button>
         </el-popover>
-        <el-button type="text" :style="{ marginLeft: '10px' }"><i class="el-icon-lock" /></el-button>
+        <!-- <el-button type="text" :style="{ marginLeft: '10px' }"><i class="el-icon-lock" /></el-button> -->
       </el-col>
     </el-row>
-    <vxe-table
-      ref="xTree"
-      resizable
-      highlight-hover-row
-      :auto-resize="true"
-      stripe
-      class="vxetable"
-      :tree-config="{children: 'children',iconOpen: 'el-icon-remove-outline', iconClose: 'el-icon-circle-plus-outline',expandAll:true}"
-      :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
-      :data="tableData"
-    >
-      <vxe-table-column type="checkbox" width="40" :resizable="false" />
-      <vxe-table-column width="32" class="meuntd" :resizable="false" :edit-render="{}">
-        <template>
-          <div class="moreOuter">
-            <i class="el-icon-more" />
+    <div class="maintable">
 
-          </div>
-        </template>
-        <template slot="edit">
-          <i class="el-icon-more" style="position:relative;top:-2px;" />
+      <vxe-table
+        ref="xTree"
+        resizable
+        highlight-hover-row
+        :auto-resize="true"
+        stripe
+        class="vxetable"
+        :tree-config="{children: 'children',iconOpen: 'el-icon-remove-outline', iconClose: 'el-icon-circle-plus-outline',expandAll:true}"
+        :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
+        :data="tableData"
+      >
+        <vxe-table-column type="checkbox" width="40" :resizable="false" />
+        <vxe-table-column width="32" class="meuntd" :resizable="false" :edit-render="{}">
+          <template>
+            <div class="moreOuter">
+              <i class="el-icon-more" />
 
-          <div class="editmenu">
-            <div class="item">编辑</div>
-            <div class="item">复制</div>
-            <div class="item">关注</div>
-            <div class="item">删除</div>
-            <div class="item create">创建子需求</div>
-          </div>
-        </template>
-      </vxe-table-column>
-      <vxe-table-column field="eventID" title="ID" />
-      <vxe-table-column field="title" title="标题" tree-node width="300">
-        <template slot="header">
-          <i v-if="isAllExpand" class="el-icon-remove-outline biaotiicon" @click="closeAllNode" />
-          <i v-else class="el-icon-circle-plus-outline biaotiicon" @click="closeAllNode" />
+            </div>
+          </template>
+          <template slot="edit">
+            <i class="el-icon-more" style="position:relative;top:1px;left: -1px;" />
 
-          标题
-        </template>
+            <div class="editmenu">
+              <div class="item">编辑</div>
+              <div class="item">复制</div>
+              <div class="item">删除</div>
+              <div class="item create">发卡</div>
+              <div class="item">换卡</div>
+              <div class="item create">标签打印</div>
+            </div>
+          </template>
+        </vxe-table-column>
+        <vxe-table-column field="eventID" title="资产编码" sortable min-width="100" :visible="tableShowColumn.zcbm" />
+        <vxe-table-column field="title" title="资产名称" tree-node width="300" :visible="tableShowColumn.zcmc">
+          <template slot="header">
+            <i v-if="isAllExpand" class="el-icon-remove-outline biaotiicon" @click="closeAllNode" />
+            <i v-else class="el-icon-circle-plus-outline biaotiicon" @click="closeAllNode" />
+            资产名称
+          </template>
+          <template #default="{ row }">
+            <span class="titleText"><i /> {{ row.title }}</span>
+          </template>
+        </vxe-table-column>
 
-        <template #default="{ row }">
-          <span class="titleText" @click="toEditPage"><i /> {{ row.title }}</span>
-        </template>
+        <vxe-table-column field="status" title="资产类别" min-width="100" :visible="tableShowColumn.zclb">
+          <template #default="{ row }">
+            <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
+          </template>
+        </vxe-table-column>
 
-      </vxe-table-column>
-      <vxe-table-column field="youxian" title="优先级" :edit-render="{}">
+        <vxe-table-column field="youxian" title="标准型号" min-width="80" :visible="tableShowColumn.bzxh" />
 
-        <template #default="{ row }">
-          <span class="youxianspan" :class="row.youxian">{{ row.youxian }}</span>
-        </template>
+        <vxe-table-column field="diedai" title="规格型号" min-width="80" :visible="tableShowColumn.ggxh">
+          <template #default="{ row }">
+            <span>{{ row.diedai ? row.diedai : '--' }}</span>
+          </template>
+        </vxe-table-column>
 
-        <template slot="edit" slot-scope="scope">
-          <span>{{ scope.row.youxian }}</span>
-          <div class="edityouxian">
-            <ul>
-              <li class="empty">--空--</li>
-              <li class="high">High</li>
-              <li class="middle">Middle</li>
-              <li class="low">Low</li>
-              <li class="nice">Nice to Have</li>
-            </ul>
-          </div>
-        </template>
+        <vxe-table-column title="计量单位" min-width="80" :visible="tableShowColumn.jldw">--</vxe-table-column>
 
-      </vxe-table-column>
+        <vxe-table-column field="startTime" title="购入日期" min-width="120" :visible="tableShowColumn.grrq" />
 
-      <vxe-table-column field="diedai" title="迭代">
-        <template #default="{ row }">
-          <span>{{ row.diedai ? row.diedai : '--' }}</span>
-        </template>
+        <vxe-table-column title="所属单位" min-width="80" :visible="tableShowColumn.ssdw">--</vxe-table-column>
 
-      </vxe-table-column>
+        <vxe-table-column title="金额" min-width="80" :visible="tableShowColumn.je">--</vxe-table-column>
 
-      <vxe-table-column field="status" title="状态">
-        <template #default="{ row }">
-          <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
-        </template>
+        <vxe-table-column field="person" title="管理员" min-width="80" :visible="tableShowColumn.gly">
+          <template #default="{ row }">
+            {{ row.person ? row.person : '--' }}
+          </template>
+          <template slot="edit" slot-scope="scope">
+            <el-input v-model="scope.row.person" size="mini" />
+          </template>
+        </vxe-table-column>
 
-      </vxe-table-column>
+        <vxe-table-column title="使用人" min-width="80" :visible="tableShowColumn.syr">--</vxe-table-column>
+        <vxe-table-column title="使用单位" min-width="80" :visible="tableShowColumn.sydw">--</vxe-table-column>
+        <vxe-table-column title="使用部门" min-width="80" :visible="tableShowColumn.sybm">--</vxe-table-column>
+        <vxe-table-column title="使用期限" min-width="80" :visible="tableShowColumn.syqx">--</vxe-table-column>
+        <vxe-table-column title="区域" min-width="80" :visible="tableShowColumn.qy">--</vxe-table-column>
+        <vxe-table-column title="存放地点" min-width="80" :visible="tableShowColumn.cfdd">--</vxe-table-column>
+        <vxe-table-column title="备注信息" min-width="80" :visible="tableShowColumn.bzxx">--</vxe-table-column>
+        <vxe-table-column title="物资状态" min-width="80" :visible="tableShowColumn.wzzt">--</vxe-table-column>
+        <vxe-table-column title="RFID码" min-width="80" :visible="tableShowColumn.RFID">--</vxe-table-column>
+        <vxe-table-column title="自定义字段1" min-width="100" :visible="tableShowColumn.zdyzd1">--</vxe-table-column>
+        <vxe-table-column title="供应商" min-width="80" :visible="tableShowColumn.gys">--</vxe-table-column>
+        <vxe-table-column title="联系人" min-width="80" :visible="tableShowColumn.lxr">--</vxe-table-column>
+        <vxe-table-column title="联系方式" min-width="80" :visible="tableShowColumn.lxfs">--</vxe-table-column>
+        <vxe-table-column title="负责人" min-width="80" :visible="tableShowColumn.fzr">--</vxe-table-column>
 
-      <vxe-table-column field="person" title="处理人" :edit-render="{}">
-        <template #default="{ row }">
-          {{ row.person ? row.person : '--' }}
-        </template>
+        <vxe-table-column field="endTime" title="维保时间" min-width="120" :visible="tableShowColumn.wbsj" />
+        <vxe-table-column title="维保说明" min-width="80" :visible="tableShowColumn.wbsm">--</vxe-table-column>
 
-        <template slot="edit" slot-scope="scope">
-          <el-input v-model="scope.row.person" size="mini" />
-        </template>
-
-      </vxe-table-column>
-
-      <vxe-table-column field="startTime" title="预计开始" :edit-render="{}">
-        <template #default="{ row }">
-          {{ row.startTime ? row.startTime : '--' }}
-        </template>
-
-        <template slot="edit" slot-scope="scope">
-
-          <el-date-picker
-            v-model="scope.row.startTime"
-            type="date"
-            placeholder="选择日期"
-          />
-        </template>
-
-      </vxe-table-column>
-
-      <vxe-table-column field="endTime" title="预计结束" :edit-render="{}">
-        <template #default="{ row }">
-          {{ row.endTime ? row.endTime : '--' }}
-        </template>
-
-        <template slot="edit" slot-scope="scope">
-
-          <el-date-picker
-            v-model="scope.row.endTime"
-            type="date"
-            placeholder="选择日期"
-          />
-        </template>
-
-      </vxe-table-column>
-
-    </vxe-table>
+      </vxe-table>
+    </div>
+    <el-pagination
+      background
+      layout="prev, pager, next, jumper"
+      style="text-align:right;margin-top:20px;"
+      :total="1000"
+    />
 
     <!-- 模态框 -->
-    <el-dialog title="新建资源信息" :visible.sync="xjzyxxVisible" width="1200px">
+    <el-dialog :title="xjzyxxTitle" :visible.sync="xjzyxxVisible" width="80%">
       <el-form :model="xjzyxxForm" label-position="left">
         <el-row :gutter="20">
           <el-col :span="8">
@@ -249,11 +202,11 @@
             <el-form-item label="备注" :label-width="formLabelWidth" required>
               <el-col :span="24">
                 <el-input
+                  v-model="xjzyxxForm.remark"
                   type="textarea"
                   :rows="2"
                   placeholder="请输入内容"
-                  v-model="xjzyxxForm.remark">
-                </el-input>
+                />
               </el-col>
             </el-form-item>
           </el-col>
@@ -301,16 +254,16 @@
             <el-form-item label="维保说明" :label-width="formLabelWidth" required>
               <el-col :span="24">
                 <el-input
+                  v-model="xjzyxxForm.maintenanceInstructions"
                   type="textarea"
                   :rows="2"
                   placeholder="请输入维保说明"
-                  v-model="xjzyxxForm.maintenanceInstructions">
-                </el-input>
+                />
               </el-col>
             </el-form-item>
           </el-col>
         </el-row>
-        
+
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="xjzyxxVisible = false">取 消</el-button>
@@ -427,25 +380,69 @@ export default {
         { value: 'company2', label: '公司二' },
         { value: 'company3', label: '公司三' }
       ],
+      tableShowColumn: {
+        zcbm: true,
+        zcmc: true,
+        zclb: true,
+        bzxh: true,
+        ggxh: true,
+        jldw: true,
+        grrq: true,
+        ssdw: true,
+        je: true,
+        gly: true,
+        syr: true,
+        sydw: true,
+        sybm: true,
+        syqx: true,
+        qy: true,
+        cfdd: true,
+        bzxx: true,
+        wzzt: true,
+        RFID: true,
+        zdyzd1: true,
+        gys: true,
+        lxr: true,
+        lxfs: true,
+        fzr: true,
+        wbsj: true,
+        wbsm: true
+      },
+      copyForTableShowColumn: {},
+      isAllreadyConfirmColSetting: false,
       companyValue: '',
       input1: '',
       xjzyxxVisible: false,
+      xjzyxxTitle: '新建资源信息',
       gjssVisible: false,
       settingVisible: false,
       popoverSwitchList: [
-        { name: '状态', active: true, disabled: false },
-        { name: '签字状态', active: false, disabled: false },
-        { name: '照片', active: false, disabled: false },
-        { name: '资产编码', active: true, disabled: true },
-        { name: '资产名称', active: true, disabled: true },
-        { name: 'RFID', active: true, disabled: false },
-        { name: '资产类别编码', active: false, disabled: false },
-        { name: '资产类别(短)', active: true, disabled: false },
-        { name: '资产类别', active: false, disabled: false },
-        { name: '规格型号', active: true, disabled: false },
-        { name: 'SN号', active: true, disabled: false },
-        { name: '计量单位', active: true, disabled: false },
-        { name: '金额', active: true, disabled: false }
+        { name: '资产编码', model: 'zcbm', disabled: false },
+        { name: '资产名称', model: 'zcmc', disabled: false },
+        { name: '资产类别', model: 'zclb', disabled: false },
+        { name: '标准型号', model: 'bzxh', disabled: false },
+        { name: '规格型号', model: 'ggxh', disabled: false },
+        { name: '计量单位', model: 'jldw', disabled: false },
+        { name: '购入日期', model: 'grrq', disabled: false },
+        { name: '所属单位', model: 'ssdw', disabled: false },
+        { name: '金额', model: 'je', disabled: false },
+        { name: '管理员', model: 'gly', disabled: false },
+        { name: '使用人', model: 'syr', disabled: false },
+        { name: '使用单位', model: 'sydw', disabled: false },
+        { name: '使用部门', model: 'sybm', disabled: false },
+        { name: '使用期限', model: 'syqx', disabled: false },
+        { name: '区域', model: 'qy', disabled: false },
+        { name: '存放地点', model: 'cfdd', disabled: false },
+        { name: '备注信息', model: 'bzxx', disabled: false },
+        { name: '物资状态', model: 'wzzt', disabled: false },
+        { name: 'RFID码', model: 'RFID', disabled: false },
+        { name: '自定义字段1', model: 'zdyzd1', disabled: false },
+        { name: '供应商', model: 'gys', disabled: false },
+        { name: '联系人', model: 'lxr', disabled: false },
+        { name: '联系方式', model: 'lxfs', disabled: false },
+        { name: '负责人', model: 'fzr', disabled: false },
+        { name: '维保时间', model: 'wbsj', disabled: false },
+        { name: '维保说明', model: 'wbsm', disabled: false }
       ],
       xjzyxxForm: {
         assetCategory: '',
@@ -743,6 +740,34 @@ export default {
     },
     hidenavtree(e) {
       this.hidetree = e
+    },
+    addNew() {
+      this.xjzyxxTitle = '新建资源信息'
+      this.xjzyxxVisible = true
+    },
+    confirmColSetting() {
+      console.log('confirmhide')
+      this.isAllreadyConfirmColSetting = true
+      this.settingVisible = false
+      this.$nextTick(() => {
+        this.$refs.xTree.refreshColumn()
+      })
+    },
+    cancalColSetting() {
+      this.settingVisible = false
+    },
+    showTableColSetting() {
+      this.copyForTableShowColumn = { ...this.tableShowColumn }
+      console.log('show')
+    },
+    hideTableColSetting() {
+      if (this.isAllreadyConfirmColSetting) {
+        this.isAllreadyConfirmColSetting = false
+        return
+      }
+      this.tableShowColumn = { ...this.copyForTableShowColumn }
+      this.copyForTableShowColumn = {}
+      this.settingVisible = false
     }
   }
 }
@@ -894,6 +919,10 @@ export default {
       }
 
   }
+}
+.maintable {
+  width: 100%;
+  overflow-x: auto;
 }
 .popoverSwitchList{ padding: 0; margin-bottom: 10px; max-height: 400px; overflow-y: auto;
   .item{ margin: 15px 0;
