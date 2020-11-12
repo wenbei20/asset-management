@@ -1,19 +1,19 @@
 <template>
   <div class="navTree" :class="{'hide':!show}">
     <div class="title">{{ title }}</div>
+
+    <!-- :data="treeData" -->
     <el-tree
       v-if="show"
-      :data="treeData"
       :props="defaultProps"
-      node-key="id"
-      :default-expanded-keys="['1-1']"
-      :default-expand-all="true"
+      node-key="groupId"
+      :load="loadNode"
+      lazy
       @node-click="handleNodeClick"
     >
       <div slot-scope="{ node, data }" class="custom-tree-node">
         <i :class="['custom-icon', data.icon]" />
-        <span>{{ data.label }}</span>
-        <span class="selfNum">{{ data.num }}</span>
+        <span>{{ data.groupName }}</span>
         <span class="selfIcon el-icon-more" @click.stop="moreClick(data)" />
 
         <drapDown v-if="data.position" :show.sync="data.showTopMenu" :width="116" :left="222">
@@ -31,7 +31,7 @@
 <script>
 
 import drapDown from '@/components/drapdownMenu'
-
+import { getOrganizationGroup } from '@/api/settings'
 export default {
   components: { drapDown },
   props: {
@@ -106,14 +106,43 @@ export default {
     return {
       show: true,
       defaultProps: {
-        children: 'children',
-        label: 'label',
-        icon: 'icon'
+        label: 'groupName',
+        children: 'zones',
+        isLeaf: 'leaf'
       },
       showTopMenu: true
     }
   },
+  created() {
+    // this.getTreeNodeData(0)
+  },
   methods: {
+    getTreeNodeData(id) {
+      return new Promise(function(resolve, reject) {
+        getOrganizationGroup({ parentId: id }).then(res => {
+          // console.log('res', res)
+          if (res.code === 0 && res.data && Array.isArray(res.data)) {
+            res.data.forEach(item => {
+              item.showTopMenu = false
+            })
+            resolve(res.data)
+          } else {
+            resolve([])
+          }
+        }).catch(err => {
+          console.log('err', err)
+          resolve([])
+        })
+      })
+    },
+    loadNode(node, resolve) {
+      if (node.level === 0) {
+        this.getTreeNodeData(0).then(arr => {
+          console.log('arr', arr)
+          resolve(arr)
+        })
+      }
+    },
     handleOpen() {
 
     },

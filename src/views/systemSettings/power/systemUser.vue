@@ -63,7 +63,7 @@
 
       <div class="checkouter">
         <div class="toptit">用户组2</div>
-        <table cellspacing="0">
+        <!-- <table cellspacing="0">
           <colgroup>
             <col style="width: 10%;">
             <col style="width: 85%;">
@@ -118,8 +118,14 @@
               </td>
             </tr>
           </tbody>
-        </table>
-
+        </table> -->
+        <el-tree
+          :props="props"
+          :load="loadNode"
+          node-key="id"
+          lazy
+          show-checkbox
+        />
         <div class="confirm">
           <el-button type="primary">保存</el-button>
         </div>
@@ -190,7 +196,12 @@ export default {
         { name: '附件下载/预览', checked: false },
         { name: '附件删除/解除关联', checked: false }
       ],
-      allCheck: false
+      allCheck: false,
+      props: {
+        label: 'name',
+        children: 'zones',
+        isLeaf: 'leaf'
+      }
     }
   },
   computed: {
@@ -200,6 +211,26 @@ export default {
 
   },
   methods: {
+    loadNode(node, resolve) {
+      console.log('node', node)
+      if (node.level === 0) {
+        return resolve([{ name: 'region', id: '11111', test: '52465456' }])
+      }
+      if (node.level > 1) return resolve([])
+
+      setTimeout(() => {
+        const data = [{
+          name: 'leaf',
+          id: '22222'
+        }, {
+          name: 'zone',
+          id: '212322'
+
+        }]
+
+        resolve(data)
+      }, 500)
+    }
   }
 }
 </script>

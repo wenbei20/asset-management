@@ -39,3 +39,13 @@ export function getListGroup(params) {
     params
   })
 }
+
+// 用户管理
+
+export function getOrganizationGroup(params) {
+  return request({
+    url: '/sys/group/listGroupByParentId',
+    method: 'get',
+    params
+  })
+}
