@@ -261,6 +261,56 @@
         </el-row>
 
       </el-form>
+      <div class="selectBtns">
+        <el-button type="primary" plain @click="showSelectTable=true">选择资产</el-button>
+        <el-button plain>删除所选</el-button>
+      </div>
+
+      <vxe-table
+        ref="innerTree"
+        resizable
+        highlight-hover-row
+        height="300"
+        :auto-resize="true"
+        stripe
+        class="innerVxetable"
+        :data="tableData"
+      >
+        <vxe-table-column type="checkbox" width="40" :resizable="false" />
+        <vxe-table-column title="照片" min-width="60">--</vxe-table-column>
+        <vxe-table-column title="资产编码" min-width="120">--</vxe-table-column>
+        <vxe-table-column title="资产名称" min-width="120">--</vxe-table-column>
+        <vxe-table-column title="所属公司" min-width="120">--</vxe-table-column>
+        <vxe-table-column title="当前所在公司" min-width="120">--</vxe-table-column>
+        <vxe-table-column title="当前所在部门" min-width="120">--</vxe-table-column>
+        <vxe-table-column title="当前使用人" min-width="120">--</vxe-table-column>
+        <vxe-table-column title="存放地点" min-width="120">--</vxe-table-column>
+      </vxe-table>
+      <el-dialog title="选择资产" :visible.sync="showSelectTable" append-to-body width="70%">
+        <vxe-table
+          ref="innerSeleTree"
+          resizable
+          highlight-hover-row
+          :auto-resize="true"
+          stripe
+          class="innerVxetable"
+          :data="tableData"
+        >
+          <vxe-table-column type="checkbox" width="40" :resizable="false" />
+          <vxe-table-column title="照片" min-width="60">--</vxe-table-column>
+          <vxe-table-column title="资产编码" min-width="120">--</vxe-table-column>
+          <vxe-table-column title="资产名称" min-width="120">--</vxe-table-column>
+          <vxe-table-column title="所属公司" min-width="120">--</vxe-table-column>
+          <vxe-table-column title="当前所在公司" min-width="120">--</vxe-table-column>
+          <vxe-table-column title="当前所在部门" min-width="120">--</vxe-table-column>
+          <vxe-table-column title="当前使用人" min-width="120">--</vxe-table-column>
+          <vxe-table-column title="存放地点" min-width="120">--</vxe-table-column>
+        </vxe-table>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="showSelectTable = false">取 消</el-button>
+          <el-button type="primary" @click="innerTableConfirm">确 定</el-button>
+        </div>
+      </el-dialog>
     </Dialog>
   </div>
 </template>
@@ -300,6 +350,7 @@ export default {
       },
       gjssVisible: false,
       settingVisible: false,
+      showSelectTable: false,
       popoverSwitchList: [
         { name: '办理状态', active: 'blzt', disabled: false },
         { name: '领用单号', active: 'lydh', disabled: false },
@@ -314,9 +365,9 @@ export default {
         { name: '资产明细', active: 'zcmx', disabled: false }
       ],
       tableData: [
-        { handleStatus: '' },
-        { handleStatus: '' },
-        { handleStatus: '' },
+        { handleStatus: '12' },
+        { handleStatus: '232' },
+        { handleStatus: 'asdas' },
         { handleStatus: '' },
         { handleStatus: '' },
         { handleStatus: '' },
@@ -364,6 +415,10 @@ export default {
         this.showAddOrEditTitle = '编辑'
         this.showAddOrEdit = true
       }
+    },
+    innerTableConfirm() {
+      const num = this.$refs.innerSeleTree.getCheckboxRecords()
+      console.log('num', num)
     }
   }
 }
@@ -379,5 +434,7 @@ export default {
     }
   }
 }
-
+.selectBtns {
+  padding: 20px 0;
+}
 </style>

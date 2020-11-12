@@ -1,12 +1,28 @@
 <template>
   <div class="app-container">
     <el-row>
-      <el-button type="primary" icon="el-icon-plus" @click="showAddDialog=true">新建</el-button>
+      <el-select v-model="SearchType" placeholder="请选择搜索类型" style="padding:0 6px;width:160px;">
+        <el-option label="用户名" value="sysuserName" />
+        <el-option label="姓名" value="chineseName" />
+        <el-option label="手机号" value="mobile" />
+        <el-option label="邮箱" value="email" />
+      </el-select>
+      <el-input
+        v-model="searchIpt"
+        :style="{ width: '160px',marginRight:'20px'}"
+        placeholder="搜索..."
+        clearable
+        @clear="clearSearchRes"
+      >
+        <el-button slot="append" icon="el-icon-search" @click="searchList" />
+      </el-input>
+      <el-button type="primary" icon="el-icon-plus" @click="addNewUser">新建</el-button>
 
     </el-row>
     <el-row style="padding-top:20px;">
       <vxe-table
         ref="xTree"
+        v-loading="tableLoading"
         resizable
         highlight-hover-row
         :auto-resize="true"
@@ -16,318 +32,280 @@
         :data="tableData"
       >
         <vxe-table-column type="checkbox" width="40" :resizable="false" />
-        <vxe-table-column field="eventID" title="序号" />
-        <vxe-table-column field="person" title="用户名" />
-        <vxe-table-column field="date" title="姓名" />
-        <vxe-table-column field="diedai" title="手机号" />
-        <vxe-table-column field="name" title="邮箱" />
-        <vxe-table-column field="status" title="停用状态" />
+        <vxe-table-column field="id" title="序号" width="60" />
+        <vxe-table-column field="sysuserName" title="用户名" />
+        <vxe-table-column field="chineseName" title="姓名" />
+        <vxe-table-column field="mobile" title="手机号" />
+        <vxe-table-column field="email" title="邮箱" />
+        <!-- <vxe-table-column field="status" title="停用状态" /> -->
 
-        <vxe-table-column field="title" title="所属部门" />
+        <!-- <vxe-table-column field="title" title="所属部门" /> -->
         <vxe-table-column title="操作">
-          <el-link type="primary" :underline="false">编辑</el-link>
-          |
-          <el-link type="primary" :underline="false">删除</el-link>
+          <template slot-scope="scope">
+            <el-link type="primary" :underline="false" @click="editSysUser(scope.row)">编辑</el-link>
+            |
+            <el-link type="primary" :underline="false" @click="deleteSysUser(scope.row)">删除</el-link>
+          </template>
         </vxe-table-column>
 
       </vxe-table>
 
-      <el-pagination
+      <pagination
+        v-show="pageTotal>0"
         background
+        :total="pageTotal"
         layout="prev, pager, next, jumper"
+        :page.sync="pageQuery.pageNo"
+        :limit.sync="pageQuery.pageSize"
         style="text-align:right;margin-top:20px;"
-        :total="1000"
+        @pagination="getList"
       />
-      <el-dialog title="添加成员" :visible.sync="showAddDialog" width="600px">
-        <el-form :model="addUserInfo" label-position="right">
-          <el-form-item label="手机号" :label-width="formLabelWidth" required>
-            <el-input v-model="addUserInfo.mobile" />
+      <el-dialog :title="addDialogTitle" :visible.sync="showAddDialog" width="600px" @close="cancalAddUser">
+        <el-form ref="addUser" :rules="addFormRules" :model="addUserInfo" status-icon label-position="right">
+          <el-form-item label="用户名" prop="sysuserName" :label-width="formLabelWidth">
+            <el-input v-model="addUserInfo.sysuserName" />
           </el-form-item>
-          <el-form-item label="邮箱" :label-width="formLabelWidth">
+          <el-form-item label="真实姓名" prop="chineseName" :label-width="formLabelWidth">
+            <el-input v-model="addUserInfo.chineseName" />
+          </el-form-item>
+          <el-form-item label="邮箱" prop="email" :label-width="formLabelWidth">
             <el-input v-model="addUserInfo.email" />
           </el-form-item>
-          <el-form-item label="账号" :label-width="formLabelWidth">
-            <el-input v-model="addUserInfo.account" />
+          <el-form-item label="手机号" prop="mobile" :label-width="formLabelWidth">
+            <el-input v-model="addUserInfo.mobile" />
           </el-form-item>
-          <el-form-item label="真实姓名" :label-width="formLabelWidth">
-            <el-input v-model="addUserInfo.realName" />
+          <el-form-item label="密码" prop="power" :label-width="formLabelWidth">
+            <el-input v-model="addUserInfo.power" autocomplete="off" type="password" />
           </el-form-item>
-          <el-form-item label="启用/停用" :label-width="formLabelWidth">
+          <el-form-item label="确认密码" prop="rePower" :label-width="formLabelWidth">
+            <el-input v-model="addUserInfo.rePower" autocomplete="off" type="password" />
+          </el-form-item>
+          <!-- <el-form-item label="启用/停用" :label-width="formLabelWidth">
             <el-radio-group v-model="addUserInfo.status">
               <el-radio :label="1">启用</el-radio>
               <el-radio :label="2">停用</el-radio>
             </el-radio-group>
-          </el-form-item>
+          </el-form-item> -->
         </el-form>
 
         <div slot="footer" class="dialog-footer">
-          <el-button @click="showAddDialog=false">取 消</el-button>
-          <el-button type="primary" @click="showAddDialog=false">确 定</el-button>
+          <el-button @click="cancalAddUser">取 消</el-button>
+          <el-button type="primary" @click="confirmAdd">确 定</el-button>
         </div>
       </el-dialog>
     </el-row>
   </div>
 </template>
 <script>
+import { getSysUserList, addSysUserList, deleteSysUserList, editSysUserList } from '@/api/settings'
+import { isMobileNumber } from '@/utils/validate'
+import Pagination from '@/components/Pagination'
 export default {
+  components: { Pagination },
   data() {
+    var validatePass = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请输入密码'))
+      } else {
+        if (this.addUserInfo.rePower !== '') {
+          this.$refs.addUser.validateField('rePower')
+        }
+        callback()
+      }
+    }
+    var validatePass2 = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请再次输入密码'))
+      } else if (value !== this.addUserInfo.power) {
+        callback(new Error('两次输入密码不一致!'))
+      } else {
+        callback()
+      }
+    }
+    var validateMobile = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请输入手机号'))
+      } else if (!isMobileNumber(value)) {
+        callback(new Error('手机号格式错误'))
+      } else {
+        callback()
+      }
+    }
     return {
+      addFormRules: {
+        power: [
+          { validator: validatePass, trigger: 'blur', required: true }
+        ],
+        rePower: [
+          { validator: validatePass2, trigger: 'blur', required: true }
+        ],
+        mobile: [
+          { validator: validateMobile, trigger: 'blur', required: true }
+        ],
+        email: [
+          { message: '请输入邮箱地址', trigger: 'blur', required: true },
+          { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+        ],
+        chineseName: [
+          { message: '请输入姓名', trigger: 'blur', required: true }
+        ],
+        sysuserName: [
+          { message: '请输入用户名', trigger: 'blur', required: true }
+        ]
+
+      },
       showAddDialog: false,
+      SearchType: '',
+      searchIpt: '',
       formLabelWidth: '100px',
       addUserInfo: {
-        mobile: '',
+        sysuserName: '',
+        chineseName: '',
         email: '',
-        account: '',
-        realName: '',
-        status: ''
+        mobile: '',
+        power: '',
+        rePower: ''
       },
-      tableData: [
-        {
-          id: 1,
-          date: '2016-05-02',
-          name: '王小虎',
-          title: '按照部门统计巡检漏检结果',
-          checked: false,
-          eventID: '1018723',
-          youxian: 'High',
-          diedai: 'V3.2',
-          status: '已实现',
-          person: '赵鹏翔;刘彩萍',
-          startTime: '2020-09-07',
-          endTime: '2020-09-11'
-        },
-        {
-          id: 2,
-          date: '2016-05-04',
-          name: '王小虎',
-          title: '终端软件更新web端开发',
-          checked: false,
-          eventID: '1003470',
-          youxian: 'High',
-          diedai: '--',
-          status: '已拒绝',
-          person: '刘峰',
-          startTime: '2019-03-04',
-          endTime: '2019-09-11',
-          children: [
-            {
-              id: 31,
-              date: '2016-05-01',
-              name: '王小虎',
-              title: '版本号',
-              checked: false,
-              eventID: '1003471',
-              youxian: 'High',
-              diedai: '--',
-              status: '已拒绝',
-              person: '刘峰',
-              startTime: '2019-03-04',
-              endTime: '2019-03-05',
-              children: [
-                {
-                  id: 31,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '版本文件列表',
-                  checked: false,
-                  eventID: '1003481',
-                  youxian: 'High',
-                  diedai: '服务端',
-                  status: '已拒绝',
-                  person: '刘峰',
-                  startTime: '2019-03-04',
-                  endTime: '2019-03-04'
-                }, {
-                  id: 31,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '添加版本号',
-                  checked: false,
-                  eventID: '1003480',
-                  youxian: 'High',
-                  diedai: '服务端',
-                  status: '已拒绝',
-                  person: '刘峰',
-                  startTime: '2019-03-04',
-                  endTime: '2019-03-04'
-                }
-              ]
-            }
-          ]
-        },
-        {
-          id: 3,
-          date: '2016-05-01',
-          name: '王小虎',
-          title: '系统管理',
-          checked: false,
-          eventID: '1003031',
-          youxian: 'High',
-          diedai: '--',
-          status: '规划中',
-          person: '安喜喜',
-          startTime: '--',
-          endTime: '--',
-          children: [
-            {
-              id: 31,
-              date: '2016-05-01',
-              name: '王小虎',
-              title: '系统管理菜单-（菜单管理）',
-              checked: false,
-              eventID: '1003480',
-              youxian: 'High',
-              diedai: '--',
-              status: '规划中',
-              person: '安喜喜',
-              startTime: '--',
-              endTime: '--',
-              children: [
-                {
-                  id: 3,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '系统管理菜单-（菜单管理）列表数据及分页',
-                  checked: false,
-                  eventID: '1004511',
-                  youxian: 'High',
-                  diedai: 'WEB前端',
-                  status: '已实现',
-                  person: '安喜喜',
-                  startTime: '2019-03-05',
-                  endTime: '2019-03-05'
-                },
-                {
-                  id: 3,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '系统管理-（菜单管理）-需求讨论',
-                  checked: false,
-                  eventID: '1004507',
-                  youxian: 'High',
-                  diedai: 'WEB前端',
-                  status: '已实现',
-                  person: '安喜喜',
-                  startTime: '2019-03-05',
-                  endTime: '2019-03-05'
-                }, {
-                  id: 3,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '系统管理-（菜单管理）-页面搭建',
-                  checked: false,
-                  eventID: '1004506',
-                  youxian: 'High',
-                  diedai: 'WEB前端',
-                  status: '已实现',
-                  person: '安喜喜',
-                  startTime: '2019-03-05',
-                  endTime: '2019-03-05'
-                }, {
-                  id: 3,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '添加 菜单/按钮 权限',
-                  checked: false,
-                  eventID: '1004505',
-                  youxian: 'High',
-                  diedai: 'WEB前端',
-                  status: '已实现',
-                  person: '安喜喜',
-                  startTime: '2019-03-05',
-                  endTime: '2019-03-05'
-                }
-              ]
-            }
-          ]
-        },
-        {
-          id: 4,
-          date: '2016-05-03',
-          name: '王小虎',
-          title: '调试下载临时任务接口',
-          checked: false,
-          eventID: '1003026',
-          youxian: 'Middle',
-          diedai: '--',
-          status: '已实现',
-          person: '代海涛',
-          startTime: '2019-03-05',
-          endTime: '2019-03-05'
-        },
-        {
-          id: 4,
-          date: '2016-05-03',
-          name: '王小虎',
-          title: '优化视频视频录制播放功能',
-          checked: false,
-          eventID: '1002733',
-          youxian: 'Middle',
-          diedai: '--',
-          status: '已实现',
-          person: '代海涛',
-          startTime: '2019-02-19',
-          endTime: '2019-02-19',
-          children: [
-            {
-              id: 4,
-              date: '2016-05-03',
-              name: '王小虎',
-              title: '优化视频录制播放',
-              checked: false,
-              eventID: '1002736',
-              youxian: 'Middle',
-              diedai: 'APP安卓',
-              status: '已实现',
-              person: '代海涛',
-              startTime: '2019-02-19',
-              endTime: '2019-02-19'
-            },
-            {
-              id: 4,
-              date: '2016-05-03',
-              name: '王小虎',
-              title: '优化视频录制大小',
-              checked: false,
-              eventID: '1002734',
-              youxian: 'Middle',
-              diedai: 'APP安卓',
-              status: '已实现',
-              person: '代海涛',
-              startTime: '2019-02-19',
-              endTime: '2019-02-19'
-            }
-          ]
-        },
-        {
-          id: 4,
-          date: '2016-05-03',
-          name: '王小虎',
-          title: '调试刷纽扣提交开始和结束时间接口',
-          checked: false,
-          eventID: '1002705',
-          youxian: 'Middle',
-          diedai: '--',
-          status: '已实现',
-          person: '代海涛',
-          startTime: '2019-03-04',
-          endTime: '2019-03-04'
-        },
-        {
-          id: 4,
-          date: '2016-05-03',
-          name: '王小虎',
-          title: '调试同步巡检任务数据接口',
-          checked: false,
-          eventID: '1002704',
-          youxian: 'Middle',
-          diedai: '--',
-          status: '已实现',
-          person: '代海涛',
-          startTime: '2019-03-01',
-          endTime: '2019-03-01'
+      tableLoading: true,
+      tableData: [],
+      pageTotal: 0,
+      pagerCount: 0,
+      pageQuery: {
+        chineseName: '',
+        email: '',
+        mobile: '',
+        pageNo: 1,
+        pageSize: 10,
+        sysuserName: ''
+      },
+      addDialogTitle: '添加成员',
+      addDialogSysUserID: ''
+    }
+  },
+  created() {
+    this.getList()
+  },
+  methods: {
+    getList() {
+      this.tableLoading = true
+      getSysUserList(this.pageQuery).then(res => {
+        console.log('res', res)
+        if (res.code === 0 && res.data && res.data.items) {
+          this.tableData = res.data.items
+          this.pageTotal = res.data.total
+          this.pageQuery.pageSize = res.data.limit
+          this.pageQuery.pageNo = res.data.page
         }
-      ]
+
+        this.tableLoading = false
+      }).catch(err => {
+        console.log('err', err)
+        this.tableLoading = false
+      })
+    },
+    cancalAddUser() {
+      this.$refs.addUser.clearValidate()
+      this.addUserInfo = { sysuserName: '', chineseName: '', email: '', mobile: '', power: '', rePower: '' }
+      this.showAddDialog = false
+    },
+    confirmAdd() {
+      this.$refs.addUser.validate(valid => {
+        if (valid && this.addDialogTitle === '添加成员') {
+          addSysUserList({ ...this.addUserInfo }).then(res => { // 添加用户
+            if (res.code === 0) {
+              this.$message({
+                type: 'success',
+                message: '添加系统用户成功'
+              })
+              this.getList()
+            } else {
+              this.$message({
+                type: 'error',
+                message: '添加系统用户失败，请稍后再试'
+              })
+            }
+            this.showAddDialog = false
+          }).catch(err => {
+            this.$message({
+              type: 'error',
+              message: '添加系统用户失败，请稍后再试'
+            })
+            console.log('err', err)
+            this.showAddDialog = false
+          })
+        } else if (valid && this.addDialogTitle === '编辑成员') { // 修改用户
+          editSysUserList({ ...this.addUserInfo }, this.addDialogSysUserID).then(res => {
+            if (res.code === 0) {
+              this.$message({
+                type: 'success',
+                message: '修改用户成功'
+              })
+              this.getList()
+            } else {
+              this.$message({
+                type: 'error',
+                message: '修改用户失败，请稍后再试'
+              })
+            }
+            this.showAddDialog = false
+          }).catch(err => {
+            this.$message({
+              type: 'error',
+              message: '修改用户失败，请稍后再试'
+            })
+            console.log('err', err)
+            this.showAddDialog = false
+          })
+        }
+      })
+    },
+    searchList() {
+      if (!this.SearchType) {
+        this.$message({ type: 'warning', message: '请选择搜索类型' })
+        return
+      }
+
+      if (!this.searchIpt) {
+        this.$message({ type: 'warning', message: '请输入搜索内容' })
+        return
+      }
+
+      this.pageQuery = { chineseName: '', email: '', mobile: '', pageNo: 1, pageSize: 10, sysuserName: '' }
+      this.pageQuery[this.SearchType] = this.searchIpt
+      this.getList()
+    },
+    clearSearchRes() {
+      this.pageQuery = { chineseName: '', email: '', mobile: '', pageNo: 1, pageSize: 10, sysuserName: '' }
+      this.getList()
+    },
+    deleteSysUser(row) {
+      console.log('row', row)
+      this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }).then(() => {
+        deleteSysUserList(row.sysuserId).then(res => {
+          if (res.code === 0) {
+            this.$message({ type: 'success', message: '成功删除该用户' })
+          }
+        }).catch(err => {
+          console.log('err', err)
+          this.$message({ type: 'error', message: '删除用户失败，请稍后再试' })
+        })
+      }).catch(() => {
+        this.$message({ type: 'info', message: '已取消删除' })
+      })
+    },
+    editSysUser(row) {
+      this.addDialogTitle = '编辑成员'
+      this.addDialogSysUserID = row.sysuserId
+      this.showAddDialog = true
+      console.log('row', row)
+      for (const key in this.addUserInfo) {
+        this.addUserInfo[key] = row[key]
+      }
+      this.addUserInfo.rePower = row.power
+    },
+    addNewUser() {
+      this.addDialogTitle = '添加成员'
+      this.showAddDialog = true
     }
   }
 }

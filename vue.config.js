@@ -31,10 +31,29 @@ module.exports = {
   productionSourceMap: false,
   devServer: {
     port: port,
-    open: true,
+    open: false,
     overlay: {
       warnings: false,
       errors: true
+    },
+    proxy: {
+      '/dev-api': {
+        target: 'http://192.168.12.98:8000/',
+        ws: true,
+        changeOrigin: true,
+        pathRewrite: {
+          '^/dev-api': ''
+        }
+      },
+      '/devforimg': {
+        target: 'http://192.168.12.106:8000/',
+        ws: true,
+        changeOrigin: true,
+        pathRewrite: {
+          '^/devforimg': ''
+        }
+      }
+
     },
     before: require('./mock/mock-server.js')
   },

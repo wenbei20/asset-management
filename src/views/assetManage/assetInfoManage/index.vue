@@ -2,22 +2,22 @@
   <div class="app-container">
     <el-row>
       <el-col :span="17">
-        <span style="font-size:14px;">使用公司/部门</span>
-        <el-select v-model="companyValue" placeholder="请选择公司/部门" style="padding:0 6px;">
-          <el-option
-            v-for="item in companyOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
+        <span style="font-size:14px;">使用部门</span>
+        <el-select v-model="companyValue" placeholder="请选择部门" style="padding:0 6px;">
+          <el-option label="无" value=" " />
+          <el-option label="部门1" value="1" />
+        </el-select>
+        <el-select v-model="statusValue" placeholder="请选择资产类别" style="margin-right:6px; width: 160px;">
+          <el-option label="类别1" value="1" />
+
         </el-select>
         <el-button type="primary" icon="el-icon-plus" @click="addNew">新建</el-button>
-        <el-dropdown :style="{ marginLeft: '5px' }">
+        <el-dropdown :style="{ marginLeft: '5px' }" @command="operationSelect">
           <el-button type="default" icon="el-icon-receiving" plain>
             操作<i class="el-icon-arrow-down el-icon--right" />
           </el-button>
           <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item>下载导入模板</el-dropdown-item>
+            <el-dropdown-item :command="1">下载导入模板</el-dropdown-item>
             <el-dropdown-item>批量导入资产</el-dropdown-item>
             <el-dropdown-item>导出资产</el-dropdown-item>
             <el-dropdown-item style="border-top:1px solid #dfe6ee;">批量打印标签</el-dropdown-item>
@@ -69,14 +69,18 @@
 
       <vxe-table
         ref="xTree"
+        v-loading="tableLoading"
         resizable
         highlight-hover-row
+        row-class-name="VxeTable_Row"
         :auto-resize="true"
         stripe
         class="vxetable"
         :tree-config="{children: 'children',iconOpen: 'el-icon-remove-outline', iconClose: 'el-icon-circle-plus-outline',expandAll:true}"
         :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
+        :sort-config="{remote:true}"
         :data="tableData"
+        @sort-change="sortChangeEvent"
       >
         <vxe-table-column type="checkbox" width="40" :resizable="false" />
         <vxe-table-column width="32" class="meuntd" :resizable="false" :edit-render="{}">
@@ -86,300 +90,364 @@
 
             </div>
           </template>
-          <template slot="edit">
+          <template slot="edit" slot-scope="scope">
             <i class="el-icon-more" style="position:relative;top:1px;left: -1px;" />
 
             <div class="editmenu">
               <div class="item">编辑</div>
-              <div class="item">复制</div>
-              <div class="item">删除</div>
+              <div class="item" @click="addNewDeputyAssets">副资产</div>
+              <div class="item" @click="showCopyPage(scope.row)">复制</div>
+              <!-- <el-popconfirm
+                title="这是一段内容确定删除吗？"
+              >
+                <div slot="reference" class="item">删除</div>
+              </el-popconfirm> -->
+              <div class="item" @click="deteleAsset(scope.row)">删除</div>
               <div class="item create">发卡</div>
               <div class="item">换卡</div>
               <div class="item create">标签打印</div>
             </div>
           </template>
         </vxe-table-column>
-        <vxe-table-column field="eventID" title="资产编码" sortable min-width="100" :visible="tableShowColumn.zcbm" />
-        <vxe-table-column field="title" title="资产名称" tree-node width="300" :visible="tableShowColumn.zcmc">
+        <vxe-table-column width="80" title="状态">
+          <template #default="{ row }">
+            <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
+          </template>
+        </vxe-table-column>
+        <vxe-table-column field="assetcode" title="资产编码" sortable min-width="100" :visible="tableShowColumn.zcbm" />
+        <vxe-table-column field="assetname" title="资产名称" sortable tree-node width="300" :visible="tableShowColumn.zcmc">
           <template slot="header">
             <i v-if="isAllExpand" class="el-icon-remove-outline biaotiicon" @click="closeAllNode" />
             <i v-else class="el-icon-circle-plus-outline biaotiicon" @click="closeAllNode" />
             资产名称
           </template>
           <template #default="{ row }">
-            <span class="titleText"><i /> {{ row.title }}</span>
+            <span class="titleText"><i /> {{ row.assetname }}</span>
           </template>
         </vxe-table-column>
 
-        <vxe-table-column field="status" title="资产类别" min-width="100" :visible="tableShowColumn.zclb">
-          <template #default="{ row }">
-            <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
-          </template>
-        </vxe-table-column>
+        <vxe-table-column field="assetkindName" title="资产类别" sortable min-width="100" :visible="tableShowColumn.zclb">--</vxe-table-column>
 
-        <vxe-table-column field="youxian" title="标准型号" min-width="80" :visible="tableShowColumn.bzxh" />
+        <vxe-table-column field="standardtypeName" title="标准型号" sortable min-width="100" :visible="tableShowColumn.bzxh" />
 
-        <vxe-table-column field="diedai" title="规格型号" min-width="80" :visible="tableShowColumn.ggxh">
+        <vxe-table-column field="norms" title="规格型号" sortable min-width="100" :visible="tableShowColumn.ggxh">
           <template #default="{ row }">
             <span>{{ row.diedai ? row.diedai : '--' }}</span>
           </template>
         </vxe-table-column>
 
-        <vxe-table-column title="计量单位" min-width="80" :visible="tableShowColumn.jldw">--</vxe-table-column>
+        <vxe-table-column field="unitname" title="计量单位" min-width="100" sortable :visible="tableShowColumn.jldw" />
 
-        <vxe-table-column field="startTime" title="购入日期" min-width="120" :visible="tableShowColumn.grrq" />
+        <vxe-table-column field="buydate" title="购入日期" sortable min-width="120" :visible="tableShowColumn.grrq" />
 
-        <vxe-table-column title="所属单位" min-width="80" :visible="tableShowColumn.ssdw">--</vxe-table-column>
+        <vxe-table-column field="groupName" title="所属单位" min-width="100" sortable :visible="tableShowColumn.ssdw" />
 
-        <vxe-table-column title="金额" min-width="80" :visible="tableShowColumn.je">--</vxe-table-column>
+        <vxe-table-column field="money" title="金额" min-width="100" sortable :visible="tableShowColumn.je">--</vxe-table-column>
 
-        <vxe-table-column field="person" title="管理员" min-width="80" :visible="tableShowColumn.gly">
-          <template #default="{ row }">
-            {{ row.person ? row.person : '--' }}
-          </template>
-          <template slot="edit" slot-scope="scope">
-            <el-input v-model="scope.row.person" size="mini" />
-          </template>
-        </vxe-table-column>
+        <vxe-table-column field="adminReguserName" title="管理员" sortable min-width="100" :visible="tableShowColumn.gly" />
+        <vxe-table-column field="userName" title="使用人" min-width="100" sortable :visible="tableShowColumn.syr" />
+        <vxe-table-column field="useMerchantName" title="使用单位" min-width="100" sortable :visible="tableShowColumn.sydw" />
+        <vxe-table-column field="useBranchMerchantName" title="使用部门" min-width="100" sortable :visible="tableShowColumn.sybm" />
+        <vxe-table-column field="limitdate" title="使用期限" min-width="100" sortable :visible="tableShowColumn.syqx" />
+        <vxe-table-column field="areaName" title="区域" min-width="100" sortable :visible="tableShowColumn.qy" />
+        <vxe-table-column field="posname" title="存放地点" min-width="100" sortable :visible="tableShowColumn.cfdd" />
+        <vxe-table-column field="memo" title="备注信息" min-width="100" sortable :visible="tableShowColumn.bzxx" />
+        <vxe-table-column field="statusName" title="物资状态" min-width="100" sortable :visible="tableShowColumn.wzzt" />
+        <vxe-table-column field="rfidCode" title="RFID码" min-width="100" sortable :visible="tableShowColumn.RFID" />
+        <!-- <vxe-table-column title="自定义字段1" min-width="120" sortable :visible="tableShowColumn.zdyzd1">--</vxe-table-column> -->
+        <!-- <vxe-table-column field="rfidCode" title="供应商" min-width="100" sortable :visible="tableShowColumn.gys" /> -->
+        <!-- <vxe-table-column title="联系人" min-width="100" sortable :visible="tableShowColumn.lxr">--</vxe-table-column>
+        <vxe-table-column title="联系方式" min-width="100" sortable :visible="tableShowColumn.lxfs">--</vxe-table-column>
+        <vxe-table-column title="负责人" min-width="100" sortable :visible="tableShowColumn.fzr">--</vxe-table-column>
 
-        <vxe-table-column title="使用人" min-width="80" :visible="tableShowColumn.syr">--</vxe-table-column>
-        <vxe-table-column title="使用单位" min-width="80" :visible="tableShowColumn.sydw">--</vxe-table-column>
-        <vxe-table-column title="使用部门" min-width="80" :visible="tableShowColumn.sybm">--</vxe-table-column>
-        <vxe-table-column title="使用期限" min-width="80" :visible="tableShowColumn.syqx">--</vxe-table-column>
-        <vxe-table-column title="区域" min-width="80" :visible="tableShowColumn.qy">--</vxe-table-column>
-        <vxe-table-column title="存放地点" min-width="80" :visible="tableShowColumn.cfdd">--</vxe-table-column>
-        <vxe-table-column title="备注信息" min-width="80" :visible="tableShowColumn.bzxx">--</vxe-table-column>
-        <vxe-table-column title="物资状态" min-width="80" :visible="tableShowColumn.wzzt">--</vxe-table-column>
-        <vxe-table-column title="RFID码" min-width="80" :visible="tableShowColumn.RFID">--</vxe-table-column>
-        <vxe-table-column title="自定义字段1" min-width="100" :visible="tableShowColumn.zdyzd1">--</vxe-table-column>
-        <vxe-table-column title="供应商" min-width="80" :visible="tableShowColumn.gys">--</vxe-table-column>
-        <vxe-table-column title="联系人" min-width="80" :visible="tableShowColumn.lxr">--</vxe-table-column>
-        <vxe-table-column title="联系方式" min-width="80" :visible="tableShowColumn.lxfs">--</vxe-table-column>
-        <vxe-table-column title="负责人" min-width="80" :visible="tableShowColumn.fzr">--</vxe-table-column>
-
-        <vxe-table-column field="endTime" title="维保时间" min-width="120" :visible="tableShowColumn.wbsj" />
-        <vxe-table-column title="维保说明" min-width="80" :visible="tableShowColumn.wbsm">--</vxe-table-column>
+        <vxe-table-column field="endTime" title="维保时间" sortable min-width="120" :visible="tableShowColumn.wbsj" />
+        <vxe-table-column title="维保说明" min-width="100" sortable :visible="tableShowColumn.wbsm">--</vxe-table-column> -->
 
       </vxe-table>
     </div>
-    <el-pagination
+    <pagination
+      v-show="pageTotal>0"
       background
+      :total="pageTotal"
       layout="prev, pager, next, jumper"
+      :page.sync="pageQuery.pageNo"
+      :limit.sync="pageQuery.pageSize"
       style="text-align:right;margin-top:20px;"
-      :total="1000"
+      @pagination="getList"
     />
 
     <!-- 模态框 -->
-    <el-dialog :title="xjzyxxTitle" :visible.sync="xjzyxxVisible" width="80%">
-      <el-form :model="xjzyxxForm" label-position="left">
-        <el-row :gutter="20">
-          <el-col :span="8">
-            <el-form-item label="资产类别" :label-width="formLabelWidth" required>
-              <el-col :span="24">
-                <el-select v-model="xjzyxxForm.assetCategory" placeholder="请选择资产类别" :style="{ width: '100%' }">
-                  <el-option label="资产类别" value="1" />
-                </el-select>
-              </el-col>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="标准型号" :label-width="formLabelWidth">
-              <el-col :span="24">
-                <el-select v-model="xjzyxxForm.standardModel" placeholder="请选择标准型号" :style="{ width: '100%' }">
-                  <el-option label="标准型号" value="1" />
-                </el-select>
-              </el-col>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="资产编码" :label-width="formLabelWidth" required>
-              <el-col :span="24">
-                <el-input v-model="xjzyxxForm.assetCoding" placeholder="请输入资产编码" disabled />
-              </el-col>
-            </el-form-item>
-          </el-col>
-          <el-col :span="16">
-            <el-form-item label="备注" :label-width="formLabelWidth" required>
-              <el-col :span="24">
-                <el-input
-                  v-model="xjzyxxForm.remark"
-                  type="textarea"
-                  :rows="2"
-                  placeholder="请输入内容"
-                />
-              </el-col>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <div :style="{ background: '#e8ebf9', padding: '10px', margin: '10px 0' }">维保信息</div>
-        <el-row :gutter="20">
-          <el-col :span="8">
-            <el-form-item label="供应商" :label-width="formLabelWidth" required>
-              <el-col :span="24">
-                <el-input v-model="xjzyxxForm.assetCoding" placeholder="请输入供应商" />
-              </el-col>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="联系人" :label-width="formLabelWidth" required>
-              <el-col :span="24">
-                <el-input v-model="xjzyxxForm.contactUser" placeholder="请输入联系人" />
-              </el-col>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="联系方式" :label-width="formLabelWidth" required>
-              <el-col :span="24">
-                <el-input v-model="xjzyxxForm.contactInfomation" placeholder="请输入联系方式" />
-              </el-col>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="负责人" :label-width="formLabelWidth" required>
-              <el-col :span="24">
-                <el-select v-model="gjssForm.chargePerson" placeholder="请选择负责人" :style="{ width: '100%' }">
-                  <el-option label="负责人" value="1" />
-                </el-select>
-              </el-col>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="维保到期" :label-width="formLabelWidth" required>
-              <el-col :span="24">
-                <el-input v-model="xjzyxxForm.maintenanceDate" placeholder="请输入维保到期日期" />
-              </el-col>
-            </el-form-item>
-          </el-col>
-          <el-col :span="16">
-            <el-form-item label="维保说明" :label-width="formLabelWidth" required>
-              <el-col :span="24">
-                <el-input
-                  v-model="xjzyxxForm.maintenanceInstructions"
-                  type="textarea"
-                  :rows="2"
-                  placeholder="请输入维保说明"
-                />
-              </el-col>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="xjzyxxVisible = false">取 消</el-button>
-        <el-button type="primary" @click="xjzyxxVisible = false">确 定</el-button>
-      </div>
-    </el-dialog>
+    <from-dialog
+      :visible.sync="xjzyxxVisible"
+      :title="xjzyxxTitle"
+      :father-asset-code="fatherAssetCode"
+      @confirm="submitData"
+    />
 
     <!-- 模态框 高级搜索-->
-    <el-dialog title="高级搜索" :visible.sync="gjssVisible" width="600px">
-      <el-form :model="gjssForm" label-position="left">
-        <el-form-item label="状态" :label-width="formLabelWidth">
-          <el-col :span="24">
-            <el-select v-model="gjssForm.status" placeholder="请选择状态" :style="{ width: '100%' }">
-              <el-option label="状态一" value="1" />
-            </el-select>
+    <el-dialog title="高级搜索" :visible.sync="gjssVisible" width="60%">
+      <el-form :model="gjssForm" label-position="right" class="gjssFormDom">
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="状态" :label-width="formLabelWidth">
+              <!-- <el-select v-model="gjssForm.status" size="small" placeholder="请选择状态" :style="{ width: '100%' }">
+                <el-option label="状态一" value="1" />
+              </el-select> -->
+
+              <el-dropdown trigger="click" :style="{ width: '100%' }" placement="bottom-start">
+                <el-input v-model="highSearch_status" size="small" readonly placeholder="请选择状态" />
+
+                <el-dropdown-menu slot="dropdown">
+                  <el-checkbox-group v-model="gjssForm.statusId" class="highSearchCheckbox">
+                    <el-checkbox label="复选框 A" />
+                    <el-checkbox label="复选框 B" />
+                    <el-checkbox label="复选框 C" />
+                    <el-checkbox label="禁用" />
+                    <el-checkbox label="选中且禁用" />
+                  </el-checkbox-group>
+                </el-dropdown-menu>
+              </el-dropdown>
+            </el-form-item>
           </el-col>
-        </el-form-item>
-        <el-form-item label="签字状态" :label-width="formLabelWidth">
-          <el-col :span="24">
-            <el-select v-model="gjssForm.signStatus" placeholder="请选择签字状态" :style="{ width: '100%' }">
-              <el-option label="签字状态" value="1" />
-            </el-select>
+          <el-col :span="12">
+            <el-form-item label="资产编码" :label-width="formLabelWidth">
+              <el-col :span="10" style="padding:0px;">
+                <el-select v-model="gjssForm.assetcodeLogicType" size="small" placeholder="请选择条件" :style="{ width: '100%' }">
+                  <el-option label="等于" value="EQ" />
+                  <el-option label="不等于" value="NOTEQ" />
+                  <el-option label="包含" value="CON" />
+                  <el-option label="开头为" value="STARTWITH" />
+                </el-select>
+              </el-col>
+              <el-col :span="13" :offset="1" style="padding:0px;">
+                <el-input v-model="gjssForm.assetcode" size="small" placeholder="请输入资产编码" />
+              </el-col>
+            </el-form-item>
           </el-col>
-        </el-form-item>
-        <el-form-item label="资产编码" :label-width="formLabelWidth">
-          <el-col :span="10">
-            <el-select v-model="gjssForm.assetCoding" placeholder="请选择条件" :style="{ width: '100%' }">
-              <el-option label="资产编码" value="1" />
-            </el-select>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="资产名称" :label-width="formLabelWidth">
+              <el-col :span="10" style="padding:0px;">
+                <el-select v-model="gjssForm.assetnameLogicType" size="small" placeholder="请选择条件" :style="{ width: '100%' }">
+                  <el-option label="等于" value="EQ" />
+                  <el-option label="不等于" value="NOTEQ" />
+                  <el-option label="包含" value="CON" />
+                  <el-option label="开头为" value="STARTWITH" />
+                </el-select>
+              </el-col>
+              <el-col :span="13" :offset="1" style="padding:0px;">
+                <el-input v-model="gjssForm.assetname" size="small" placeholder="请输入资产名称" />
+              </el-col>
+            </el-form-item>
           </el-col>
-          <el-col :span="13" :offset="1">
-            <el-input v-model="gjssForm.assetCodingInput" placeholder="请输入资产编码" />
+          <el-col :span="12">
+            <el-form-item label="资产类别" :label-width="formLabelWidth">
+              <el-select v-model="gjssForm.assetkindId" size="small" placeholder="请选择资产类别" :style="{ width: '100%' }">
+                <el-option label="资产类别" value="1" />
+              </el-select>
+            </el-form-item>
           </el-col>
-        </el-form-item>
-        <el-form-item label="资产名称" :label-width="formLabelWidth">
-          <el-col :span="10">
-            <el-select v-model="gjssForm.assetName" placeholder="请选择条件" :style="{ width: '100%' }">
-              <el-option label="资产名称" value="1" />
-            </el-select>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="标准型号" :label-width="formLabelWidth">
+              <el-select v-model="gjssForm.standardtypeId" size="small" placeholder="请选择条件" :style="{ width: '100%' }">
+                <el-option label="标准型号" value="1" />
+              </el-select>
+
+            </el-form-item>
           </el-col>
-          <el-col :span="13" :offset="1">
-            <el-input v-model="gjssForm.assetNameInput" placeholder="请输入资产名称" />
+
+          <el-col :span="12">
+            <el-form-item label="规格型号" :label-width="formLabelWidth">
+              <el-col :span="10" style="padding:0px;">
+                <el-select v-model="gjssForm.normsLogicType" size="small" placeholder="请选择条件" :style="{ width: '100%' }">
+                  <el-option label="等于" value="EQ" />
+                  <el-option label="不等于" value="NOTEQ" />
+                  <el-option label="包含" value="CON" />
+                  <el-option label="开头为" value="STARTWITH" />
+                </el-select>
+              </el-col>
+              <el-col :span="13" :offset="1" style="padding:0px;">
+                <el-input v-model="gjssForm.norms" size="small" placeholder="请输入规格型号" />
+              </el-col>
+            </el-form-item>
           </el-col>
-        </el-form-item>
-        <el-form-item label="RFID" :label-width="formLabelWidth">
-          <el-col :span="10">
-            <el-select v-model="gjssForm.rfidName" placeholder="请选择条件" :style="{ width: '100%' }">
-              <el-option label="RFID" value="1" />
-            </el-select>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="购入日期" :label-width="formLabelWidth">
+              <el-date-picker
+                v-model="gjssForm.buydate"
+                type="date"
+                placeholder="选择日期"
+                style="width:100%"
+                size="small"
+                format="yyyy 年 MM 月 dd 日"
+                value-format="yyyy-MM-dd"
+              />
+            </el-form-item>
           </el-col>
-          <el-col :span="13" :offset="1">
-            <el-input v-model="gjssForm.rfidNameInput" placeholder="请输入RFID" />
+
+          <el-col :span="12">
+            <el-form-item label="所属单位" :label-width="formLabelWidth">
+              <el-select v-model="gjssForm.merchantId" size="small" placeholder="请选择所属单位" :style="{ width: '100%' }">
+                <el-option label="所属单位" value="1" />
+
+              </el-select>
+            </el-form-item>
           </el-col>
-        </el-form-item>
-        <el-form-item label="资产类别" :label-width="formLabelWidth">
-          <el-col :span="24">
-            <el-select v-model="gjssForm.assetCategory" placeholder="请选择资产类别" :style="{ width: '100%' }">
-              <el-option label="资产类别" value="1" />
-            </el-select>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="使用人" :label-width="formLabelWidth">
+              <el-select v-model="gjssForm.userId" size="small" placeholder="请选择条件" :style="{ width: '100%' }">
+                <el-option label="使用人1" value="1" />
+              </el-select>
+            </el-form-item>
           </el-col>
-        </el-form-item>
-        <el-form-item label="规格型号" :label-width="formLabelWidth">
-          <el-col :span="10">
-            <el-select v-model="gjssForm.specificationModel" placeholder="请选择条件" :style="{ width: '100%' }">
-              <el-option label="规格型号" value="1" />
-            </el-select>
+
+          <el-col :span="12">
+            <el-form-item label="使用单位" :label-width="formLabelWidth">
+              <el-select v-model="gjssForm.useMerchantId" size="small" placeholder="请选择使用单位" :style="{ width: '100%' }">
+                <el-option label="使用单位" value="1" />
+              </el-select>
+            </el-form-item>
           </el-col>
-          <el-col :span="13" :offset="1">
-            <el-input v-model="gjssForm.specificationModelInput" placeholder="请输入规格型号" />
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="使用部门" :label-width="formLabelWidth">
+              <el-select v-model="gjssForm.useBranchMerchantId" size="small" placeholder="请选择条件" :style="{ width: '100%' }">
+                <el-option label="使用部门" value="1" />
+              </el-select>
+            </el-form-item>
           </el-col>
-        </el-form-item>
-        <el-form-item label="SN号" :label-width="formLabelWidth">
-          <el-col :span="10">
-            <el-select v-model="gjssForm.snNumber" placeholder="请选择条件" :style="{ width: '100%' }">
-              <el-option label="SN号" value="1" />
-            </el-select>
+
+          <el-col :span="12">
+            <el-form-item label="使用期限" :label-width="formLabelWidth">
+
+              <el-input v-model="gjssForm.limitdate" size="small" placeholder="请输入使用期限" />
+
+            </el-form-item>
           </el-col>
-          <el-col :span="13" :offset="1">
-            <el-input v-model="gjssForm.snNumberInput" placeholder="请输入SN号" />
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="区域" :label-width="formLabelWidth">
+              <el-select v-model="gjssForm.areaId" size="small" placeholder="请选择区域" :style="{ width: '100%' }">
+                <el-option label="区域" value="1" />
+              </el-select>
+            </el-form-item>
           </el-col>
-        </el-form-item>
+
+          <el-col :span="12">
+            <el-form-item label="存放地点" :label-width="formLabelWidth">
+              <el-col :span="10" style="padding:0px;">
+                <el-select v-model="gjssForm.posnameLogicType" size="small" placeholder="请选择条件" :style="{ width: '100%' }">
+                  <el-option label="等于" value="EQ" />
+                  <el-option label="不等于" value="NOTEQ" />
+                  <el-option label="包含" value="CON" />
+                  <el-option label="开头为" value="STARTWITH" />
+                </el-select>
+              </el-col>
+              <el-col :span="13" :offset="1" style="padding:0px;">
+                <el-input v-model="gjssForm.posname" size="small" placeholder="请输入存放地点" />
+              </el-col>
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="gjssVisible = false">取 消</el-button>
-        <el-button type="primary" @click="gjssVisible = false">确 定</el-button>
+        <el-button type="primary" @click="confirmHighSearch">确 定</el-button>
       </div>
     </el-dialog>
+
+    <!-- 复制资产 -->
+    <el-dialog title="资产复制" :visible.sync="assetCopyVisible" width="600px" class="assetCopyDialog">
+      <el-row>
+        <el-col :span="10" class="assetCopy_title">
+          资产名称：
+        </el-col>
+        <el-col :span="14">
+          {{ assetCopyOptions.name }}
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="10" class="assetCopy_title">
+          资产分类：
+        </el-col>
+        <el-col :span="14">
+          {{ assetCopyOptions.type }}
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="10" class="assetCopy_title">
+          输入数量：
+        </el-col>
+        <el-col :span="14">
+          <el-input-number v-model="copyNum" :min="1" :max="99" @change="handleChange" />
+          份
+        </el-col>
+      </el-row>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="assetCopyVisible = false">取 消</el-button>
+        <el-button type="primary" @click="assetCopyVisible = false">确 定</el-button>
+      </div>
+
+    </el-dialog>
+
   </div>
 </template>
 
 <script>
+import { getAssetsList, createAssets, deleteAsset } from '@/api/assetManage'
+import fromDialog from './components/formDialog'
+import Pagination from '@/components/Pagination'
 export default {
   name: 'AssetInfoManage',
+  components: { fromDialog, Pagination },
   filters: {
     statusClass(e) {
       switch (e) {
-        case '已实现':
-          return 'gray'
-        case '实现中':
-          return 'blue'
-        case '规划中':
-          return 'green'
-        case '已拒绝':
-          return 'blue'
+        case '在库':
+          return 'zaik'
+        case '在运':
+          return 'zaiy'
+        case '闲置':
+          return 'xianz'
+        case '维修':
+          return 'weix'
+        case '报废':
+          return 'baof'
+        case '退运':
+          return 'tuiy'
         default :
-          return 'green'
+          return ' '
       }
     }
+
   },
   data() {
     return {
+      assetCopyVisible: false,
+      fatherAssetCode: '',
+      PerviewDialogImageUrl: '',
+      PerviewDialogVisible: false,
+      copyNum: 1,
+      assetCopyOptions: {
+        name: '测试',
+        type: '测试分类',
+        number: 1
+      },
       companyOptions: [
         { value: 'company1', label: '公司一' },
         { value: 'company2', label: '公司二' },
         { value: 'company3', label: '公司三' }
       ],
+      avatarImageUrl: '',
       tableShowColumn: {
         zcbm: true,
         zcmc: true,
@@ -411,6 +479,7 @@ export default {
       copyForTableShowColumn: {},
       isAllreadyConfirmColSetting: false,
       companyValue: '',
+      statusValue: '',
       input1: '',
       xjzyxxVisible: false,
       xjzyxxTitle: '新建资源信息',
@@ -435,42 +504,36 @@ export default {
         { name: '存放地点', model: 'cfdd', disabled: false },
         { name: '备注信息', model: 'bzxx', disabled: false },
         { name: '物资状态', model: 'wzzt', disabled: false },
-        { name: 'RFID码', model: 'RFID', disabled: false },
-        { name: '自定义字段1', model: 'zdyzd1', disabled: false },
-        { name: '供应商', model: 'gys', disabled: false },
-        { name: '联系人', model: 'lxr', disabled: false },
-        { name: '联系方式', model: 'lxfs', disabled: false },
-        { name: '负责人', model: 'fzr', disabled: false },
-        { name: '维保时间', model: 'wbsj', disabled: false },
-        { name: '维保说明', model: 'wbsm', disabled: false }
+        { name: 'RFID码', model: 'RFID', disabled: false }
+        // { name: '自定义字段1', model: 'zdyzd1', disabled: false },
+        // { name: '供应商', model: 'gys', disabled: false },
+        // { name: '联系人', model: 'lxr', disabled: false },
+        // { name: '联系方式', model: 'lxfs', disabled: false },
+        // { name: '负责人', model: 'fzr', disabled: false },
+        // { name: '维保时间', model: 'wbsj', disabled: false },
+        // { name: '维保说明', model: 'wbsm', disabled: false }
       ],
-      xjzyxxForm: {
-        assetCategory: '',
-        standardModel: '',
-        assetCoding: '',
-        remark: '',
-        supplier: '',
-        contactUser: '',
-        contactInformation: '',
-        chargePerson: '',
-        maintenanceDate: '',
-        maintenanceInstructions: ''
-      },
+
       gjssForm: {
-        name: '',
-        status: '',
-        signStatus: '',
-        assetCoding: '',
-        assetCodingInput: '',
-        assetName: '',
-        assetNameInput: '',
-        rfidName: '',
-        rfidNameInput: '',
-        assetCategory: '',
-        specificationModel: '',
-        specificationModelInput: '',
-        snNumber: '',
-        snNumberInput: ''
+        statusId: [],
+        assetcode: '',
+        assetcodeLogicType: '',
+        assetname: '',
+        assetnameLogicType: '',
+        assetkindId: '',
+        standardtypeId: '',
+        norms: '',
+        normsLogicType: '',
+        buydate: '',
+        merchantId: '',
+        userId: '',
+        useMerchantId: '',
+        useBranchMerchantId: '',
+        limitdate: '',
+        posnameLogicType: '',
+        posname: '',
+        areaId: ''
+
       },
       formLabelWidth: '100px',
       isAllExpand: true,
@@ -484,7 +547,7 @@ export default {
           eventID: '1018723',
           youxian: 'High',
           diedai: 'V3.2',
-          status: '已实现',
+          status: '在库',
           person: '赵鹏翔;刘彩萍',
           startTime: '2020-09-07',
           endTime: '2020-09-11'
@@ -498,7 +561,7 @@ export default {
           eventID: '1003470',
           youxian: 'High',
           diedai: '--',
-          status: '已拒绝',
+          status: '在运',
           person: '刘峰',
           startTime: '2019-03-04',
           endTime: '2019-09-11',
@@ -512,7 +575,7 @@ export default {
               eventID: '1003471',
               youxian: 'High',
               diedai: '--',
-              status: '已拒绝',
+              status: '闲置',
               person: '刘峰',
               startTime: '2019-03-04',
               endTime: '2019-03-05',
@@ -526,7 +589,7 @@ export default {
                   eventID: '1003481',
                   youxian: 'High',
                   diedai: '服务端',
-                  status: '已拒绝',
+                  status: '维修',
                   person: '刘峰',
                   startTime: '2019-03-04',
                   endTime: '2019-03-04'
@@ -539,7 +602,7 @@ export default {
                   eventID: '1003480',
                   youxian: 'High',
                   diedai: '服务端',
-                  status: '已拒绝',
+                  status: '报废',
                   person: '刘峰',
                   startTime: '2019-03-04',
                   endTime: '2019-03-04'
@@ -557,7 +620,7 @@ export default {
           eventID: '1003031',
           youxian: 'High',
           diedai: '--',
-          status: '规划中',
+          status: '退运',
           person: '安喜喜',
           startTime: '--',
           endTime: '--',
@@ -571,7 +634,7 @@ export default {
               eventID: '1003480',
               youxian: 'High',
               diedai: '--',
-              status: '规划中',
+              status: '退运',
               person: '安喜喜',
               startTime: '--',
               endTime: '--',
@@ -585,7 +648,7 @@ export default {
                   eventID: '1004511',
                   youxian: 'High',
                   diedai: 'WEB前端',
-                  status: '已实现',
+                  status: '报废',
                   person: '安喜喜',
                   startTime: '2019-03-05',
                   endTime: '2019-03-05'
@@ -599,7 +662,7 @@ export default {
                   eventID: '1004507',
                   youxian: 'High',
                   diedai: 'WEB前端',
-                  status: '已实现',
+                  status: '维修',
                   person: '安喜喜',
                   startTime: '2019-03-05',
                   endTime: '2019-03-05'
@@ -612,7 +675,7 @@ export default {
                   eventID: '1004506',
                   youxian: 'High',
                   diedai: 'WEB前端',
-                  status: '已实现',
+                  status: '维修',
                   person: '安喜喜',
                   startTime: '2019-03-05',
                   endTime: '2019-03-05'
@@ -625,7 +688,7 @@ export default {
                   eventID: '1004505',
                   youxian: 'High',
                   diedai: 'WEB前端',
-                  status: '已实现',
+                  status: '闲置',
                   person: '安喜喜',
                   startTime: '2019-03-05',
                   endTime: '2019-03-05'
@@ -643,7 +706,7 @@ export default {
           eventID: '1003026',
           youxian: 'Middle',
           diedai: '--',
-          status: '已实现',
+          status: '闲置',
           person: '代海涛',
           startTime: '2019-03-05',
           endTime: '2019-03-05'
@@ -657,7 +720,7 @@ export default {
           eventID: '1002733',
           youxian: 'Middle',
           diedai: '--',
-          status: '已实现',
+          status: '在运',
           person: '代海涛',
           startTime: '2019-02-19',
           endTime: '2019-02-19',
@@ -671,7 +734,7 @@ export default {
               eventID: '1002736',
               youxian: 'Middle',
               diedai: 'APP安卓',
-              status: '已实现',
+              status: '在运',
               person: '代海涛',
               startTime: '2019-02-19',
               endTime: '2019-02-19'
@@ -685,7 +748,7 @@ export default {
               eventID: '1002734',
               youxian: 'Middle',
               diedai: 'APP安卓',
-              status: '已实现',
+              status: '在库',
               person: '代海涛',
               startTime: '2019-02-19',
               endTime: '2019-02-19'
@@ -701,7 +764,7 @@ export default {
           eventID: '1002705',
           youxian: 'Middle',
           diedai: '--',
-          status: '已实现',
+          status: '在库',
           person: '代海涛',
           startTime: '2019-03-04',
           endTime: '2019-03-04'
@@ -715,15 +778,76 @@ export default {
           eventID: '1002704',
           youxian: 'Middle',
           diedai: '--',
-          status: '已实现',
+          status: '在库',
           person: '代海涛',
           startTime: '2019-03-01',
           endTime: '2019-03-01'
         }
-      ]
+      ],
+      addDialogRoles: {
+        assetname: [
+          { required: true, message: '请输入资产名称', trigger: 'blur' }
+        ],
+        assetkindId: [
+          { required: true, message: '请选择资产类别', trigger: 'change' }
+        ],
+        assetcode: [
+          { required: true, message: '请输入资产编码', trigger: 'blur' }
+        ]
+      },
+      pageQuery: {
+        // statusId: [],
+        // assetcode: '',
+        // assetcodeLogicType: '',
+        // assetname: '',
+        // assetnameLogicType: '',
+        // assetkindId: '',
+        // standardtypeId: '',
+        // norms: '',
+        // normsLogicType: '',
+        // buydate: '',
+        // merchantId: '',
+        // userId: '',
+        // useMerchantId: '',
+        // useBranchMerchantId: '',
+        // limitdate: '',
+
+        orderType: '',
+        orderName: '',
+
+        pageNo: 1,
+        pageSize: 10
+      },
+      pageTotal: 0,
+      tableLoading: false
     }
   },
+  computed: {
+    highSearch_status() {
+      return this.gjssForm.statusId.join(';')
+    }
+  },
+  created() {
+    this.getList()
+  },
   methods: {
+    getList() {
+      this.tableLoading = true
+      getAssetsList(this.pageQuery).then(res => {
+        console.log('res', res)
+        if (res.code === 0 && res.data && res.data.items) {
+          this.tableData = res.data.items
+          this.pageTotal = res.data.total
+          this.pageQuery.pageSize = res.data.limit
+          this.pageQuery.pageNo = res.data.page
+        }
+
+        this.tableLoading = false
+      }).catch(err => {
+        console.log('err', err)
+        this.tableLoading = false
+      })
+    },
     closeAllNode() {
       if (this.isAllExpand) {
         this.$refs.xTree.clearTreeExpand()
@@ -742,8 +866,13 @@ export default {
       this.hidetree = e
     },
     addNew() {
-      this.xjzyxxTitle = '新建资源信息'
+      this.xjzyxxTitle = '新建资产信息'
       this.xjzyxxVisible = true
+    },
+    addNewDeputyAssets() {
+      this.xjzyxxTitle = '新建副资产信息'
+      this.xjzyxxVisible = true
+      this.fatherAssetCode = 'testCode'
     },
     confirmColSetting() {
       console.log('confirmhide')
@@ -768,6 +897,78 @@ export default {
       this.tableShowColumn = { ...this.copyForTableShowColumn }
       this.copyForTableShowColumn = {}
       this.settingVisible = false
+    },
+    sortChangeEvent(column, property, order) {
+      console.log('column', column.order)
+    },
+    operationSelect(command) {
+      console.log('command', command)
+      const a = document.createElement('a')
+      a.setAttribute('href', '/asset/static/img/wave.29c712eb.png')
+      a.setAttribute('download', '11222')
+      a.setAttribute('target', '_blank')
+      const clickEvent = new MouseEvent('click', { 'bubbles': true, 'cancelable': true })
+      a.dispatchEvent(clickEvent)
+    },
+
+    showCopyPage(row) {
+      console.log('row', row)
+      this.assetCopyVisible = true
+    },
+    deteleAsset(row) {
+      console.log('row', row)
+      this.$confirm('此操作将永久删除该资产, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        deleteAsset({ assetsId: row.assetId }).then(res => {
+          if (res.code === 0) {
+            this.$message({ type: 'success', message: '删除成功!' })
+          } else {
+            this.$message({ type: 'error', message: '删除失败，请稍后再试' })
+          }
+        }).catch(err => {
+          this.$message({ type: 'error', message: '删除失败，请稍后再试' })
+          console.log('err', err)
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
+    },
+    handleChange(val) {
+
+    },
+    handleRemove(file) {
+      this.$refs.upload.handleRemove(file)
+    },
+    handlePictureCardPreview(file) {
+      this.PerviewDialogImageUrl = file.url
+      this.PerviewDialogVisible = true
+    },
+    submitData(data) {
+      console.log('data', data)
+      createAssets(data).then(res => {
+        console.log('createAssets', res)
+        if (res.code === 0) {
+          this.$message({ type: 'success', message: '添加资产成功！' })
+        } else {
+          this.$message({ type: 'error', message: '添加资产失败，请稍后再试' })
+        }
+        this.xjzyxxVisible = false
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'error', message: '添加资产失败，请稍后再试' })
+        this.xjzyxxVisible = false
+      })
+    },
+    confirmHighSearch() {
+      const obj = { ...this.pageQuery, ...this.gjssForm }
+      obj.statusId = [...this.gjssForm.statusId]
+      console.log('obj', obj)
     }
   }
 }
@@ -823,11 +1024,7 @@ export default {
             &.High { background-color: #f85e5e; }
             &.Middle { background-color: #93c36b; }
           }
-          .statuspan { display: inline-block; border: 1px solid #8091a5; color: #8091a5; max-height: 66px; font-size: 12px; line-height: 20px; vertical-align: middle; border-radius: 12px; cursor: pointer; overflow: visible; padding: 2px 10px;
-            &.gray{ color: #999; }
-            &.blue { border-color: #3582fb; color: #3582fb; }
-            &.green { border-color: #93c46b; color: #93c46b; }
-          }
+
         }
       }
     }
@@ -932,5 +1129,80 @@ export default {
       }
     }
   }
+}
+
+ .statuspan { display: inline-block; border: 1px solid #8091a5; color: #8091a5; max-height: 66px; font-size: 12px; line-height: 20px; vertical-align: middle; border-radius: 12px; cursor: pointer; overflow: visible; padding: 2px 10px;
+ border-color: transparent;
+            &.zaik{border-color: #71C496; color: #71C496; }
+            &.zaiy { border-color: #3582fb; background-color: #3582fb; color: #fff; }
+            &.xianz { border-color: #818C95; background-color: #818C95;  color: #fff;}
+            &.weix { border-color: #AD89C5; background-color: #AD89C5; color: #fff; }
+            &.baof { border-color: #D56D53; background-color: #D56D53; color: #fff; }
+            &.tuiy { border-color: #EEA446; background-color: #EEA446; color: #fff; }
+          }
+
+</style>
+<style  scoped>
+.avatar-uploader >>> .el-upload {
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.avatar-uploader >>> .el-upload:hover {
+  border-color: #409EFF;
+}
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 79px;
+  height: 79px;
+  line-height: 79px;
+  text-align: center;
+}
+.avatar-uploader >>> .el-upload--picture-card {
+  width: 79px;
+  height: 79px;
+  line-height: 79px;
+}
+.avatar-uploader >>> .el-upload-list--picture-card .el-upload-list__item {
+      width: 79px;
+    height: 79px;
+}
+.avatar {
+  width: 79px;
+  height: 79px;
+  display: block;
+}
+/* .maintable >>> .VxeTable_Row:nth-last-of-type(1) .editmenu {
+  top:-162px
+} */
+
+.maintable >>> .vxe-table--body-wrapper {
+  min-height: 350px;
+}
+
+.assetCopyDialog >>> .el-row {
+  line-height: 50px;
+  font-size: 14px;
+}
+.assetCopyDialog .assetCopy_title {
+  text-align: right;
+  padding-right: 20px;
+}
+
+.gjssFormDom >>>  .el-row {
+  height: 50px;
+}
+.xjzyxx_dialog >>> .el-form-item{
+  margin-bottom: 10px;
+}
+.xjzyxx_dialog >>> .el-form-item__error {
+  top:90%;
+}
+.highSearchCheckbox >>> .el-checkbox {
+  display: block;
+  padding: 4px 10px;
 }
 </style>
