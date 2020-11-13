@@ -7,6 +7,8 @@ const getDefaultState = () => {
     token: getToken(),
     name: '',
     avatar: '',
+    introduction: '',
+    roles: [],
     type:''
   }
 }
@@ -40,11 +42,10 @@ const actions = {
     const { username, password } = userInfo
     return new Promise((resolve, reject) => {
       login({ username: username.trim(), power: password }).then(response => {
-      
+        console.log(response)
         if (response.code === 0) {
           commit('SET_TOKEN', response.data.token)
-          commit('SET_TYPE', response.data.userType)
-          commit('SET_NAME', response.data.userName)
+     
           setToken(response.data.token)
           // getPermission().then(res=>{
           //     console.log('getPermission', res)
@@ -60,11 +61,13 @@ const actions = {
           // })
           resolve()
         } else {
+
           console.log('response.msg',response.msg )
           reject(response.msg)
         }
-      }).catch(error => {
-        reject(error)
+      }).catch(err => {
+        console.log(err)
+        reject(err)
       })
     })
   },
@@ -73,7 +76,7 @@ const actions = {
   getInfo({ commit, state }) {
     return new Promise((resolve, reject) => {
       getInfo(state.token).then(response => {
-        console.log(response)
+  
         // const { data } = response
         if (response.code !== 0) {
           reject('验证失败，请重新登陆')

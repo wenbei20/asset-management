@@ -69,7 +69,7 @@
 
 <script>
 import { validUsername } from '@/utils/validate'
-
+import { Message } from 'element-ui'
 import loginPic from '@/assets/login/login-pic.png'
 
 export default {
@@ -165,8 +165,25 @@ export default {
               // this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
               this.loading = false
             })
-            .catch(() => {
-               
+            .catch((error) => {
+
+             // console.log(error)
+                  let err = ''
+        // console.log('err', err.message === "Network Error")
+         
+              if(!error.message){
+                  err = error
+              }else  if(error.message === 'Network Error'){
+                err = '网络连接失败，请稍后重试！'
+              }else {
+                err = '连接超时，请稍后重试！'
+              }
+              // Message.error(error || '登陆失败，请稍后重试！')
+              this.$message({
+                  type:'error',
+                  message: err,
+                  duration:2000
+              })
               this.loading = false
             })
         } else {
