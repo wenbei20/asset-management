@@ -6,7 +6,8 @@ const getDefaultState = () => {
   return {
     token: getToken(),
     name: '',
-    avatar: ''
+    avatar: '',
+    merchantId: 'c5e3bcce38e848cd8aca30dad8d73760'
   }
 }
 

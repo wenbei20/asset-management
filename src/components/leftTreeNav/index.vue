@@ -1,7 +1,7 @@
 <template>
   <div class="navTree" :class="{'hide':!show}">
+    <div class="companyName">国网北京电科院</div>
     <div class="title">{{ title }}</div>
-
     <!-- :data="treeData" -->
     <el-tree
       v-if="show"
@@ -11,15 +11,14 @@
       lazy
       @node-click="handleNodeClick"
     >
-      <div slot-scope="{ node, data }" class="custom-tree-node">
-        <i :class="['custom-icon', data.icon]" />
+      <span slot-scope="{ node, data }" class="custom-tree-node">
         <span>{{ data.groupName }}</span>
         <span class="selfIcon el-icon-more" @click.stop="moreClick(data)" />
 
         <drapDown v-if="data.position" :show.sync="data.showTopMenu" :width="116" :left="222">
           <div v-for="(item , idx ) in dropDownData[data.position]" :key="idx" :class="item.className" @click.stop="operationNode(item, data)">{{ item.name }}</div>
         </drapDown>
-      </div>
+      </span>
     </el-tree>
 
     <div v-if="isAbleClose" class="hideBtn" @click="hidemenu">
@@ -32,6 +31,7 @@
 
 import drapDown from '@/components/drapdownMenu'
 import { getOrganizationGroup } from '@/api/settings'
+import { mapState } from 'vuex'
 export default {
   components: { drapDown },
   props: {
@@ -96,7 +96,8 @@ export default {
       default: () => {
         return {
           top: [{ name: '添加成员', className: '', operate: 'addperson' }, { name: '添加(子)分公司', className: '', operate: '' }, { name: '添加子部门', className: '', operate: 'addSonDepartment' }],
-          sub: [{ name: '添加成员', className: '', operate: 'addperson' }, { name: '添加(子)分公司', className: '', operate: '' }, { name: '添加子部门', className: '', operate: 'addSonDepartment' }, { name: '设置负责人', className: '', operate: 'setPrincipal' }, { name: '修改名称', className: '', operate: 'changeName' }, { name: '删除部门', className: 'deletePart' }]
+          sub: [{ name: '添加成员', className: '', operate: 'addperson' }, { name: '添加(子)分公司', className: '', operate: '' }, { name: '添加子部门', className: '', operate: 'addSonDepartment' }, { name: '设置负责人', className: '', operate: 'setPrincipal' }, { name: '修改名称', className: '', operate: 'changeName' }, { name: '删除部门', className: 'deletePart' }],
+          department: [{ name: '添加成员', className: '', operate: 'addperson' }, { name: '添加子部门', className: '', operate: 'addSonDepartment' }, { name: '设置负责人', className: '', operate: 'setPrincipal' }, { name: '修改名称', className: '', operate: 'changeName' }, { name: '删除部门', className: 'deletePart' }]
           // third: [{ name: '创建需求', className: 'border_bottom' }, { name: '创建子分类', className: '' }, { name: '修改分类', className: '' }, { name: '删除分类', className: '' }]
         }
       }
@@ -113,6 +114,11 @@ export default {
       showTopMenu: true
     }
   },
+  computed: {
+    ...mapState({
+      merchantId: state => state.user.merchantId
+    })
+  },
   created() {
     // this.getTreeNodeData(0)
   },
@@ -122,9 +128,6 @@ export default {
         getOrganizationGroup({ parentId: id }).then(res => {
           // console.log('res', res)
           if (res.code === 0 && res.data && Array.isArray(res.data)) {
-            res.data.forEach(item => {
-              item.showTopMenu = false
-            })
             resolve(res.data)
           } else {
             resolve([])
@@ -136,12 +139,18 @@ export default {
       })
     },
     loadNode(node, resolve) {
-      if (node.level === 0) {
-        this.getTreeNodeData(0).then(arr => {
-          console.log('arr', arr)
-          resolve(arr)
+      const key = node.key ? node.key : this.merchantId
+      this.getTreeNodeData(key).then(arr => {
+        arr.forEach(item => {
+          item.showTopMenu = false
+          if (node.level === 0) {
+            item.position = 'top'
+          } else {
+            item.position = item.nodeType === 1 ? 'department' : 'sub'
+          }
         })
-      }
+        resolve(arr)
+      })
     },
     handleOpen() {
 
@@ -153,15 +162,15 @@ export default {
       this.show = !this.show
       this.$emit('show', this.show)
     },
-    handleNodeClick() {
-
+    handleNodeClick(data) {
+      this.$emit('handleNodeClick', data)
     },
     moreClick(data) {
       data.showTopMenu = true
     },
     operationNode(e, data) {
       if (e.operate) {
-        this.$emit('operation', e.operate)
+        this.$emit('operation', e.operate, data)
       }
       data.showTopMenu = false
     }
@@ -202,10 +211,16 @@ export default {
         border-radius: 2px;
         position: relative;
         .title {
-                padding: 20px 20px 5px;
+                padding: 5px 10px;
                 font-size: 16px;
                 color: #3f4a56;
                 font-weight: normal;
+        }
+        .companyName {
+                padding: 10px 5px 0 5px;
+                text-align: center;
+                font-size: 18px;
+                font-weight: bold;
         }
         .el-menu-vertical {
             border-right: none;
@@ -251,7 +266,6 @@ export default {
   ::v-deep{
     .el-tree-node{ font-size: 14px; color: #333; font-weight: 600;
       &__content{ height: 30px; line-height: 30px;}
-      &__expand-icon{ display: none;}
       &__children{
         .el-tree-node{ font-weight: 400;}
       }
@@ -262,7 +276,9 @@ export default {
   }
   .custom-icon{ margin: 0 5px;}
 }
+.companyName {
 
+}
 </style>
 <style scoped>
 .el-menu-vertical >>> .el-menu-item-group__title {

@@ -5,15 +5,28 @@
       class="navtree"
       @show="hidenavtree"
       @operation="navTreeOperation"
+      @handleNodeClick="handleNodeClick"
     />
     <div :class="['container' , !navTreeShow ? 'hidetree' : '']">
-      <el-row style="height:40px; margin-left:20px;padding-top:10px;">
-        <el-button type="primary" icon="el-icon-plus" @click="showAddDialog=true">新建</el-button>
-
+      <el-row style="height:40px; margin-left:10px;padding-top:10px;">
+        <el-button type="primary" icon="el-icon-plus" @click="createSimplePerson">新建</el-button>
+        <div class="SearchBox">
+          <span>用户名/姓名</span>
+          <el-input
+            v-model="searchIpt"
+            :style="{ width: '160px',marginRight:'10px' }"
+            placeholder="搜索..."
+            clearable
+            @clear="clearSearchRes"
+          >
+            <el-button slot="append" icon="el-icon-search" @click="searchList" />
+          </el-input>
+        </div>
       </el-row>
       <el-row style="padding-top:20px;">
         <vxe-table
           ref="xTree"
+          v-loading="tableLoading"
           resizable
           highlight-hover-row
           :auto-resize="true"
@@ -23,30 +36,34 @@
           :data="tableData"
         >
           <vxe-table-column type="checkbox" width="40" :resizable="false" />
-          <vxe-table-column field="eventID" title="序号" />
-          <vxe-table-column field="person" title="用户名" />
-          <vxe-table-column field="date" title="姓名" />
-          <vxe-table-column field="diedai" title="手机号" />
-          <vxe-table-column field="name" title="邮箱" />
-          <vxe-table-column field="status" title="停用状态" />
-
-          <vxe-table-column field="title" title="所属部门" />
+          <vxe-table-column type="checkbox" width="40" :resizable="false" />
+          <vxe-table-column type="seq" title="序号" width="60" />
+          <vxe-table-column field="reguserName" title="用户名" />
+          <vxe-table-column field="chineseName" title="姓名" />
+          <vxe-table-column field="mobile" title="手机号" />
+          <vxe-table-column field="email" title="邮箱" />
           <vxe-table-column title="操作">
-            <el-link type="primary" :underline="false">编辑</el-link>
-            |
-            <el-link type="primary" :underline="false">删除</el-link>
+            <template slot-scope="scope">
+              <el-link type="primary" :underline="false" @click="editSysUser(scope.row)">编辑</el-link>
+              |
+              <el-link type="primary" :underline="false" @click="deleteSysUser(scope.row)">删除</el-link>
+            </template>
           </vxe-table-column>
 
         </vxe-table>
 
-        <el-pagination
+        <pagination
+          v-show="pageTotal>0"
           background
+          :total="pageTotal"
           layout="prev, pager, next, jumper"
-          style="text-align:right;margin-top:20px;height: 30px;"
-          :total="1000"
+          :page.sync="pageQuery.pageNo"
+          :limit.sync="pageQuery.pageSize"
+          style="text-align:right;margin-top:20px;height:30px;"
+          @pagination="getList"
         />
         <el-dialog title="添加成员" :visible.sync="showAddDialog" width="600px">
-          <el-form :model="addUserInfo" label-position="right">
+          <el-form :model="addUserInfo" label-position="right" style="padding-right:20px;">
             <el-form-item label="手机号" :label-width="formLabelWidth" required>
               <el-input v-model="addUserInfo.mobile" />
             </el-form-item>
@@ -66,17 +83,18 @@
               </el-radio-group>
             </el-form-item>
             <el-form-item label="单位/部门" :label-width="formLabelWidth">
-              <el-dropdown trigger="click">
-                <el-input v-model="addUserInfo.Unit" />
+              <el-dropdown trigger="click" placement="bottom-start" style="width:100%" @visible-change="changeDialogDepartment">
+                <el-input v-model="checkedDepartTags" />
 
-                <el-dropdown-menu slot="dropdown">
+                <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
                   <el-tree
-                    :data="data"
+                    ref="dialogTree"
                     show-checkbox
-                    node-key="id"
-                    :default-expanded-keys="[2, 3]"
-                    :default-checked-keys="[5]"
+                    node-key="groupId"
                     :props="defaultProps"
+                    :load="loadNode"
+                    :default-checked-keys="defaultCheckedKeys"
+                    lazy
                   />
                 </el-dropdown-menu>
               </el-dropdown>
@@ -91,12 +109,12 @@
 
           <div slot="footer" class="dialog-footer">
             <el-button @click="showAddDialog=false">取 消</el-button>
-            <el-button type="primary" @click="showAddDialog=false">确 定</el-button>
+            <el-button type="primary" @click="createConfirm">确 定</el-button>
           </div>
         </el-dialog>
 
         <el-dialog :title="editDialogTitle" :visible.sync="showEditDialog" width="600px">
-          <el-form :model="DialogData" label-position="right">
+          <el-form ref="EditDialog" :model="DialogData" label-position="right">
             <el-form-item v-if="editDialogStatus !== 'setPrincipal'" label="部门名称" :label-width="formLabelWidth" required>
               <el-input v-model="DialogData.name" />
             </el-form-item>
@@ -115,7 +133,7 @@
           </el-form>
           <div slot="footer" class="dialog-footer">
             <el-button @click="showEditDialog=false">取 消</el-button>
-            <el-button type="primary" @click="showEditDialog=false">确 定</el-button>
+            <el-button type="primary" @click="editConfirm">确 定</el-button>
           </div>
         </el-dialog>
 
@@ -124,14 +142,17 @@
   </div>
 </template>
 <script>
+import { saveOrganizationGroup, getOrganizationGroup, getSysUserList, deleteSysUserList } from '@/api/settings'
+import { mapState } from 'vuex'
+import Pagination from '@/components/Pagination'
 import navTree from '@/components/leftTreeNav'
 export default {
-  components: { navTree },
+  components: { navTree, Pagination },
   data() {
     return {
       navTreeShow: true,
       showAddDialog: false,
-
+      pageTotal: 10,
       showEditDialog: false,
       editDialogTitle: '',
       editDialogStatus: '',
@@ -149,253 +170,7 @@ export default {
         Unit: '',
         allowSupplement: ''
       },
-      tableData: [
-        {
-          id: 1,
-          date: '2016-05-02',
-          name: '王小虎',
-          title: '按照部门统计巡检漏检结果',
-          checked: false,
-          eventID: '1018723',
-          youxian: 'High',
-          diedai: 'V3.2',
-          status: '已实现',
-          person: '赵鹏翔;刘彩萍',
-          startTime: '2020-09-07',
-          endTime: '2020-09-11'
-        },
-        {
-          id: 2,
-          date: '2016-05-04',
-          name: '王小虎',
-          title: '终端软件更新web端开发',
-          checked: false,
-          eventID: '1003470',
-          youxian: 'High',
-          diedai: '--',
-          status: '已拒绝',
-          person: '刘峰',
-          startTime: '2019-03-04',
-          endTime: '2019-09-11',
-          children: [
-            {
-              id: 31,
-              date: '2016-05-01',
-              name: '王小虎',
-              title: '版本号',
-              checked: false,
-              eventID: '1003471',
-              youxian: 'High',
-              diedai: '--',
-              status: '已拒绝',
-              person: '刘峰',
-              startTime: '2019-03-04',
-              endTime: '2019-03-05',
-              children: [
-                {
-                  id: 31,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '版本文件列表',
-                  checked: false,
-                  eventID: '1003481',
-                  youxian: 'High',
-                  diedai: '服务端',
-                  status: '已拒绝',
-                  person: '刘峰',
-                  startTime: '2019-03-04',
-                  endTime: '2019-03-04'
-                }, {
-                  id: 31,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '添加版本号',
-                  checked: false,
-                  eventID: '1003480',
-                  youxian: 'High',
-                  diedai: '服务端',
-                  status: '已拒绝',
-                  person: '刘峰',
-                  startTime: '2019-03-04',
-                  endTime: '2019-03-04'
-                }
-              ]
-            }
-          ]
-        },
-        {
-          id: 3,
-          date: '2016-05-01',
-          name: '王小虎',
-          title: '系统管理',
-          checked: false,
-          eventID: '1003031',
-          youxian: 'High',
-          diedai: '--',
-          status: '规划中',
-          person: '安喜喜',
-          startTime: '--',
-          endTime: '--',
-          children: [
-            {
-              id: 31,
-              date: '2016-05-01',
-              name: '王小虎',
-              title: '系统管理菜单-（菜单管理）',
-              checked: false,
-              eventID: '1003480',
-              youxian: 'High',
-              diedai: '--',
-              status: '规划中',
-              person: '安喜喜',
-              startTime: '--',
-              endTime: '--',
-              children: [
-                {
-                  id: 3,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '系统管理菜单-（菜单管理）列表数据及分页',
-                  checked: false,
-                  eventID: '1004511',
-                  youxian: 'High',
-                  diedai: 'WEB前端',
-                  status: '已实现',
-                  person: '安喜喜',
-                  startTime: '2019-03-05',
-                  endTime: '2019-03-05'
-                },
-                {
-                  id: 3,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '系统管理-（菜单管理）-需求讨论',
-                  checked: false,
-                  eventID: '1004507',
-                  youxian: 'High',
-                  diedai: 'WEB前端',
-                  status: '已实现',
-                  person: '安喜喜',
-                  startTime: '2019-03-05',
-                  endTime: '2019-03-05'
-                }, {
-                  id: 3,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '系统管理-（菜单管理）-页面搭建',
-                  checked: false,
-                  eventID: '1004506',
-                  youxian: 'High',
-                  diedai: 'WEB前端',
-                  status: '已实现',
-                  person: '安喜喜',
-                  startTime: '2019-03-05',
-                  endTime: '2019-03-05'
-                }, {
-                  id: 3,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '添加 菜单/按钮 权限',
-                  checked: false,
-                  eventID: '1004505',
-                  youxian: 'High',
-                  diedai: 'WEB前端',
-                  status: '已实现',
-                  person: '安喜喜',
-                  startTime: '2019-03-05',
-                  endTime: '2019-03-05'
-                }
-              ]
-            }
-          ]
-        },
-        {
-          id: 4,
-          date: '2016-05-03',
-          name: '王小虎',
-          title: '调试下载临时任务接口',
-          checked: false,
-          eventID: '1003026',
-          youxian: 'Middle',
-          diedai: '--',
-          status: '已实现',
-          person: '代海涛',
-          startTime: '2019-03-05',
-          endTime: '2019-03-05'
-        },
-        {
-          id: 4,
-          date: '2016-05-03',
-          name: '王小虎',
-          title: '优化视频视频录制播放功能',
-          checked: false,
-          eventID: '1002733',
-          youxian: 'Middle',
-          diedai: '--',
-          status: '已实现',
-          person: '代海涛',
-          startTime: '2019-02-19',
-          endTime: '2019-02-19',
-          children: [
-            {
-              id: 4,
-              date: '2016-05-03',
-              name: '王小虎',
-              title: '优化视频录制播放',
-              checked: false,
-              eventID: '1002736',
-              youxian: 'Middle',
-              diedai: 'APP安卓',
-              status: '已实现',
-              person: '代海涛',
-              startTime: '2019-02-19',
-              endTime: '2019-02-19'
-            },
-            {
-              id: 4,
-              date: '2016-05-03',
-              name: '王小虎',
-              title: '优化视频录制大小',
-              checked: false,
-              eventID: '1002734',
-              youxian: 'Middle',
-              diedai: 'APP安卓',
-              status: '已实现',
-              person: '代海涛',
-              startTime: '2019-02-19',
-              endTime: '2019-02-19'
-            }
-          ]
-        },
-        {
-          id: 4,
-          date: '2016-05-03',
-          name: '王小虎',
-          title: '调试刷纽扣提交开始和结束时间接口',
-          checked: false,
-          eventID: '1002705',
-          youxian: 'Middle',
-          diedai: '--',
-          status: '已实现',
-          person: '代海涛',
-          startTime: '2019-03-04',
-          endTime: '2019-03-04'
-        },
-        {
-          id: 4,
-          date: '2016-05-03',
-          name: '王小虎',
-          title: '调试同步巡检任务数据接口',
-          checked: false,
-          eventID: '1002704',
-          youxian: 'Middle',
-          diedai: '--',
-          status: '已实现',
-          person: '代海涛',
-          startTime: '2019-03-01',
-          endTime: '2019-03-01'
-        }
-      ],
+      tableData: [],
       data: [{
         id: 1,
         label: '一级 1',
@@ -432,20 +207,76 @@ export default {
         }]
       }],
       defaultProps: {
-        children: 'children',
-        label: 'label'
-      }
+        children: 'zones',
+        label: 'groupName',
+        isLeaf: 'leaf'
+      },
+      thisOperationNode: {},
+      editDialogRules: {
+        name: [{ required: true, message: '请输入内容', trigger: 'blur' }]
+      },
+      searchIpt: '',
+      pageQuery: {
+        chineseName: '',
+        email: '',
+        mobile: '',
+        pageNo: 1,
+        pageSize: 10,
+        sysuserName: '',
+        groupId: ''
+      },
+      tableLoading: false,
+      checkedDepartment: [],
+      defaultCheckedKeys: []
     }
   },
+  computed: {
+    checkedDepartTags() {
+      return this.checkedDepartment.map(item => item.groupName).join(';')
+    },
+    ...mapState({
+      merchantId: state => state.user.merchantId
+    })
+  },
+  created() {
+    this.getList()
+  },
   methods: {
+    getList() {
+      this.tableLoading = true
+      getSysUserList(this.pageQuery).then(res => {
+        console.log('res', res)
+        if (res.code === 0 && res.data && res.data.items) {
+          this.tableData = res.data.items
+          this.pageTotal = res.data.total
+          this.pageQuery.pageSize = res.data.limit
+          this.pageQuery.pageNo = res.data.page
+        }
+
+        this.tableLoading = false
+      }).catch(err => {
+        console.log('err', err)
+        this.tableLoading = false
+      })
+    },
     getTreeData() {
 
     },
     hidenavtree(e) {
       this.navTreeShow = e
     },
-    navTreeOperation(operate) {
-      console.log('operate', operate)
+    createSimplePerson() {
+      this.defaultCheckedKeys.forEach(element => {
+        this.$refs.dialogTree.setChecked(element, false)
+      })
+      this.defaultCheckedKeys = []
+      this.checkedDepartment = []
+      this.showAddDialog = true
+    },
+    navTreeOperation(operate, data) {
+      console.log('data', data)
+      this.checkedDepartment = []
+      this.thisOperationNode = { ...data }
       if (operate !== 'addperson') {
         this.DialogData.name = ''
         this.editDialogStatus = operate
@@ -464,7 +295,20 @@ export default {
         }
       } else {
         this.showAddDialog = true
+        this.checkedDepartment = [{ ...data }]
+        this.defaultCheckedKeys = []
+        this.defaultCheckedKeys.push(data.groupId)
       }
+    },
+    editConfirm() {
+      this.$ref.EditDialog.validate(validate => {
+        if (validate) {
+          // saveOrganizationGroup()
+        }
+      })
+    },
+    createConfirm() {
+
     },
     querySearchAsync(queryString, cb) {
       const resArr = []
@@ -482,6 +326,76 @@ export default {
     },
     handleSelect(e) {
       console.log('点击', e)
+    },
+    clearSearchRes() {
+
+    },
+    searchList() {
+
+    },
+
+    // 新建成员树结构
+    getTreeNodeData(id) {
+      return new Promise(function(resolve, reject) {
+        getOrganizationGroup({ parentId: id }).then(res => {
+          // console.log('res', res)
+          if (res.code === 0 && res.data && Array.isArray(res.data)) {
+            resolve(res.data)
+          } else {
+            resolve([])
+          }
+        }).catch(err => {
+          console.log('err', err)
+          resolve([])
+        })
+      })
+    },
+    loadNode(node, resolve) {
+      console.log('node', node)
+      const key = node.key ? node.key : this.merchantId
+      this.getTreeNodeData(key).then(arr => {
+        console.log('arr', arr)
+        resolve(arr)
+      })
+    },
+    changeDialogDepartment(visible) {
+      if (!visible) {
+        const checkedArr = this.$refs.dialogTree.getCheckedNodes()
+        console.log('checkedArr', checkedArr)
+        this.checkedDepartment = [...checkedArr.map(item => { return { ...item } })]
+      }
+    },
+    handleNodeClick(data) {
+      console.log('lala', data)
+      if (data.groupId) {
+        // getListRegUserByGroupId({ groupId: data.groupId }).then(res => {
+        //   console.log('res', res)
+        // }).catch(err => {
+        //   console.log('err', err)
+        // })
+        this.pageQuery.groupId = data.groupId
+        this.getList()
+      } else {
+        this.tableData = []
+      }
+    },
+    editSysUser(row) {
+
+    },
+    deleteSysUser(row) {
+      console.log('row', row)
+      this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }).then(() => {
+        deleteSysUserList(row.reguserId).then(res => {
+          if (res.code === 0) {
+            this.$message({ type: 'success', message: '成功删除该用户' })
+          }
+        }).catch(err => {
+          console.log('err', err)
+          this.$message({ type: 'error', message: '删除用户失败，请稍后再试' })
+        })
+      }).catch(() => {
+        this.$message({ type: 'info', message: '已取消删除' })
+      })
     }
   }
 }
@@ -507,6 +421,18 @@ export default {
 }
 .navtree >>> .deletePart {
   color: #999;
+}
+.SearchBox {
+  float: right;
+}
+.SearchBox >span {
+  display: inline-block;
+  font-size: 14px;
+  margin-right: 12px;
+  color: #606266;
+}
+.innerTreeForDepart {
+  padding: 10px 20px;
 }
 </style>
 

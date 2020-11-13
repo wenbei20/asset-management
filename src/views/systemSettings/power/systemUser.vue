@@ -1,33 +1,14 @@
 <template>
-  <div :class="[noNavbar?'noNavbar':'' , 'settings']">
+  <div class="settings">
     <div class="yonghuzu">
       <div class="tit">用户组</div>
-      <ul>
-        <li>
+      <ul v-loading="addGroupLoading" class="yonghuGroup">
+        <li v-for="(item,i) in groupList" :key="i" class="normal" :class="{'active' : item.roleName === activeGroupName}" @click="activeThisGroup(item)">
           <div class="icon">
             <i class="el-icon-s-custom" />
           </div>
           <div>
-            <div class="cnt">管理员</div>
-            <span>系统分组</span>
-          </div>
-        </li>
-        <li class="active">
-          <div class="icon">
-            <i class="el-icon-s-custom" />
-          </div>
-          <div>
-            <div class="cnt">普通成员</div>
-            <span>系统分组</span>
-          </div>
-        </li>
-
-        <li v-for="(item,i) in groupList" :key="i" class="normal">
-          <div class="icon">
-            <i class="el-icon-s-custom" />
-          </div>
-          <div>
-            <div class="cnt">{{ item.name }}</div>
+            <div class="cnt">{{ item.roleName }}</div>
             <i class="el-icon-more" @click="item.showMenu = true" />
             <div v-if="item.showMenu" class="menu">
               <div>重命名</div>
@@ -37,10 +18,15 @@
           </div>
         </li>
       </ul>
-      <div style="padding:10px;">
-        <el-link type="primary" :underline="false">
+      <div style="padding:10px;" :class="{'adding_group':isAddingGroup}">
+        <el-link v-if="!isAddingGroup" type="primary" :underline="false" @click="isAddingGroup = true">
           <i class="el-icon-plus" />添加用户组
         </el-link>
+        <div v-else class="addGroupBox">
+          <el-input ref="addGroupipt" v-model="addGroupName" type="text" placeholder="输入用户组名称" />
+          <el-button type="primary" size="mini" @click="configAdd(true)">确定</el-button>
+          <el-button size="mini" @click="configAdd(false)">取消</el-button>
+        </div>
       </div>
     </div>
     <div class="other">
@@ -136,22 +122,19 @@
 </template>
 
 <script>
+import { getlistRole, saveRole } from '@/api/settings'
 import addPerson from '@/components/Dialog/addPerson'
+import { mapState } from 'vuex'
+import Pagination from '@/components/Pagination'
 export default {
   components: { addPerson },
-  props: {
-    info: {
-      type: Object,
-      default: () => { return {} }
-    },
-    noNavbar: {
-      type: Boolean,
-      default: false
-    }
-  },
   data() {
     return {
       showAddPerson: false,
+      isAddingGroup: false,
+      addGroupLoading: false,
+      addGroupName: '',
+      activeGroupName: '',
       groupList: [
         { name: 'test001', showMenu: false },
         { name: '用户组1', showMenu: false },
@@ -202,17 +185,57 @@ export default {
         children: 'zones',
         isLeaf: 'leaf'
       }
+
     }
   },
   computed: {
-
+    ...mapState({
+      merchantId: state => state.user.merchantId
+    })
   },
   created() {
-
+    this.getRoleList()
   },
   methods: {
+    getRoleList() {
+      getlistRole({ roleKind: 0 }).then(res => {
+        console.log('res', res)
+        if (res.code === 0) {
+          res.data.forEach(item => { item.showMenu = false })
+          this.groupList = res.data
+        }
+      })
+    },
+    activeThisGroup(row) {
+      console.log('row', row)
+      this.activeGroupName = row.roleName
+      // if(row)
+    },
+    configAdd(bool) {
+      if (bool) {
+        if (!this.addGroupName) {
+          this.$message({ type: 'warning', message: '请输入用户组名称' })
+          return
+        }
+        saveRole({ roleKind: 0, roleName: this.addGroupName }).then(res => {
+          if (res.code === 0) {
+            this.$message({ type: 'success', message: '保存用户组成功' })
+            this.getRoleList()
+          } else {
+            this.$message({ type: 'error', message: '保存用户组失败，请稍后再试' })
+          }
+          this.isAddingGroup = false
+        }).catch(err => {
+          console.log('err', err)
+          this.$message({ type: 'error', message: '保存用户组失败，请稍后再试' })
+          this.isAddingGroup = false
+        })
+      } else {
+        this.isAddingGroup = false
+      }
+    },
     loadNode(node, resolve) {
-      console.log('node', node)
+      // console.log('node', node)
       if (node.level === 0) {
         return resolve([{ name: 'region', id: '11111', test: '52465456' }])
       }
@@ -436,5 +459,13 @@ export default {
         margin-top: 20px;
     }
 }
-
+.adding_group {
+  background-color: #fff;
+}
+</style>
+<style scoped>
+.addGroupBox >>> .el-input__inner {
+  border-radius: 2px;
+  margin-bottom: 16px;
+}
 </style>

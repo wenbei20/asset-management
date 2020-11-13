@@ -2,15 +2,21 @@
   <div class="app-container">
     <el-row>
       <el-col :span="17">
-        <span style="font-size:14px;">使用部门</span>
-        <el-select v-model="companyValue" placeholder="请选择部门" style="padding:0 6px;">
-          <el-option label="无" value=" " />
-          <el-option label="部门1" value="1" />
+        <el-select v-model="companyValue" placeholder="请选择搜索类别" style="padding:0 6px;width: 160px;" @change="changeSelectdepartment">
+          <el-option label="使用部门" value="1" />
+          <el-option label="资产类别" value="2" />
+          <el-option label="资产名称" value="3" />
         </el-select>
-        <el-select v-model="statusValue" placeholder="请选择资产类别" style="margin-right:6px; width: 160px;">
-          <el-option label="类别1" value="1" />
 
-        </el-select>
+        <el-input
+          v-model="searchIpt"
+          :style="{ width: '160px',marginRight:'20px' }"
+          placeholder="搜索..."
+          clearable
+          @clear="clearSearchRes"
+        >
+          <el-button slot="append" icon="el-icon-search" @click="searchList" />
+        </el-input>
         <el-button type="primary" icon="el-icon-plus" @click="addNew">新建</el-button>
         <el-dropdown :style="{ marginLeft: '5px' }" @command="operationSelect">
           <el-button type="default" icon="el-icon-receiving" plain>
@@ -27,12 +33,13 @@
       </el-col>
       <el-col :span="7">
 
-        <el-input
+        <!-- <el-input
           v-model="input1"
           :style="{ width: '200px', float: 'right' }"
           placeholder="搜索..."
           suffix-icon="el-icon-search"
-        />
+        /> -->
+
       </el-col>
     </el-row>
     <el-row type="flex" justify="space-between" align="middle" :style="{ fontSize: '12px' }">
@@ -147,13 +154,13 @@
         <vxe-table-column field="adminReguserName" title="管理员" sortable min-width="100" :visible="tableShowColumn.gly" />
         <vxe-table-column field="userName" title="使用人" min-width="100" sortable :visible="tableShowColumn.syr" />
         <vxe-table-column field="useMerchantName" title="使用单位" min-width="100" sortable :visible="tableShowColumn.sydw" />
-        <vxe-table-column field="useBranchMerchantName" title="使用部门" min-width="100" sortable :visible="tableShowColumn.sybm" />
+        <!-- <vxe-table-column field="useBranchMerchantName" title="使用部门" min-width="100" sortable :visible="tableShowColumn.sybm" /> -->
         <vxe-table-column field="limitdate" title="使用期限" min-width="100" sortable :visible="tableShowColumn.syqx" />
         <vxe-table-column field="areaName" title="区域" min-width="100" sortable :visible="tableShowColumn.qy" />
         <vxe-table-column field="posname" title="存放地点" min-width="100" sortable :visible="tableShowColumn.cfdd" />
-        <vxe-table-column field="memo" title="备注信息" min-width="100" sortable :visible="tableShowColumn.bzxx" />
+        <vxe-table-column field="memo" title="备注信息" min-width="100" :visible="tableShowColumn.bzxx" />
         <vxe-table-column field="statusName" title="物资状态" min-width="100" sortable :visible="tableShowColumn.wzzt" />
-        <vxe-table-column field="rfidCode" title="RFID码" min-width="100" sortable :visible="tableShowColumn.RFID" />
+        <vxe-table-column field="rfidCode" title="RFID码" min-width="100" :visible="tableShowColumn.RFID" />
         <!-- <vxe-table-column title="自定义字段1" min-width="120" sortable :visible="tableShowColumn.zdyzd1">--</vxe-table-column> -->
         <!-- <vxe-table-column field="rfidCode" title="供应商" min-width="100" sortable :visible="tableShowColumn.gys" /> -->
         <!-- <vxe-table-column title="联系人" min-width="100" sortable :visible="tableShowColumn.lxr">--</vxe-table-column>
@@ -480,7 +487,7 @@ export default {
       isAllreadyConfirmColSetting: false,
       companyValue: '',
       statusValue: '',
-      input1: '',
+      searchIpt: '',
       xjzyxxVisible: false,
       xjzyxxTitle: '新建资源信息',
       gjssVisible: false,
@@ -969,6 +976,18 @@ export default {
       const obj = { ...this.pageQuery, ...this.gjssForm }
       obj.statusId = [...this.gjssForm.statusId]
       console.log('obj', obj)
+    },
+    searchList() {
+
+    },
+    clearSearchRes() {
+
+    },
+    changeSelectdepartment(val) {
+      console.log('changeSelectdepartment', val)
+    },
+    changeSelectType(val) {
+      console.log('changeSelectType', val)
     }
   }
 }
