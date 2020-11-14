@@ -69,22 +69,22 @@
 
 <script>
 import { validUsername } from '@/utils/validate'
-
+import { Message } from 'element-ui'
 import loginPic from '@/assets/login/login-pic.png'
 
 export default {
   name: 'Login',
   data() {
     const validateUsername = (rule, value, callback) => {
-      if (!validUsername(value)) {
-        callback(new Error('Please enter the correct user name'))
+       if (value.length === 0) {
+        callback(new Error('请输入用户名'))
       } else {
         callback()
       }
     }
     const validatePassword = (rule, value, callback) => {
       if (value.length < 6) {
-        callback(new Error('The password can not be less than 6 digits'))
+        callback(new Error('密码至少需要6位'))
       } else {
         callback()
       }
@@ -93,8 +93,8 @@ export default {
       loginPic,
       tabsActive: 'password',
       loginForm: {
-        username: 'admin',
-        password: '111111'
+        username: 'anykkk',
+        password: '123456'
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
@@ -158,16 +158,36 @@ export default {
           this.loading = true
           this.$store.dispatch('user/login', this.loginForm)
             .then(() => {
+              console.log(this.$route)
               // 登录成功后，暂时先进入引导页面
+               
               this.$router.push({ path: '/home' })
               // this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
               this.loading = false
             })
-            .catch(() => {
+            .catch((error) => {
+
+             // console.log(error)
+                  let err = ''
+        // console.log('err', err.message === "Network Error")
+         
+              if(!error.message){
+                  err = error
+              }else  if(error.message === 'Network Error'){
+                err = '网络连接失败，请稍后重试！'
+              }else {
+                err = '连接超时，请稍后重试！'
+              }
+              // Message.error(error || '登陆失败，请稍后重试！')
+              this.$message({
+                  type:'error',
+                  message: err,
+                  duration:2000
+              })
               this.loading = false
             })
         } else {
-          console.log('error submit!!')
+          //console.log('error submit!!')
           return false
         }
       })
