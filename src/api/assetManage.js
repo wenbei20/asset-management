@@ -31,4 +31,19 @@ export function deleteAsset(data) {
     data: data2FormData(data)
   })
 }
+export function baseCode(data) {
+  return request({
+    url: '/assets/baseCode',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function copyAsset(data) {
+  return request({
+    url: '/assets/copy',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
 

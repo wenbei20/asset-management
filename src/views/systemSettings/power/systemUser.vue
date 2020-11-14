@@ -4,17 +4,23 @@
       <div class="tit">用户组</div>
       <ul v-loading="addGroupLoading" class="yonghuGroup">
         <li v-for="(item,i) in groupList" :key="i" class="normal" :class="{'active' : item.roleName === activeGroupName}" @click="activeThisGroup(item)">
-          <div class="icon">
+          <div v-if="!item.editing" class="icon">
             <i class="el-icon-s-custom" />
           </div>
-          <div>
+          <div v-if="!item.editing">
+
             <div class="cnt">{{ item.roleName }}</div>
             <i class="el-icon-more" @click="item.showMenu = true" />
             <div v-if="item.showMenu" class="menu">
-              <div>重命名</div>
-              <div>删除</div>
+              <div @click="reNameGoup(item)">重命名</div>
+              <div @click="removeGoup(item)">删除</div>
             </div>
             <div v-if="item.showMenu" class="dialogmenu" @click="item.showMenu = false" />
+          </div>
+          <div v-else class="addGroupBox" style="padding:0 20px 0 0;">
+            <el-input ref="addGroupipt" v-model="editGroupName" type="text" placeholder="输入用户组名称" />
+            <el-button type="primary" size="mini" @click="configEdit(true ,item)">确定</el-button>
+            <el-button size="mini" @click="configEdit(false ,item)">取消</el-button>
           </div>
         </li>
       </ul>
@@ -40,10 +46,13 @@
           </span>
         </div>
       </div>
-      <div class="imgbox">
-        <div>
-          <i>PP</i>
-          <span>pp</span>
+      <div v-loading="groupUserLoading" class="imgbox">
+        <div v-for="(item ,i) in groupUserList" :key="i">
+          <i>{{ item.chinese_name | getFirstString }}</i>
+          <span>{{ item.chinese_name }}</span>
+        </div>
+        <div v-if="groupUserList.length === 0" class="nores">
+          暂无成员，快来添加成员吧
         </div>
       </div>
 
@@ -122,14 +131,20 @@
 </template>
 
 <script>
-import { getlistRole, saveRole } from '@/api/settings'
+import { getlistRole, saveRole, updateRole, deleteRole, getlistRegUserByRoleId } from '@/api/settings'
 import addPerson from '@/components/Dialog/addPerson'
 import { mapState } from 'vuex'
-import Pagination from '@/components/Pagination'
 export default {
   components: { addPerson },
+  filters: {
+    getFirstString(val) {
+      return val ? val.substring(0, 1) : ''
+    }
+  },
   data() {
     return {
+      editGroupName: '',
+      groupUserLoading: false,
       showAddPerson: false,
       isAddingGroup: false,
       addGroupLoading: false,
@@ -184,7 +199,8 @@ export default {
         label: 'name',
         children: 'zones',
         isLeaf: 'leaf'
-      }
+      },
+      groupUserList: []
 
     }
   },
@@ -193,15 +209,80 @@ export default {
       merchantId: state => state.user.merchantId
     })
   },
+
   created() {
     this.getRoleList()
   },
   methods: {
+    removeGoup(item) {
+      deleteRole({ roleId: item.roleId }, item.roleId).then(res => {
+        if (res.code === 0) {
+          this.$message({ type: 'success', message: '删除成功' })
+        } else {
+          this.$message({ type: 'error', message: '删除失败，请稍后再试' })
+        }
+        item.editing = false
+        item.showMenu = false
+
+        this.getRoleList()
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'error', message: '删除失败，请稍后再试' })
+        item.editing = false
+        item.showMenu = false
+      })
+    },
+    reNameGoup(item) {
+      this.editGroupName = item.roleName
+      item.editing = true
+    },
+    configEdit(bool, item) {
+      console.log('item', item)
+      if (!bool) {
+        item.editing = false
+        item.showMenu = false
+        return
+      }
+
+      if (!this.editGroupName) {
+        this.$message({ type: 'error', message: '请输入名称' })
+        item.editing = false
+        item.showMenu = false
+        return
+      }
+      const obj = {
+        readme: item.readme,
+        roleId: item.roleId,
+        roleKind: item.roleKind,
+        roleName: this.editGroupName
+      }
+
+      updateRole(obj, obj.roleId).then(res => {
+        if (res.code === 0) {
+          this.$message({ type: 'success', message: '修改成功' })
+        } else {
+          this.$message({ type: 'error', message: '修改失败，请稍后再试' })
+        }
+        item.editing = false
+        item.showMenu = false
+
+        this.getRoleList()
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'error', message: '修改失败，请稍后再试' })
+        item.editing = false
+        item.showMenu = false
+      })
+    },
     getRoleList() {
       getlistRole({ roleKind: 0 }).then(res => {
         console.log('res', res)
         if (res.code === 0) {
-          res.data.forEach(item => { item.showMenu = false })
+          res.data.forEach(item => {
+            item.showMenu = false
+            item.editing = false
+          })
+
           this.groupList = res.data
         }
       })
@@ -209,7 +290,19 @@ export default {
     activeThisGroup(row) {
       console.log('row', row)
       this.activeGroupName = row.roleName
-      // if(row)
+      if (row.roleId) {
+        this.groupUserLoading = true
+        getlistRegUserByRoleId({ roleId: row.roleId }).then(res => {
+          if (res.code === 0) {
+            console.log('res', res)
+            this.groupUserList = res.data
+          }
+          this.groupUserLoading = false
+        }).catch(err => {
+          this.groupUserLoading = false
+          console.log('err', err)
+        })
+      }
     },
     configAdd(bool) {
       if (bool) {
@@ -295,7 +388,8 @@ export default {
             margin: 0;
         }
         li {
-            height: 56px;
+            // height: 56px;
+            padding-bottom: 15px;
             list-style: none;
             padding-left: 15px;
             display: flex;
@@ -394,23 +488,35 @@ export default {
             padding: 20px 15px;
             background: #f8f8f8;
             overflow: hidden;
+            .nores {
+              width: 100%;
+              text-align: center;
+              color: #3f4a56;
+              font-size: 14px;
+            }
             >div {
                 width: 140px;
-                height: 20px;
                 margin-bottom: 15px;
                 margin-right: 15px;
-                float: left;
+                display: inline-block;
                 i {
                     display: inline-block;
                     height: 24px;
+                    width: 24px;
+                    text-align: center;
                     line-height: 24px;
                     background: #b9cdef;
-                    border-radius: 10px;
+                    border-radius: 12px;
                     color: #fff;
                     padding: 0 4px;
                     font-size: 10px;
                     font-style: normal;
                     margin-right: 6px;
+                }
+                span {
+                  display: inline-block;
+                  position: relative;
+                  top: 2px;;
                 }
             }
         }

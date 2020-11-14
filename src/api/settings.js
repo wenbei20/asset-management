@@ -122,3 +122,20 @@ export function getlistRegUserByRoleId(params) {
     params
   })
 }
+
+export function updateRole(data, id) {
+  return request({
+    url: '/sys/role/updateRole/' + id,
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function deleteRole(params, id) {
+  return request({
+    url: '/sys/role/deleteRole/' + id,
+    method: 'get',
+    params
+  })
+}
+

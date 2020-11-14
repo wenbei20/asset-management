@@ -95,10 +95,9 @@ export default {
       type: Object,
       default: () => {
         return {
-          top: [{ name: '添加成员', className: '', operate: 'addperson' }, { name: '添加(子)分公司', className: '', operate: '' }, { name: '添加子部门', className: '', operate: 'addSonDepartment' }],
-          sub: [{ name: '添加成员', className: '', operate: 'addperson' }, { name: '添加(子)分公司', className: '', operate: '' }, { name: '添加子部门', className: '', operate: 'addSonDepartment' }, { name: '设置负责人', className: '', operate: 'setPrincipal' }, { name: '修改名称', className: '', operate: 'changeName' }, { name: '删除部门', className: 'deletePart' }],
-          department: [{ name: '添加成员', className: '', operate: 'addperson' }, { name: '添加子部门', className: '', operate: 'addSonDepartment' }, { name: '设置负责人', className: '', operate: 'setPrincipal' }, { name: '修改名称', className: '', operate: 'changeName' }, { name: '删除部门', className: 'deletePart' }]
-          // third: [{ name: '创建需求', className: 'border_bottom' }, { name: '创建子分类', className: '' }, { name: '修改分类', className: '' }, { name: '删除分类', className: '' }]
+          top: [{ name: '添加成员', className: '', operate: 'addperson' }, { name: '添加(子)分公司', className: '', operate: 'addSonCompany' }, { name: '添加子部门', className: '', operate: 'addSonDepartment' }],
+          sub: [{ name: '添加成员', className: '', operate: 'addperson' }, { name: '添加(子)分公司', className: '', operate: 'addSonCompany' }, { name: '添加子部门', className: '', operate: 'addSonDepartment' }, { name: '修改名称', className: '', operate: 'changeName' }, { name: '删除部门', className: 'deletePart' }],
+          department: [{ name: '添加成员', className: '', operate: 'addperson' }, { name: '添加子部门', className: '', operate: 'addSonDepartment' }, { name: '修改名称', className: '', operate: 'changeName' }, { name: '删除部门', className: 'deletePart' }]
         }
       }
     }

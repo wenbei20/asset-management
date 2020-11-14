@@ -292,6 +292,7 @@ export default {
         console.log('err', err)
         this.showAddDialog = false
       })
+      this.addUserInfoSeleReguser = ''
     },
     querySearchAsync(queryString, cb) {
       if (queryString) {
