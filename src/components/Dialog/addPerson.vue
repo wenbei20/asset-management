@@ -81,19 +81,28 @@
       </el-tab-pane>
     </el-tabs> -->
 
-    <div class="tabscnt">
+    <div v-if="!showAddPersonTree" class="tabscnt">
       <el-input v-model="addinfo.putin" type="textarea" class="textarea" placeholder="请输入公司已有成员的昵称" />
 
       <div class="yonghuzu">
-        <span class="putinAdd">
+        <span class="putinAdd" @click="forAddpersonTree">
           <i class="el-icon-user-solid" />
           通过组织架构添加
         </span>
 
       </div>
     </div>
+    <div v-else class="tabscnt">
+      <el-row style="min-height:260px;">
+        <el-tree :data="data" :props="defaultProps" show-checkbox />
+      </el-row>
 
-    <div slot="footer" class="dialog-footer">
+      <el-row style="text-align:right;">
+        <el-button type="primary" @click="AddtreePerson">添加</el-button>
+      </el-row>
+    </div>
+
+    <div v-if="!showAddPersonTree" slot="footer" class="dialog-footer">
       <el-row>
         <el-col :span="6" :offset="18" class="footer_btns">
           <el-button type="primary" @click="confirm">导入成员</el-button>
@@ -123,6 +132,46 @@ export default {
         putin: '',
         copy: '',
         joinGroup: []
+      },
+      showAddPersonTree: false,
+      data: [{
+        label: '一级 1',
+        children: [{
+          label: '二级 1-1',
+          children: [{
+            label: '三级 1-1-1'
+          }]
+        }]
+      }, {
+        label: '一级 2',
+        children: [{
+          label: '二级 2-1',
+          children: [{
+            label: '三级 2-1-1'
+          }]
+        }, {
+          label: '二级 2-2',
+          children: [{
+            label: '三级 2-2-1'
+          }]
+        }]
+      }, {
+        label: '一级 3',
+        children: [{
+          label: '二级 3-1',
+          children: [{
+            label: '三级 3-1-1'
+          }]
+        }, {
+          label: '二级 3-2',
+          children: [{
+            label: '三级 3-2-1'
+          }]
+        }]
+      }],
+      defaultProps: {
+        children: 'children',
+        label: 'label'
       }
     }
   },
@@ -153,6 +202,12 @@ export default {
     },
     handleClick() {
 
+    },
+    forAddpersonTree() {
+      this.showAddPersonTree = true
+    },
+    AddtreePerson() {
+      this.showAddPersonTree = false
     }
   }
 }
@@ -332,7 +387,7 @@ export default {
 
 }
 .settings_qiyongDialog  >>> .el-dialog__body {
-    padding: 20px 20px 0 20px;
+    padding: 20px ;
     min-height: 340px;
 }
 .settings_qiyongDialog  >>> .el-tabs__header {

@@ -153,3 +153,10 @@ div:focus {
 
   }
 }
+
+.innerTreeForDepart  {
+  padding: 10px 0;
+  .el-tree-node__content {
+    padding-right: 20px;
+  }
+}

@@ -1,12 +1,13 @@
 <template>
-  <el-dialog :title="title" :visible.sync="innerVisible" width="80%" class="xjzyxx_dialog" @close="closeThis">
+  <el-dialog :title="title" :visible.sync="innerVisible" width="80%" class="xjzyxx_dialog" :close-on-click-modal="false" @close="closeThis">
     <div v-if="title === '新建副资产信息'" class="showFatherAssetCode"><span>父资产编码</span>{{ fatherAssetCode }}</div>
     <el-form ref="assetForm" :model="xjzyxxForm" label-position="right" :rules="addDialogRoles">
       <el-row :gutter="20">
         <el-col :span="8">
           <el-form-item label="资产类别" :label-width="formLabelWidth" prop="assetkindId">
             <el-select v-model="xjzyxxForm.assetkindId" size="small" placeholder="请选择资产类别" :style="{ width: '100%' }">
-              <el-option label="资产类别" value="1" />
+              <!-- <el-option label="资产类别" value="1" /> -->
+              <el-option v-for="(ele , i) in mainSortData.statusList" :key="i" :label="ele.status_name" :value="ele.status_id" />
             </el-select>
           </el-form-item>
         </el-col>
@@ -82,13 +83,13 @@
             </el-select>
           </el-form-item>
         </el-col>
-        <el-col :span="8">
+        <!-- <el-col :span="8">
           <el-form-item label="使用部门" :label-width="formLabelWidth" prop="useBranchMerchantId">
             <el-select v-model="xjzyxxForm.useBranchMerchantId" size="small" placeholder="请选择管理员" :style="{ width: '100%' }">
               <el-option label="管理员1" value="1" />
             </el-select>
           </el-form-item>
-        </el-col>
+        </el-col> -->
         <el-col :span="8">
           <el-form-item label="使用期限" :label-width="formLabelWidth" prop="limitdate">
             <el-date-picker
@@ -119,13 +120,11 @@
             </el-select>
           </el-form-item>
         </el-col>
-        <el-col :span="8">
+        <!-- <el-col :span="8">
           <el-form-item label="rfid码" :label-width="formLabelWidth" prop="rfidCode">
             <el-input v-model="xjzyxxForm.rfidCode" size="small" placeholder="请输入rfid码" />
           </el-form-item>
-        </el-col>
-      </el-row>
-      <el-row :gutter="20">
+        </el-col> -->
         <el-col :span="16">
           <el-form-item label="备注" :label-width="formLabelWidth" prop="memo">
             <el-input
@@ -138,6 +137,9 @@
           </el-form-item>
         </el-col>
       </el-row>
+      <!-- <el-row :gutter="20">
+        <el-col :span="16" />
+      </el-row> -->
       <div :style="{ background: '#e8ebf9', padding: '10px', margin: '10px 0' }">维保信息</div>
       <el-row :gutter="20">
         <el-col :span="8">
@@ -255,6 +257,18 @@ export default {
     fatherAssetCode: {
       type: String,
       default: ' '
+    },
+    mainSortData: {
+      type: Object,
+      default: () => {
+        return {
+          areaList: [],
+          assetkindList: [],
+          groupList: [],
+          standardtypeList: [],
+          statusList: []
+        }
+      }
     }
   },
   data() {
@@ -329,6 +343,7 @@ export default {
     } else {
       this.postUrl = '/assets/uploadpic'
     }
+    console.log('mainSortData', this.mainSortData)
   },
   methods: {
     closeThis() {

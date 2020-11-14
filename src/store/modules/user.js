@@ -7,9 +7,10 @@ const getDefaultState = () => {
     token: getToken(),
     name: '',
     avatar: '',
+    merchantId: 'c5e3bcce38e848cd8aca30dad8d73760',
     introduction: '',
     roles: [],
-    type:''
+    type: ''
   }
 }
 
@@ -45,7 +46,7 @@ const actions = {
         console.log(response)
         if (response.code === 0) {
           commit('SET_TOKEN', response.data.token)
-     
+
           setToken(response.data.token)
           // getPermission().then(res=>{
           //     console.log('getPermission', res)
@@ -61,8 +62,7 @@ const actions = {
           // })
           resolve()
         } else {
-
-          console.log('response.msg',response.msg )
+          console.log('response.msg', response.msg)
           reject(response.msg)
         }
       }).catch(err => {
@@ -76,14 +76,13 @@ const actions = {
   getInfo({ commit, state }) {
     return new Promise((resolve, reject) => {
       getInfo(state.token).then(response => {
-  
         // const { data } = response
         if (response.code !== 0) {
           reject('验证失败，请重新登陆')
         }
-        let roles = response.roles
-        if(Array.isArray(roles) && roles.length > 0){
-            name = roles[0]
+        const roles = response.roles
+        if (Array.isArray(roles) && roles.length > 0) {
+          name = roles[0]
         }
         // const { roles, name, avatar, introduction } = response
 

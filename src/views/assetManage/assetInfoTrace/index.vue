@@ -16,9 +16,9 @@
         </el-form>
       </el-col>
     </el-row>
-    <el-row :style="{ fontSize: '12px' }">
+    <!-- <el-row :style="{ fontSize: '12px' }">
       <el-col :span="24">金额合计：0.00</el-col>
-    </el-row>
+    </el-row> -->
     <vxe-table
       ref="xTree"
       resizable

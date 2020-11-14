@@ -2,15 +2,21 @@
   <div class="app-container">
     <el-row>
       <el-col :span="17">
-        <span style="font-size:14px;">使用部门</span>
-        <el-select v-model="companyValue" placeholder="请选择部门" style="padding:0 6px;">
-          <el-option label="无" value=" " />
-          <el-option label="部门1" value="1" />
+        <el-select v-model="companyValue" placeholder="请选择搜索类别" style="padding:0 6px;width: 160px;" @change="changeSelectdepartment">
+          <el-option label="使用部门" value="1" />
+          <el-option label="资产类别" value="2" />
+          <el-option label="资产名称" value="3" />
         </el-select>
-        <el-select v-model="statusValue" placeholder="请选择资产类别" style="margin-right:6px; width: 160px;">
-          <el-option label="类别1" value="1" />
 
-        </el-select>
+        <el-input
+          v-model="searchIpt"
+          :style="{ width: '160px',marginRight:'20px' }"
+          placeholder="搜索..."
+          clearable
+          @clear="clearSearchRes"
+        >
+          <el-button slot="append" icon="el-icon-search" @click="searchList" />
+        </el-input>
         <el-button type="primary" icon="el-icon-plus" @click="addNew">新建</el-button>
         <el-dropdown :style="{ marginLeft: '5px' }" @command="operationSelect">
           <el-button type="default" icon="el-icon-receiving" plain>
@@ -27,12 +33,13 @@
       </el-col>
       <el-col :span="7">
 
-        <el-input
+        <!-- <el-input
           v-model="input1"
           :style="{ width: '200px', float: 'right' }"
           placeholder="搜索..."
           suffix-icon="el-icon-search"
-        />
+        /> -->
+
       </el-col>
     </el-row>
     <el-row type="flex" justify="space-between" align="middle" :style="{ fontSize: '12px' }">
@@ -109,11 +116,21 @@
             </div>
           </template>
         </vxe-table-column>
-        <vxe-table-column width="80" title="状态">
+        <vxe-table-column width="80" title="状态" sortable>
           <template #default="{ row }">
             <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
           </template>
         </vxe-table-column>
+        <!-- <vxe-table-column width="80" title="状态" :filters="[{ data: '' }]" :filter-method="filterStatusMethod" :filter-multiple="true">
+          <template #default="{ row }">
+            <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
+          </template>
+          <template v-slot:filter="{ $panel, column }">
+            <el-checkbox-group v-for="(option, index) in column.filters" :key="index" v-model="option.data" style="padding:10px" @change="$panel.changeOption($event, !!option.data, option)">
+              <el-checkbox v-for="(item,i) in MainSortData.statusList " :key="i" :label="item.status_name" style="display:block;" />
+            </el-checkbox-group>
+          </template>
+        </vxe-table-column> -->
         <vxe-table-column field="assetcode" title="资产编码" sortable min-width="100" :visible="tableShowColumn.zcbm" />
         <vxe-table-column field="assetname" title="资产名称" sortable tree-node width="300" :visible="tableShowColumn.zcmc">
           <template slot="header">
@@ -147,13 +164,13 @@
         <vxe-table-column field="adminReguserName" title="管理员" sortable min-width="100" :visible="tableShowColumn.gly" />
         <vxe-table-column field="userName" title="使用人" min-width="100" sortable :visible="tableShowColumn.syr" />
         <vxe-table-column field="useMerchantName" title="使用单位" min-width="100" sortable :visible="tableShowColumn.sydw" />
-        <vxe-table-column field="useBranchMerchantName" title="使用部门" min-width="100" sortable :visible="tableShowColumn.sybm" />
+        <!-- <vxe-table-column field="useBranchMerchantName" title="使用部门" min-width="100" sortable :visible="tableShowColumn.sybm" /> -->
         <vxe-table-column field="limitdate" title="使用期限" min-width="100" sortable :visible="tableShowColumn.syqx" />
         <vxe-table-column field="areaName" title="区域" min-width="100" sortable :visible="tableShowColumn.qy" />
         <vxe-table-column field="posname" title="存放地点" min-width="100" sortable :visible="tableShowColumn.cfdd" />
-        <vxe-table-column field="memo" title="备注信息" min-width="100" sortable :visible="tableShowColumn.bzxx" />
+        <vxe-table-column field="memo" title="备注信息" min-width="100" :visible="tableShowColumn.bzxx" />
         <vxe-table-column field="statusName" title="物资状态" min-width="100" sortable :visible="tableShowColumn.wzzt" />
-        <vxe-table-column field="rfidCode" title="RFID码" min-width="100" sortable :visible="tableShowColumn.RFID" />
+        <vxe-table-column field="rfidCode" title="RFID码" min-width="100" :visible="tableShowColumn.RFID" />
         <!-- <vxe-table-column title="自定义字段1" min-width="120" sortable :visible="tableShowColumn.zdyzd1">--</vxe-table-column> -->
         <!-- <vxe-table-column field="rfidCode" title="供应商" min-width="100" sortable :visible="tableShowColumn.gys" /> -->
         <!-- <vxe-table-column title="联系人" min-width="100" sortable :visible="tableShowColumn.lxr">--</vxe-table-column>
@@ -181,12 +198,13 @@
       :visible.sync="xjzyxxVisible"
       :title="xjzyxxTitle"
       :father-asset-code="fatherAssetCode"
+      :main-sort-data="MainSortData"
       @confirm="submitData"
     />
 
     <!-- 模态框 高级搜索-->
-    <el-dialog title="高级搜索" :visible.sync="gjssVisible" width="60%">
-      <el-form :model="gjssForm" label-position="right" class="gjssFormDom">
+    <el-dialog title="高级搜索" :visible.sync="gjssVisible" width="60%" class="gjssFormDom">
+      <el-form :model="gjssForm" label-position="right">
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="状态" :label-width="formLabelWidth">
@@ -199,11 +217,7 @@
 
                 <el-dropdown-menu slot="dropdown">
                   <el-checkbox-group v-model="gjssForm.statusId" class="highSearchCheckbox">
-                    <el-checkbox label="复选框 A" />
-                    <el-checkbox label="复选框 B" />
-                    <el-checkbox label="复选框 C" />
-                    <el-checkbox label="禁用" />
-                    <el-checkbox label="选中且禁用" />
+                    <el-checkbox v-for="(item,i) in MainSortData.statusList" :key="i" :label="item.status_name" :value="item.status_id" />
                   </el-checkbox-group>
                 </el-dropdown-menu>
               </el-dropdown>
@@ -224,8 +238,6 @@
               </el-col>
             </el-form-item>
           </el-col>
-        </el-row>
-        <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="资产名称" :label-width="formLabelWidth">
               <el-col :span="10" style="padding:0px;">
@@ -243,13 +255,34 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="资产类别" :label-width="formLabelWidth">
-              <el-select v-model="gjssForm.assetkindId" size="small" placeholder="请选择资产类别" :style="{ width: '100%' }">
+              <!-- <el-select v-model="gjssForm.assetkindId" size="small" placeholder="请选择资产类别" :style="{ width: '100%' }">
                 <el-option label="资产类别" value="1" />
-              </el-select>
+                <el-checkbox v-for="(item,i) in MainSortData.statusList" :key="i" :label="item.status_name" :value="item.status_id" />
+
+              </el-select> -->
+
+              <el-dropdown trigger="click" placement="bottom-start" style="width:100%" @visible-change="highSearchChangeAssetkind">
+                <el-input v-model="checkedDepartTags" size="small" />
+
+                <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
+                  <!-- <el-tree
+                    ref="dialogTree"
+                    show-checkbox
+                    node-key="groupId"
+                    :props="defaultProps"
+                    :data="MainSortData.assetkindList"
+                  /> -->
+                  <el-tree
+                    ref="dialogTree"
+                    show-checkbox
+                    node-key="status_id"
+                    :props="defaultProps"
+                    :data="MainSortData.statusList"
+                  />
+                </el-dropdown-menu>
+              </el-dropdown>
             </el-form-item>
           </el-col>
-        </el-row>
-        <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="标准型号" :label-width="formLabelWidth">
               <el-select v-model="gjssForm.standardtypeId" size="small" placeholder="请选择条件" :style="{ width: '100%' }">
@@ -290,58 +323,25 @@
             </el-form-item>
           </el-col>
 
-          <el-col :span="12">
+          <!-- <el-col :span="12">
             <el-form-item label="所属单位" :label-width="formLabelWidth">
-              <el-select v-model="gjssForm.merchantId" size="small" placeholder="请选择所属单位" :style="{ width: '100%' }">
-                <el-option label="所属单位" value="1" />
 
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="使用人" :label-width="formLabelWidth">
-              <el-select v-model="gjssForm.userId" size="small" placeholder="请选择条件" :style="{ width: '100%' }">
-                <el-option label="使用人1" value="1" />
-              </el-select>
-            </el-form-item>
-          </el-col>
+              <el-dropdown trigger="click" placement="bottom-start" style="width:100%" @visible-change="highSearchChangeAssetkind">
+                <el-input v-model="checkedDepartTags" size="small" />
 
-          <el-col :span="12">
-            <el-form-item label="使用单位" :label-width="formLabelWidth">
-              <el-select v-model="gjssForm.useMerchantId" size="small" placeholder="请选择使用单位" :style="{ width: '100%' }">
-                <el-option label="使用单位" value="1" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="使用部门" :label-width="formLabelWidth">
-              <el-select v-model="gjssForm.useBranchMerchantId" size="small" placeholder="请选择条件" :style="{ width: '100%' }">
-                <el-option label="使用部门" value="1" />
-              </el-select>
-            </el-form-item>
-          </el-col>
+                <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
 
-          <el-col :span="12">
-            <el-form-item label="使用期限" :label-width="formLabelWidth">
-
-              <el-input v-model="gjssForm.limitdate" size="small" placeholder="请输入使用期限" />
-
+                  <el-tree
+                    ref="dialogTree"
+                    show-checkbox
+                    node-key="status_id"
+                    :props="defaultProps"
+                    :data="MainSortData.statusList"
+                  />
+                </el-dropdown-menu>
+              </el-dropdown>
             </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="区域" :label-width="formLabelWidth">
-              <el-select v-model="gjssForm.areaId" size="small" placeholder="请选择区域" :style="{ width: '100%' }">
-                <el-option label="区域" value="1" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-
+          </el-col> -->
           <el-col :span="12">
             <el-form-item label="存放地点" :label-width="formLabelWidth">
               <el-col :span="10" style="padding:0px;">
@@ -357,9 +357,66 @@
               </el-col>
             </el-form-item>
           </el-col>
+          <el-col :span="12">
+            <el-form-item label="使用单位" :label-width="formLabelWidth">
+              <el-select v-model="gjssForm.useMerchantId" size="small" placeholder="请选择使用单位" :style="{ width: '100%' }">
+                <el-option label="使用单位" value="1" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="使用人" :label-width="formLabelWidth">
+              <!-- <el-select v-model="gjssForm.userId" size="small" placeholder="请先选择使用单位" :style="{ width: '100%' }" :disabled="!gjssForm.useMerchantId">
+                <el-option label="使用人1" value="1" />
+              </el-select> -->
+              <el-autocomplete
+                v-model="highSearchSeleUser"
+                :fetch-suggestions="querySearchAsync"
+                placeholder="请输入内容"
+                style="width:100%"
+                size="small"
+                :disabled="gjssForm.useMerchantId"
+                @select="handleSelect "
+              >
+                <template slot-scope="{ item }">
+                  <span> {{ item.chineseName }} </span>
+                </template>
+              </el-autocomplete>
+            </el-form-item>
+          </el-col>
+
+          <el-col :span="12">
+            <el-form-item label="使用期限" :label-width="formLabelWidth">
+
+              <el-input v-model="gjssForm.limitdate" size="small" placeholder="请输入使用期限" />
+
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="区域" :label-width="formLabelWidth">
+              <!-- <el-select v-model="gjssForm.areaId" size="small" placeholder="请选择区域" :style="{ width: '100%' }">
+                <el-option label="区域" value="1" />
+              </el-select> -->
+              <el-dropdown trigger="click" placement="bottom-start" style="width:100%" @visible-change="highSearchChangeAssetkind">
+                <el-input v-model="checkedDepartTags" size="small" />
+
+                <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
+
+                  <el-tree
+                    ref="dialogTree"
+                    show-checkbox
+                    node-key="status_id"
+                    :props="defaultProps"
+                    :data="MainSortData.statusList"
+                  />
+                </el-dropdown-menu>
+              </el-dropdown>
+            </el-form-item>
+          </el-col>
+
         </el-row>
       </el-form>
-      <div slot="footer" class="dialog-footer">
+      <div slot="footer" class="dialog-footer" style="padding-top:10px;">
         <el-button @click="gjssVisible = false">取 消</el-button>
         <el-button type="primary" @click="confirmHighSearch">确 定</el-button>
       </div>
@@ -377,7 +434,7 @@
       </el-row>
       <el-row>
         <el-col :span="10" class="assetCopy_title">
-          资产分类：
+          资产类别：
         </el-col>
         <el-col :span="14">
           {{ assetCopyOptions.type }}
@@ -394,7 +451,7 @@
       </el-row>
       <div slot="footer" class="dialog-footer">
         <el-button @click="assetCopyVisible = false">取 消</el-button>
-        <el-button type="primary" @click="assetCopyVisible = false">确 定</el-button>
+        <el-button type="primary" @click="assetCopyConfirm">确 定</el-button>
       </div>
 
     </el-dialog>
@@ -403,7 +460,8 @@
 </template>
 
 <script>
-import { getAssetsList, createAssets, deleteAsset } from '@/api/assetManage'
+import { getAssetsList, createAssets, deleteAsset, baseCode, copyAsset } from '@/api/assetManage'
+import { getListRegUserByChineseName } from '@/api/settings'
 import fromDialog from './components/formDialog'
 import Pagination from '@/components/Pagination'
 export default {
@@ -432,12 +490,15 @@ export default {
   },
   data() {
     return {
+      highSearchSeleUser: '',
+      filterStatusList: [],
       assetCopyVisible: false,
       fatherAssetCode: '',
       PerviewDialogImageUrl: '',
       PerviewDialogVisible: false,
       copyNum: 1,
       assetCopyOptions: {
+        assetsId: '',
         name: '测试',
         type: '测试分类',
         number: 1
@@ -480,7 +541,7 @@ export default {
       isAllreadyConfirmColSetting: false,
       companyValue: '',
       statusValue: '',
-      input1: '',
+      searchIpt: '',
       xjzyxxVisible: false,
       xjzyxxTitle: '新建资源信息',
       gjssVisible: false,
@@ -537,253 +598,7 @@ export default {
       },
       formLabelWidth: '100px',
       isAllExpand: true,
-      tableData: [
-        {
-          id: 1,
-          date: '2016-05-02',
-          name: '王小虎',
-          title: '按照部门统计巡检漏检结果',
-          checked: false,
-          eventID: '1018723',
-          youxian: 'High',
-          diedai: 'V3.2',
-          status: '在库',
-          person: '赵鹏翔;刘彩萍',
-          startTime: '2020-09-07',
-          endTime: '2020-09-11'
-        },
-        {
-          id: 2,
-          date: '2016-05-04',
-          name: '王小虎',
-          title: '终端软件更新web端开发',
-          checked: false,
-          eventID: '1003470',
-          youxian: 'High',
-          diedai: '--',
-          status: '在运',
-          person: '刘峰',
-          startTime: '2019-03-04',
-          endTime: '2019-09-11',
-          children: [
-            {
-              id: 31,
-              date: '2016-05-01',
-              name: '王小虎',
-              title: '版本号',
-              checked: false,
-              eventID: '1003471',
-              youxian: 'High',
-              diedai: '--',
-              status: '闲置',
-              person: '刘峰',
-              startTime: '2019-03-04',
-              endTime: '2019-03-05',
-              children: [
-                {
-                  id: 31,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '版本文件列表',
-                  checked: false,
-                  eventID: '1003481',
-                  youxian: 'High',
-                  diedai: '服务端',
-                  status: '维修',
-                  person: '刘峰',
-                  startTime: '2019-03-04',
-                  endTime: '2019-03-04'
-                }, {
-                  id: 31,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '添加版本号',
-                  checked: false,
-                  eventID: '1003480',
-                  youxian: 'High',
-                  diedai: '服务端',
-                  status: '报废',
-                  person: '刘峰',
-                  startTime: '2019-03-04',
-                  endTime: '2019-03-04'
-                }
-              ]
-            }
-          ]
-        },
-        {
-          id: 3,
-          date: '2016-05-01',
-          name: '王小虎',
-          title: '系统管理',
-          checked: false,
-          eventID: '1003031',
-          youxian: 'High',
-          diedai: '--',
-          status: '退运',
-          person: '安喜喜',
-          startTime: '--',
-          endTime: '--',
-          children: [
-            {
-              id: 31,
-              date: '2016-05-01',
-              name: '王小虎',
-              title: '系统管理菜单-（菜单管理）',
-              checked: false,
-              eventID: '1003480',
-              youxian: 'High',
-              diedai: '--',
-              status: '退运',
-              person: '安喜喜',
-              startTime: '--',
-              endTime: '--',
-              children: [
-                {
-                  id: 3,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '系统管理菜单-（菜单管理）列表数据及分页',
-                  checked: false,
-                  eventID: '1004511',
-                  youxian: 'High',
-                  diedai: 'WEB前端',
-                  status: '报废',
-                  person: '安喜喜',
-                  startTime: '2019-03-05',
-                  endTime: '2019-03-05'
-                },
-                {
-                  id: 3,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '系统管理-（菜单管理）-需求讨论',
-                  checked: false,
-                  eventID: '1004507',
-                  youxian: 'High',
-                  diedai: 'WEB前端',
-                  status: '维修',
-                  person: '安喜喜',
-                  startTime: '2019-03-05',
-                  endTime: '2019-03-05'
-                }, {
-                  id: 3,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '系统管理-（菜单管理）-页面搭建',
-                  checked: false,
-                  eventID: '1004506',
-                  youxian: 'High',
-                  diedai: 'WEB前端',
-                  status: '维修',
-                  person: '安喜喜',
-                  startTime: '2019-03-05',
-                  endTime: '2019-03-05'
-                }, {
-                  id: 3,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '添加 菜单/按钮 权限',
-                  checked: false,
-                  eventID: '1004505',
-                  youxian: 'High',
-                  diedai: 'WEB前端',
-                  status: '闲置',
-                  person: '安喜喜',
-                  startTime: '2019-03-05',
-                  endTime: '2019-03-05'
-                }
-              ]
-            }
-          ]
-        },
-        {
-          id: 4,
-          date: '2016-05-03',
-          name: '王小虎',
-          title: '调试下载临时任务接口',
-          checked: false,
-          eventID: '1003026',
-          youxian: 'Middle',
-          diedai: '--',
-          status: '闲置',
-          person: '代海涛',
-          startTime: '2019-03-05',
-          endTime: '2019-03-05'
-        },
-        {
-          id: 4,
-          date: '2016-05-03',
-          name: '王小虎',
-          title: '优化视频视频录制播放功能',
-          checked: false,
-          eventID: '1002733',
-          youxian: 'Middle',
-          diedai: '--',
-          status: '在运',
-          person: '代海涛',
-          startTime: '2019-02-19',
-          endTime: '2019-02-19',
-          children: [
-            {
-              id: 4,
-              date: '2016-05-03',
-              name: '王小虎',
-              title: '优化视频录制播放',
-              checked: false,
-              eventID: '1002736',
-              youxian: 'Middle',
-              diedai: 'APP安卓',
-              status: '在运',
-              person: '代海涛',
-              startTime: '2019-02-19',
-              endTime: '2019-02-19'
-            },
-            {
-              id: 4,
-              date: '2016-05-03',
-              name: '王小虎',
-              title: '优化视频录制大小',
-              checked: false,
-              eventID: '1002734',
-              youxian: 'Middle',
-              diedai: 'APP安卓',
-              status: '在库',
-              person: '代海涛',
-              startTime: '2019-02-19',
-              endTime: '2019-02-19'
-            }
-          ]
-        },
-        {
-          id: 4,
-          date: '2016-05-03',
-          name: '王小虎',
-          title: '调试刷纽扣提交开始和结束时间接口',
-          checked: false,
-          eventID: '1002705',
-          youxian: 'Middle',
-          diedai: '--',
-          status: '在库',
-          person: '代海涛',
-          startTime: '2019-03-04',
-          endTime: '2019-03-04'
-        },
-        {
-          id: 4,
-          date: '2016-05-03',
-          name: '王小虎',
-          title: '调试同步巡检任务数据接口',
-          checked: false,
-          eventID: '1002704',
-          youxian: 'Middle',
-          diedai: '--',
-          status: '在库',
-          person: '代海涛',
-          startTime: '2019-03-01',
-          endTime: '2019-03-01'
-        }
-      ],
+      tableData: [],
       addDialogRoles: {
         assetname: [
           { required: true, message: '请输入资产名称', trigger: 'blur' }
@@ -796,39 +611,44 @@ export default {
         ]
       },
       pageQuery: {
-        // statusId: [],
-        // assetcode: '',
-        // assetcodeLogicType: '',
-        // assetname: '',
-        // assetnameLogicType: '',
-        // assetkindId: '',
-        // standardtypeId: '',
-        // norms: '',
-        // normsLogicType: '',
-        // buydate: '',
-        // merchantId: '',
-        // userId: '',
-        // useMerchantId: '',
-        // useBranchMerchantId: '',
-        // limitdate: '',
-
         orderType: '',
         orderName: '',
-
         pageNo: 1,
         pageSize: 10
       },
       pageTotal: 0,
-      tableLoading: false
+      tableLoading: false,
+      MainSortData: {},
+      // defaultProps: {
+      //   children: 'zones',
+      //   label: 'groupName',
+      //   isLeaf: 'leaf'
+      // }
+      defaultProps: {
+        children: 'children',
+        label: 'status_name',
+        isLeaf: 'leaf'
+      }
     }
   },
   computed: {
     highSearch_status() {
       return this.gjssForm.statusId.join(';')
+    },
+    checkedDepartTags() {
+      return ''
     }
   },
   created() {
     this.getList()
+    baseCode().then(res => {
+      if (res.code === 0 && res.data) {
+        for (const key in res.data) {
+          this.$set(this.MainSortData, key, res.data[key])
+        }
+      }
+      // this.MainSortData = res.data ? res.data : {}
+    })
   },
   methods: {
     getList() {
@@ -899,7 +719,19 @@ export default {
       this.settingVisible = false
     },
     sortChangeEvent(column, property, order) {
-      console.log('column', column.order)
+      console.log('order', column.order)
+      console.log('column', column)
+      if (!column.order) {
+        this.pageQuery.orderName = ''
+        this.pageQuery.orderType = ''
+        this.getList()
+        return
+      }
+      this.pageQuery.pageNo = 1
+      this.pageQuery.pageSize = 10
+      this.pageQuery.orderName = column.property
+      this.pageQuery.orderType = column.order.toUpperCase()
+      this.getList()
     },
     operationSelect(command) {
       console.log('command', command)
@@ -914,6 +746,9 @@ export default {
     showCopyPage(row) {
       console.log('row', row)
       this.assetCopyVisible = true
+      this.assetCopyOptions.assetsId = row.assetId
+      this.assetCopyOptions.name = row.assetname
+      this.assetCopyOptions.type = row.assetkindName
     },
     deteleAsset(row) {
       console.log('row', row)
@@ -951,6 +786,7 @@ export default {
     },
     submitData(data) {
       console.log('data', data)
+      // return
       createAssets(data).then(res => {
         console.log('createAssets', res)
         if (res.code === 0) {
@@ -969,6 +805,67 @@ export default {
       const obj = { ...this.pageQuery, ...this.gjssForm }
       obj.statusId = [...this.gjssForm.statusId]
       console.log('obj', obj)
+    },
+    searchList() {
+
+    },
+    clearSearchRes() {
+
+    },
+    changeSelectdepartment(val) {
+      console.log('changeSelectdepartment', val)
+    },
+    changeSelectType(val) {
+      console.log('changeSelectType', val)
+    },
+    changeFilterEvent() {
+
+    },
+    filterStatusMethod() {
+
+    },
+    highSearchChangeAssetkind() {
+
+    },
+    querySearchAsync(queryString, cb) {
+      if (queryString) {
+        getListRegUserByChineseName({ chineseName: queryString }).then(res => {
+          if (res.code === 0) {
+            return cb(res.data)
+          }
+        })
+        cb([])
+      } else {
+        cb([])
+      }
+    },
+    handleSelect(item) {
+      // console.log('item', item)
+      this.gjssForm.userId = item.reguserId
+      this.highSearchSeleUser = item.chineseName
+    },
+    assetCopyConfirm() {
+      console.log('数量', this.copyNum)
+      if (this.copyNum) {
+        const obj = {
+          count: this.copyNum,
+          assetsId: this.assetCopyOptions.assetId
+        }
+        copyAsset(obj).then(res => {
+          if (res.code === 0) {
+            this.$message({ type: 'success', message: '复制成功！' })
+          } else {
+            this.$message({ type: 'error', message: '复制失败，请稍后再试！' })
+          }
+          this.assetCopyVisible = false
+        }).catch(err => {
+          console.log('err', err)
+          this.assetCopyVisible = false
+          this.$message({ type: 'error', message: '复制失败，请稍后再试！' })
+        })
+      } else {
+        this.$message({ type: 'warning', message: '请输入复制数量' })
+      }
     }
   }
 }
@@ -1192,8 +1089,11 @@ export default {
   padding-right: 20px;
 }
 
-.gjssFormDom >>>  .el-row {
-  height: 50px;
+.gjssFormDom >>>  .el-form-item {
+  margin-bottom: 10px;
+}
+.gjssFormDom >>> .el-dialog__body {
+  padding-bottom: 0;
 }
 .xjzyxx_dialog >>> .el-form-item{
   margin-bottom: 10px;

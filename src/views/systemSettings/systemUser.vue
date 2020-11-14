@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-row>
       <el-select v-model="SearchType" placeholder="请选择搜索类型" style="padding:0 6px;width:160px;">
-        <el-option label="用户名" value="sysuserName" />
+        <el-option label="用户名" value="reguserName" />
         <el-option label="姓名" value="chineseName" />
         <el-option label="手机号" value="mobile" />
         <el-option label="邮箱" value="email" />
@@ -32,8 +32,8 @@
         :data="tableData"
       >
         <vxe-table-column type="checkbox" width="40" :resizable="false" />
-        <vxe-table-column field="id" title="序号" width="60" />
-        <vxe-table-column field="sysuserName" title="用户名" />
+        <vxe-table-column type="seq" title="序号" width="60" />
+        <vxe-table-column field="reguserName" title="用户名" />
         <vxe-table-column field="chineseName" title="姓名" />
         <vxe-table-column field="mobile" title="手机号" />
         <vxe-table-column field="email" title="邮箱" />
@@ -62,8 +62,8 @@
       />
       <el-dialog :title="addDialogTitle" :visible.sync="showAddDialog" width="600px" @close="cancalAddUser">
         <el-form ref="addUser" :rules="addFormRules" :model="addUserInfo" status-icon label-position="right">
-          <el-form-item label="用户名" prop="sysuserName" :label-width="formLabelWidth">
-            <el-input v-model="addUserInfo.sysuserName" />
+          <el-form-item label="用户名" prop="reguserName" :label-width="formLabelWidth">
+            <el-input v-model="addUserInfo.reguserName" />
           </el-form-item>
           <el-form-item label="真实姓名" prop="chineseName" :label-width="formLabelWidth">
             <el-input v-model="addUserInfo.chineseName" />
@@ -74,10 +74,10 @@
           <el-form-item label="手机号" prop="mobile" :label-width="formLabelWidth">
             <el-input v-model="addUserInfo.mobile" />
           </el-form-item>
-          <el-form-item label="密码" prop="power" :label-width="formLabelWidth">
+          <el-form-item v-if="addDialogTitle === '添加成员'" label="密码" prop="power" :label-width="formLabelWidth">
             <el-input v-model="addUserInfo.power" autocomplete="off" type="password" />
           </el-form-item>
-          <el-form-item label="确认密码" prop="rePower" :label-width="formLabelWidth">
+          <el-form-item v-if="addDialogTitle === '添加成员'" label="确认密码" prop="rePower" :label-width="formLabelWidth">
             <el-input v-model="addUserInfo.rePower" autocomplete="off" type="password" />
           </el-form-item>
           <!-- <el-form-item label="启用/停用" :label-width="formLabelWidth">
@@ -100,6 +100,7 @@
 import { getSysUserList, addSysUserList, deleteSysUserList, editSysUserList } from '@/api/settings'
 import { isMobileNumber } from '@/utils/validate'
 import Pagination from '@/components/Pagination'
+import { mapState } from 'vuex'
 export default {
   components: { Pagination },
   data() {
@@ -149,7 +150,7 @@ export default {
         chineseName: [
           { message: '请输入姓名', trigger: 'blur', required: true }
         ],
-        sysuserName: [
+        reguserName: [
           { message: '请输入用户名', trigger: 'blur', required: true }
         ]
 
@@ -159,7 +160,7 @@ export default {
       searchIpt: '',
       formLabelWidth: '100px',
       addUserInfo: {
-        sysuserName: '',
+        reguserName: '',
         chineseName: '',
         email: '',
         mobile: '',
@@ -176,11 +177,16 @@ export default {
         mobile: '',
         pageNo: 1,
         pageSize: 10,
-        sysuserName: ''
+        reguserName: ''
       },
       addDialogTitle: '添加成员',
       addDialogSysUserID: ''
     }
+  },
+  computed: {
+    ...mapState({
+      merchantId: state => state.user.merchantId
+    })
   },
   created() {
     this.getList()
@@ -205,13 +211,17 @@ export default {
     },
     cancalAddUser() {
       this.$refs.addUser.clearValidate()
-      this.addUserInfo = { sysuserName: '', chineseName: '', email: '', mobile: '', power: '', rePower: '' }
+      this.addUserInfo = { reguserName: '', chineseName: '', email: '', mobile: '', power: '', rePower: '' }
       this.showAddDialog = false
     },
     confirmAdd() {
       this.$refs.addUser.validate(valid => {
         if (valid && this.addDialogTitle === '添加成员') {
-          addSysUserList({ ...this.addUserInfo }).then(res => { // 添加用户
+          const obj = { ...this.addUserInfo }
+          obj.merchantId = this.merchantId
+          obj.userType = 0
+          obj.addFiledsFlag = 0
+          addSysUserList(obj).then(res => { // 添加用户
             if (res.code === 0) {
               this.$message({
                 type: 'success',
@@ -270,18 +280,18 @@ export default {
         return
       }
 
-      this.pageQuery = { chineseName: '', email: '', mobile: '', pageNo: 1, pageSize: 10, sysuserName: '' }
+      this.pageQuery = { chineseName: '', email: '', mobile: '', pageNo: 1, pageSize: 10, reguserName: '' }
       this.pageQuery[this.SearchType] = this.searchIpt
       this.getList()
     },
     clearSearchRes() {
-      this.pageQuery = { chineseName: '', email: '', mobile: '', pageNo: 1, pageSize: 10, sysuserName: '' }
+      this.pageQuery = { chineseName: '', email: '', mobile: '', pageNo: 1, pageSize: 10, reguserName: '' }
       this.getList()
     },
     deleteSysUser(row) {
       console.log('row', row)
       this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }).then(() => {
-        deleteSysUserList(row.sysuserId).then(res => {
+        deleteSysUserList(row.reguserId).then(res => {
           if (res.code === 0) {
             this.$message({ type: 'success', message: '成功删除该用户' })
           }
