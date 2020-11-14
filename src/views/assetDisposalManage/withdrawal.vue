@@ -162,6 +162,7 @@
 </template>
 <script>
 import addDialog from './components/addNewDialog'
+import { queryAssetBackList } from '@/api/assetManage'
 export default {
   components: { addDialog },
   filters: {
@@ -431,6 +432,19 @@ export default {
           endTime: '2019-03-01'
         }
       ]
+    }
+  },
+  methods: {
+    // 获取
+    getList() {
+      queryAssetBackList().then((res) => {
+        if(res.code === 0) {
+
+        }
+      })
+      .catch((err) => {
+        console.log('err', err)
+      })
     }
   }
 }
