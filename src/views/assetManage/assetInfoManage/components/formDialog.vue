@@ -1,5 +1,9 @@
 <template>
-  <el-dialog :title="title" :visible.sync="innerVisible" width="80%" class="xjzyxx_dialog" :close-on-click-modal="false" @close="closeThis">
+  <el-dialog :visible.sync="innerVisible" width="80%" class="xjzyxx_dialog" :close-on-click-modal="false" :fullscreen="fullscreen" @close="closeThis">
+    <div slot="title">
+      {{ title }}
+      <svg-icon :icon-class="fullscreen | iconName" class-name="dialogIcon" @click="changeFullscreen" />
+    </div>
     <div v-if="title === '新建副资产信息'" class="showFatherAssetCode"><span>父资产编码</span>{{ fatherAssetCode }}</div>
     <el-form ref="assetForm" :model="xjzyxxForm" label-position="right" :rules="addDialogRoles">
       <el-row :gutter="20">
@@ -245,6 +249,11 @@
 </template>
 <script>
 export default {
+  filters: {
+    iconName(val) {
+      return val ? 'shouqiquanping' : 'quanping'
+    }
+  },
   props: {
     visible: {
       type: Boolean,
@@ -256,7 +265,7 @@ export default {
     },
     fatherAssetCode: {
       type: String,
-      default: ' '
+      default: ''
     },
     mainSortData: {
       type: Object,
@@ -274,6 +283,7 @@ export default {
   data() {
     return {
       innerVisible: false,
+      fullscreen: false,
       postUrl: '',
       formLabelWidth: '100px',
       PerviewDialogVisible: false,
@@ -346,6 +356,9 @@ export default {
     console.log('mainSortData', this.mainSortData)
   },
   methods: {
+    changeFullscreen() {
+      this.fullscreen = !this.fullscreen
+    },
     closeThis() {
       this.innerVisible = false
       this.$emit('update:visible', false)
@@ -386,6 +399,7 @@ export default {
     confirm() {
       this.$refs.assetForm.validate(validate => {
         if (validate) {
+          this.xjzyxxForm.parentAssetcode = this.fatherAssetCode
           this.$emit('confirm', this.xjzyxxForm)
         }
       })
@@ -449,5 +463,10 @@ export default {
     text-align: right;
     padding-right: 12px;
     font-weight: bold;
+}
+.dialogIcon {
+    float: right;
+    margin-right: 30px;
+    cursor: pointer;
 }
 </style>

@@ -5,7 +5,7 @@
       class="navtree"
       @show="hidenavtree"
       @operation="navTreeOperation"
-      @Add="Add"
+      @handleNodeClick="handleNodeClick"
     />
     <div :class="['container' , !navTreeShow ? 'hidetree' : '']">
       <el-row style="height:40px; margin-left:10px;padding-top:10px;">
@@ -38,7 +38,6 @@
           :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
           :data="tableData"
         >
-          <vxe-table-column type="checkbox" width="40" :resizable="false" />
           <vxe-table-column type="checkbox" width="40" :resizable="false" />
           <vxe-table-column type="seq" title="序号" width="60" />
           <vxe-table-column field="reguserName" title="用户名" />
@@ -191,10 +190,9 @@ export default {
         email: '',
         reguserName: '',
         chineseName: '',
-        activeFlag: '',
+        activeFlag: 1,
         groupId: '',
-        merchantId: '',
-        addFiledsFlag: ''
+        addFiledsFlag: 2
       },
       addUserInfoRules: {
         mobile: [
@@ -214,50 +212,15 @@ export default {
           { required: true, message: '请选择状态', trigger: 'change' }
         ],
         groupId: [
-          { required: true, message: '请选择单位/部门', trigger: 'blur' }
+          { required: true, message: '请选择单位/部门', trigger: 'change' }
         ],
         addFiledsFlag: [
           { required: true, message: '请选择补充资产字段', trigger: 'change' }
         ]
       },
       tableData: [],
-      data: [{
-        id: 1,
-        label: '一级 1',
-        children: [{
-          id: 4,
-          label: '二级 1-1',
-          children: [{
-            id: 9,
-            label: '三级 1-1-1'
-          }, {
-            id: 10,
-            label: '三级 1-1-2'
-          }]
-        }]
-      }, {
-        id: 2,
-        label: '一级 2',
-        children: [{
-          id: 5,
-          label: '二级 2-1'
-        }, {
-          id: 6,
-          label: '二级 2-2'
-        }]
-      }, {
-        id: 3,
-        label: '一级 3',
-        children: [{
-          id: 7,
-          label: '二级 3-1'
-        }, {
-          id: 8,
-          label: '二级 3-2'
-        }]
-      }],
       defaultProps: {
-        children: 'zones',
+        children: 'children',
         label: 'groupName',
         isLeaf: 'leaf'
       },
@@ -404,7 +367,8 @@ export default {
     createConfirm() {
       this.$refs.addUserInfo.validate(validate => {
         if (validate) {
-          this.addUserInfo.merchantId = this.merchantId
+          // this.addUserInfo.merchantId = this.merchantId
+          this.addUserInfo.userType = 2
           console.log('addUserInfo', this.addUserInfo)
           addSysUserList({ ...this.addUserInfo }).then(res => {
             if (res.code === 0) {
@@ -485,7 +449,7 @@ export default {
         this.checkedDepartment = [...checkedArr.map(item => { return { ...item } })]
       }
     },
-    Add(data) {
+    handleNodeClick(data) {
       console.log('lala', data)
       if (data.groupId) {
         // getListRegUserByGroupId({ groupId: data.groupId }).then(res => {
@@ -493,6 +457,8 @@ export default {
         // }).catch(err => {
         //   console.log('err', err)
         // })
+        this.pageQuery.pageNo = 1
+        this.pageQuery.pageSize = 2
         this.pageQuery.groupId = data.groupId
         this.getList()
       } else {
@@ -500,7 +466,7 @@ export default {
       }
     },
     editSysUser(row) {
-
+      console.log('row', row)
     },
     deleteSysUser(row) {
       console.log('row', row)
@@ -508,6 +474,8 @@ export default {
         deleteSysUserList(row.reguserId).then(res => {
           if (res.code === 0) {
             this.$message({ type: 'success', message: '成功删除该用户' })
+            const idx = this.tableData.findIndex(item => item.reguserId === row.reguserId)
+            if (idx !== -1) this.tableData.splice(idx, 1)
           }
         }).catch(err => {
           console.log('err', err)

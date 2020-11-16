@@ -8,83 +8,29 @@
     @close="close"
   >
 
-    <!-- <el-tabs v-model="activeName" @tab-click="handleClick">
-      <el-tab-pane label="邮件邀请" name="email">
-        <div class="tabscnt">
-          <el-input v-model="addinfo.email" type="textarea" class="textarea" placeholder="通过邮箱添加新成员, 可输入多个邮箱, 空格或回车分隔" />
-
-          <div class="yonghuzu">
-            <span>并将以上成员加入用户组</span>
-            <el-dropdown trigger="click" placement="bottom-start">
-              <span class="el-dropdown-link">
-                {{ selectedGroup }}<i class="el-icon-arrow-down el-icon--right" />
-              </span>
-
-              <el-dropdown-menu slot="dropdown" class="com_dropdownmenu">
-                <div class="Search">
-                  <el-input
-                    v-model="searchgroup"
-                    prefix-icon="el-icon-search"
-                    size="small"
-                  /></div>
-                <el-checkbox-group v-model="addinfo.group">
-                  <el-checkbox label="管理员" />
-                  <el-checkbox label="普通成员" />
-                  <el-checkbox label="用户组1" />
-                  <el-checkbox label="普通用户组01" />
-                </el-checkbox-group>
-              </el-dropdown-menu>
-            </el-dropdown>
-          </div>
-        </div>
-
-      </el-tab-pane>
-      <el-tab-pane label="导入公司成员" name="putin">
-        <div class="tabscnt">
-          <el-input v-model="addinfo.putin" type="textarea" class="textarea" placeholder="请输入公司已有成员的昵称" />
-
-          <div class="yonghuzu">
-            <span class="putinAdd">
-              <i class="el-icon-user-solid" />
-              通过组织架构添加
-            </span>
-
-          </div>
-        </div>
-      </el-tab-pane>
-      <el-tab-pane label="从已有项目复制" name="copy">
-        <div class="tabscnt">
-
-          <div class="yonghuzu">
-            <span>并将以上成员加入用户组</span>
-            <el-dropdown trigger="click" placement="bottom-start">
-              <span class="el-dropdown-link">
-                {{ addinfo.copy }}<i class="el-icon-arrow-down el-icon--right" />
-              </span>
-
-              <el-dropdown-menu slot="dropdown" class="com_dropdownmenu">
-                <div class="Search">
-                  <el-input
-                    v-model="searchgroup"
-                    prefix-icon="el-icon-search"
-                    size="small"
-                  />
-                </div>
-
-                <el-dropdown-item>--空--</el-dropdown-item>
-                <el-dropdown-item>轻量团队模板</el-dropdown-item>
-                <el-dropdown-item>敏捷开发管理</el-dropdown-item>
-              </el-dropdown-menu>
-            </el-dropdown>
-          </div>
-        </div>
-      </el-tab-pane>
-    </el-tabs> -->
-
     <div v-if="!showAddPersonTree" class="tabscnt">
-      <el-input v-model="addinfo.putin" type="textarea" class="textarea" placeholder="请输入公司已有成员的昵称" />
+      <div class="inputOuter" :class="{noStructure:noStructure}" @click="$refs.autocomplete.focus()">
+        <span v-for="(ele , i) in selectedPersons" :key="i" class="selectedPersons">
+          {{ ele.chineseName }}
+          <i class="el-icon-close" @click.stop="delectThisPserson(ele)" />
+        </span>
 
-      <div class="yonghuzu">
+        <!-- <el-input v-model="addinfo.putin" class="textarea" placeholder="请输入已有成员的昵称" /> -->
+        <el-autocomplete
+          ref="autocomplete"
+          v-model="addUserInfoSeleReguser"
+          class="textarea"
+          :fetch-suggestions="querySearchAsync"
+          placeholder="请输入内容"
+          @select="handleSelect"
+        >
+          <template slot-scope="{ item }">
+            <span> {{ item.chineseName }} </span>
+          </template>
+        </el-autocomplete>
+      </div>
+
+      <div v-if="!noStructure" class="yonghuzu">
         <span class="putinAdd" @click="forAddpersonTree">
           <i class="el-icon-user-solid" />
           通过组织架构添加
@@ -105,7 +51,7 @@
     <div v-if="!showAddPersonTree" slot="footer" class="dialog-footer">
       <el-row>
         <el-col :span="6" :offset="18" class="footer_btns">
-          <el-button type="primary" @click="confirm">导入成员</el-button>
+          <el-button type="primary" :loading="confirmLoading" @click="confirm">导入成员</el-button>
         </el-col>
       </el-row>
     </div>
@@ -113,16 +59,23 @@
 </template>
 
 <script>
+import { getListRegUserByChineseName } from '@/api/settings'
 import elDragDialog from '@/directive/el-drag-dialog'
 export default {
   directives: { elDragDialog },
   props: {
     dialogVisible: {
       type: Boolean
+    },
+    noStructure: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
     return {
+      addUserInfoSeleReguser: '',
+      selectedPersons: [],
       activeName: 'email',
       innerVisible: false,
       searchgroup: '',
@@ -134,45 +87,12 @@ export default {
         joinGroup: []
       },
       showAddPersonTree: false,
-      data: [{
-        label: '一级 1',
-        children: [{
-          label: '二级 1-1',
-          children: [{
-            label: '三级 1-1-1'
-          }]
-        }]
-      }, {
-        label: '一级 2',
-        children: [{
-          label: '二级 2-1',
-          children: [{
-            label: '三级 2-1-1'
-          }]
-        }, {
-          label: '二级 2-2',
-          children: [{
-            label: '三级 2-2-1'
-          }]
-        }]
-      }, {
-        label: '一级 3',
-        children: [{
-          label: '二级 3-1',
-          children: [{
-            label: '三级 3-1-1'
-          }]
-        }, {
-          label: '二级 3-2',
-          children: [{
-            label: '三级 3-2-1'
-          }]
-        }]
-      }],
+      data: [],
       defaultProps: {
         children: 'children',
         label: 'label'
-      }
+      },
+      confirmLoading: false
     }
   },
   computed: {
@@ -193,8 +113,14 @@ export default {
   },
   methods: {
     confirm() {
-      this.$emit('update:dialogVisible', false)
-      this.innerVisible = false
+      // this.$emit('update:dialogVisible', false)
+      this.confirmLoading = true
+      this.$emit('confirmData', this.selectedPersons)
+      // this.innerVisible = false
+    },
+    cancalLoading() {
+      this.confirmLoading = false
+      this.selectedPersons = []
     },
     close() {
       this.$emit('update:dialogVisible', false)
@@ -208,6 +134,30 @@ export default {
     },
     AddtreePerson() {
       this.showAddPersonTree = false
+    },
+    querySearchAsync(queryString, cb) {
+      if (queryString) {
+        getListRegUserByChineseName({ chineseName: queryString }).then(res => {
+          if (res.code === 0) {
+            return cb(res.data)
+          }
+        })
+        // cb([])
+      } else {
+        cb([])
+      }
+    },
+    handleSelect(item) {
+      const ishave = this.selectedPersons.some(ele => { return ele.chineseName === item.chineseName })
+      if (!ishave) {
+        this.selectedPersons.push(item)
+      }
+    },
+    delectThisPserson(item) {
+      const index = this.selectedPersons.findIndex(ele => ele.reguserId === item.reguserId)
+      if (index !== -1) {
+        this.selectedPersons.splice(index, 1)
+      }
     }
   }
 }
@@ -290,9 +240,18 @@ export default {
     border-radius: 8px;
     background-color: rgba(0,0,0,0);
 }
+.inputOuter {
+  height: 212px;
+  border: 1px solid #e5e5e5;
+  padding: 10px;
+  cursor: text;
+  &.noStructure {
+    height: 300px;
+  }
+}
 .tabscnt {
     .textarea {
-        height: 212px;
+      width: 180px;
 
     }
 }
@@ -354,8 +313,22 @@ export default {
     }
 }
 
+.selectedPersons {
+  display: inline-block;
+  color: #6a8df9;
+  background-color: #e3f2fd;
+  padding: 5px 10px;
+  margin-right: 10px;
+  i {
+    cursor: pointer;
+  }
+}
+
 </style>
 <style  scoped>
+.inputOuter >>> .el-input__inner {
+  border: none;
+}
 .Search >>> .el-input__inner {
             border: none;
             border-bottom: 1px solid #DCDFE6;

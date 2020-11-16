@@ -139,3 +139,26 @@ export function deleteRole(params, id) {
   })
 }
 
+export function getListRightsByRoleId(params) {
+  return request({
+    url: '/sys/role/listRightsByRoleId',
+    method: 'get',
+    params
+  })
+}
+
+export function saveRoleRights(data) {
+  return request({
+    url: '/sys/role/saveRoleRights',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function saveRoleUser(data) {
+  return request({
+    url: '/sys/role/saveRoleUser',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}

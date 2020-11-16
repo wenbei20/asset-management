@@ -18,7 +18,7 @@
           <el-button slot="append" icon="el-icon-search" @click="searchList" />
         </el-input>
         <el-button type="primary" icon="el-icon-plus" @click="addNew">新建</el-button>
-        <el-dropdown :style="{ marginLeft: '5px' }" @command="operationSelect">
+        <el-dropdown :style="{ marginLeft: '5px' }" trigger="click" @command="operationSelect">
           <el-button type="default" icon="el-icon-receiving" plain>
             操作<i class="el-icon-arrow-down el-icon--right" />
           </el-button>
@@ -83,7 +83,7 @@
         :auto-resize="true"
         stripe
         class="vxetable"
-        :tree-config="{children: 'children',iconOpen: 'el-icon-remove-outline', iconClose: 'el-icon-circle-plus-outline',expandAll:true}"
+        :tree-config="{children: 'children',iconOpen: 'el-icon-remove-outline', iconClose: 'el-icon-circle-plus-outline',expandAll:false, hasChild: 'hasChild' , lazy: true, loadMethod: loadChildrenMethod,}"
         :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
         :sort-config="{remote:true}"
         :data="tableData"
@@ -102,7 +102,7 @@
 
             <div class="editmenu">
               <div class="item">编辑</div>
-              <div class="item" @click="addNewDeputyAssets">副资产</div>
+              <div class="item" @click="addNewDeputyAssets(scope.row)">副资产</div>
               <div class="item" @click="showCopyPage(scope.row)">复制</div>
               <!-- <el-popconfirm
                 title="这是一段内容确定删除吗？"
@@ -110,8 +110,8 @@
                 <div slot="reference" class="item">删除</div>
               </el-popconfirm> -->
               <div class="item" @click="deteleAsset(scope.row)">删除</div>
-              <div class="item create">发卡</div>
-              <div class="item">换卡</div>
+              <div v-if="!scope.row.rfidCode" class="item create" @click="expressCard('发卡',scope)">发卡</div>
+              <div v-else class="item create" @click="expressCard('换卡',scope)">换卡</div>
               <div class="item create">标签打印</div>
             </div>
           </template>
@@ -133,11 +133,6 @@
         </vxe-table-column> -->
         <vxe-table-column field="assetcode" title="资产编码" sortable min-width="100" :visible="tableShowColumn.zcbm" />
         <vxe-table-column field="assetname" title="资产名称" sortable tree-node width="300" :visible="tableShowColumn.zcmc">
-          <template slot="header">
-            <i v-if="isAllExpand" class="el-icon-remove-outline biaotiicon" @click="closeAllNode" />
-            <i v-else class="el-icon-circle-plus-outline biaotiicon" @click="closeAllNode" />
-            资产名称
-          </template>
           <template #default="{ row }">
             <span class="titleText"><i /> {{ row.assetname }}</span>
           </template>
@@ -202,8 +197,18 @@
       @confirm="submitData"
     />
 
+    <cardDialog
+      :visible.sync="showCardDialog"
+      :title="CardDialogTitle"
+      :asset-info="CardDialogInfo"
+    />
+
     <!-- 模态框 高级搜索-->
-    <el-dialog title="高级搜索" :visible.sync="gjssVisible" width="60%" class="gjssFormDom">
+    <el-dialog title="高级搜索" :fullscreen="isHighSearchFullscreen" :close-on-click-modal="false" :visible.sync="gjssVisible" width="60%" class="gjssFormDom">
+      <div slot="title">
+        高级搜索
+        <svg-icon :icon-class="isHighSearchFullscreen | iconName" class-name="dialogIcon" @click="changeFullscreen" />
+      </div>
       <el-form :model="gjssForm" label-position="right">
         <el-row :gutter="20">
           <el-col :span="12">
@@ -423,7 +428,7 @@
     </el-dialog>
 
     <!-- 复制资产 -->
-    <el-dialog title="资产复制" :visible.sync="assetCopyVisible" width="600px" class="assetCopyDialog">
+    <el-dialog title="资产复制" :close-on-click-modal="false" :visible.sync="assetCopyVisible" width="600px" class="assetCopyDialog">
       <el-row>
         <el-col :span="10" class="assetCopy_title">
           资产名称：
@@ -460,13 +465,14 @@
 </template>
 
 <script>
-import { getAssetsList, createAssets, deleteAsset, baseCode, copyAsset } from '@/api/assetManage'
+import { getAssetsList, createAssets, deleteAsset, baseCode, copyAsset, getListChild } from '@/api/assetManage'
 import { getListRegUserByChineseName } from '@/api/settings'
 import fromDialog from './components/formDialog'
+import cardDialog from './components/CardDialog'
 import Pagination from '@/components/Pagination'
 export default {
   name: 'AssetInfoManage',
-  components: { fromDialog, Pagination },
+  components: { fromDialog, Pagination, cardDialog },
   filters: {
     statusClass(e) {
       switch (e) {
@@ -485,11 +491,17 @@ export default {
         default :
           return ' '
       }
+    },
+    iconName(val) {
+      return val ? 'shouqiquanping' : 'quanping'
     }
-
   },
   data() {
     return {
+      showCardDialog: false,
+      CardDialogTitle: '',
+      CardDialogInfo: {},
+      isHighSearchFullscreen: false,
       highSearchSeleUser: '',
       filterStatusList: [],
       assetCopyVisible: false,
@@ -656,6 +668,7 @@ export default {
       getAssetsList(this.pageQuery).then(res => {
         console.log('res', res)
         if (res.code === 0 && res.data && res.data.items) {
+          res.data.items.forEach(ele => { ele.hasChild = true })
           this.tableData = res.data.items
           this.pageTotal = res.data.total
           this.pageQuery.pageSize = res.data.limit
@@ -689,10 +702,10 @@ export default {
       this.xjzyxxTitle = '新建资产信息'
       this.xjzyxxVisible = true
     },
-    addNewDeputyAssets() {
+    addNewDeputyAssets(row) {
+      this.fatherAssetCode = row.assetcode
       this.xjzyxxTitle = '新建副资产信息'
       this.xjzyxxVisible = true
-      this.fatherAssetCode = 'testCode'
     },
     confirmColSetting() {
       console.log('confirmhide')
@@ -760,6 +773,7 @@ export default {
         deleteAsset({ assetsId: row.assetId }).then(res => {
           if (res.code === 0) {
             this.$message({ type: 'success', message: '删除成功!' })
+            this.getList()
           } else {
             this.$message({ type: 'error', message: '删除失败，请稍后再试' })
           }
@@ -786,7 +800,6 @@ export default {
     },
     submitData(data) {
       console.log('data', data)
-      // return
       createAssets(data).then(res => {
         console.log('createAssets', res)
         if (res.code === 0) {
@@ -849,11 +862,12 @@ export default {
       if (this.copyNum) {
         const obj = {
           count: this.copyNum,
-          assetsId: this.assetCopyOptions.assetId
+          assetsId: this.assetCopyOptions.assetsId
         }
         copyAsset(obj).then(res => {
           if (res.code === 0) {
             this.$message({ type: 'success', message: '复制成功！' })
+            this.getList()
           } else {
             this.$message({ type: 'error', message: '复制失败，请稍后再试！' })
           }
@@ -866,6 +880,30 @@ export default {
       } else {
         this.$message({ type: 'warning', message: '请输入复制数量' })
       }
+    },
+    loadChildrenMethod({ row }) {
+      return new Promise((resolve, reject) => {
+        getListChild({ parentAssetcode: row.assetcode }).then(res => {
+          if (res.code === 0) {
+            resolve(res.data)
+          } else {
+            resolve([])
+          }
+        }).catch(err => {
+          console.log('err', err)
+          resolve([])
+        })
+      })
+    },
+    changeFullscreen() {
+      this.isHighSearchFullscreen = !this.isHighSearchFullscreen
+    },
+    expressCard(name, { row }) {
+      this.CardDialogTitle = name
+      this.CardDialogInfo.assetcode = row.assetcode
+      this.CardDialogInfo.assetname = row.assetname
+      this.CardDialogInfo.assetId = row.assetId
+      this.showCardDialog = true
     }
   }
 }
@@ -1037,7 +1075,11 @@ export default {
             &.baof { border-color: #D56D53; background-color: #D56D53; color: #fff; }
             &.tuiy { border-color: #EEA446; background-color: #EEA446; color: #fff; }
           }
-
+.dialogIcon {
+    float: right;
+    margin-right: 30px;
+    cursor: pointer;
+}
 </style>
 <style  scoped>
 .avatar-uploader >>> .el-upload {

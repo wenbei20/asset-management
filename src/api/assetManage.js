@@ -47,3 +47,10 @@ export function copyAsset(data) {
   })
 }
 
+export function getListChild(data) {
+  return request({
+    url: '/assets/listChild',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
