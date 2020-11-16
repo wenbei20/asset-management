@@ -817,7 +817,7 @@
     "@babel/types" "^7.4.4"
     "esutils" "^2.0.2"
 
-"@babel/runtime@^7.11.0", "@babel/runtime@^7.8.4":
+"@babel/runtime@^7.11.0", "@babel/runtime@^7.3.1", "@babel/runtime@^7.8.4":
   "integrity" "sha512-J5AIf3vPj3UwXaAzb5j1xM4WAQDX3EMgemF8rjCP3SoW09LfRKAXQKt6CoVYl230P6iWdRcBbnLDDdnqWxZSCA=="
   "resolved" "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.12.1.tgz"
   "version" "7.12.1"
@@ -1066,6 +1066,20 @@
   "integrity" "sha512-shAmDyaQC4H92APFoIaVDHCx5bStIocgvbwQyxPRrbUY20V1EYTbSDchWbuwlMG3V17cprZhA6+78JfB+3DTPw=="
   "resolved" "https://registry.yarnpkg.com/@nodelib/fs.stat/-/fs.stat-1.1.3.tgz"
   "version" "1.1.3"
+
+"@riophae/vue-treeselect@^0.4.0":
+  "integrity" "sha512-J4atYmBqXQmiPFK/0B5sXKjtnGc21mBJEiyKIDZwk0Q9XuynVFX6IJ4EpaLmUgL5Tve7HAS7wkiGGSti6Uaxcg=="
+  "resolved" "https://registry.npmjs.org/@riophae/vue-treeselect/-/vue-treeselect-0.4.0.tgz"
+  "version" "0.4.0"
+  dependencies:
+    "@babel/runtime" "^7.3.1"
+    "babel-helper-vue-jsx-merge-props" "^2.0.3"
+    "easings-css" "^1.0.0"
+    "fuzzysearch" "^1.0.3"
+    "is-promise" "^2.1.0"
+    "lodash" "^4.0.0"
+    "material-colors" "^1.2.6"
+    "watch-size" "^2.0.0"
 
 "@soda/friendly-errors-webpack-plugin@^1.7.1":
   "integrity" "sha512-cWKrGaFX+rfbMrAxVv56DzhPNqOJPZuNIS2HGMELtgGzb+vsMzyig9mml5gZ/hr2BGtSLV+dP2LUEuAL8aG2mQ=="
@@ -2082,7 +2096,7 @@
     "source-map" "^0.5.7"
     "trim-right" "^1.0.1"
 
-"babel-helper-vue-jsx-merge-props@^2.0.0":
+"babel-helper-vue-jsx-merge-props@^2.0.0", "babel-helper-vue-jsx-merge-props@^2.0.3":
   "integrity" "sha512-gsLiKK7Qrb7zYJNgiXKpXblxbV5ffSwR0f5whkPAaBAR4fhi6bwRZxX9wBlIc5M/v8CCkXUbXZL4N/nSE97cqg=="
   "resolved" "https://registry.yarnpkg.com/babel-helper-vue-jsx-merge-props/-/babel-helper-vue-jsx-merge-props-2.0.3.tgz"
   "version" "2.0.3"
@@ -3935,6 +3949,11 @@
     "readable-stream" "^2.0.0"
     "stream-shift" "^1.0.0"
 
+"easings-css@^1.0.0":
+  "integrity" "sha512-7Uq7NdazNfVtr0RNmPAys8it0zKCuaqxJStYKEl72D3j4gbvXhhaM7iWNbqhA4C94ygCye6VuyhzBRQC4szeBg=="
+  "resolved" "https://registry.npmjs.org/easings-css/-/easings-css-1.0.0.tgz"
+  "version" "1.0.0"
+
 "easy-stack@^1.0.0":
   "integrity" "sha1-EskbMIWjfwuqM26UhurEv5Tj54g="
   "resolved" "https://registry.yarnpkg.com/easy-stack/-/easy-stack-1.0.0.tgz"
@@ -4889,6 +4908,11 @@
   "integrity" "sha1-GwqzvVU7Kg1jmdKcDj6gslIHgyc="
   "resolved" "https://registry.yarnpkg.com/functional-red-black-tree/-/functional-red-black-tree-1.0.1.tgz"
   "version" "1.0.1"
+
+"fuzzysearch@^1.0.3":
+  "integrity" "sha1-3/yA9tawQiPyImqnndGUIxCW0Ag="
+  "resolved" "https://registry.npmjs.org/fuzzysearch/-/fuzzysearch-1.0.3.tgz"
+  "version" "1.0.3"
 
 "gensync@^1.0.0-beta.1":
   "integrity" "sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg=="
@@ -5868,6 +5892,11 @@
   "integrity" "sha1-IHurkWOEmcB7Kt8kCkGochADRXU="
   "resolved" "https://registry.yarnpkg.com/is-primitive/-/is-primitive-2.0.0.tgz"
   "version" "2.0.0"
+
+"is-promise@^2.1.0":
+  "integrity" "sha512-+lP4/6lKUBfQjZ2pdxThZvLUAafmZb8OAxFb8XXtiQmS35INgr85hdOGoEs124ez1FCnZJt6jau/T+alh58QFQ=="
+  "resolved" "https://registry.npmjs.org/is-promise/-/is-promise-2.2.2.tgz"
+  "version" "2.2.2"
 
 "is-regex@^1.0.4", "is-regex@^1.1.1":
   "integrity" "sha512-1+QkEcxiLlB7VEyFtyBg94e08OAsvq7FUBgApTq/w2ymCLyKJgDPsybBENVtA7XCQEgEXxKPonG+mvYRxh/LIg=="
@@ -6852,7 +6881,7 @@
   "resolved" "https://registry.yarnpkg.com/lodash.uniq/-/lodash.uniq-4.5.0.tgz"
   "version" "4.5.0"
 
-"lodash@^4.17.11", "lodash@^4.17.14", "lodash@^4.17.15", "lodash@^4.17.19", "lodash@^4.17.20", "lodash@^4.17.3", "lodash@^4.17.4":
+"lodash@^4.0.0", "lodash@^4.17.11", "lodash@^4.17.14", "lodash@^4.17.15", "lodash@^4.17.19", "lodash@^4.17.20", "lodash@^4.17.3", "lodash@^4.17.4":
   "integrity" "sha512-PlhdFcillOINfeV7Ni6oF1TAEayyZBoZ8bcshTHqOYJYlrqzRK5hagpagky5o4HfCzzd1TRkXPMFq6cKk9rGmA=="
   "resolved" "https://registry.yarnpkg.com/lodash/-/lodash-4.17.20.tgz"
   "version" "4.17.20"
@@ -6939,6 +6968,11 @@
   "version" "1.0.0"
   dependencies:
     "object-visit" "^1.0.0"
+
+"material-colors@^1.2.6":
+  "integrity" "sha512-6qE4B9deFBIa9YSpOc9O0Sgc43zTeVYbgDT5veRKSlB2+ZuHNoVVxA1L/ckMUayV9Ay9y7Z/SZCLcGteW9i7bg=="
+  "resolved" "https://registry.npmjs.org/material-colors/-/material-colors-1.2.6.tgz"
+  "version" "1.2.6"
 
 "math-random@^1.0.1":
   "integrity" "sha512-rUxjysqif/BZQH2yhd5Aaq7vXMSx9NdEsQcyA07uEzIvxgI7zIr33gGsh+RU0/XjmQpCW7RsVof1vlkvQVCK5A=="
@@ -10751,7 +10785,7 @@
   "resolved" "https://registry.yarnpkg.com/vue-template-es2015-compiler/-/vue-template-es2015-compiler-1.9.1.tgz"
   "version" "1.9.1"
 
-"vue@^2 || ^3.0.0-0", "vue@^2.5.17", "vue@^2.x", "vue@2.6.10", "vue@2.x":
+"vue@^2 || ^3.0.0-0", "vue@^2.2.0", "vue@^2.5.17", "vue@^2.x", "vue@>= 2.6.0 < 3", "vue@2.6.10", "vue@2.x":
   "integrity" "sha512-ImThpeNU9HbdZL3utgMCq0oiMzAkt1mcgy3/E6zWC/G6AaQoeuFdsl9nDhTDU3X1R6FK7nsIUuRACVcjI+A2GQ=="
   "resolved" "https://registry.yarnpkg.com/vue/-/vue-2.6.10.tgz"
   "version" "2.6.10"
@@ -10760,6 +10794,11 @@
   "integrity" "sha512-mdHeHT/7u4BncpUZMlxNaIdcN/HIt1GsGG5LKByArvYG/v6DvHcOxvDCts+7SRdCoIRGllK8IMZvQtQXLppDYg=="
   "resolved" "https://registry.yarnpkg.com/vuex/-/vuex-3.1.0.tgz"
   "version" "3.1.0"
+
+"vxe-table@^2.9.26":
+  "integrity" "sha512-Sy1JZeWJVDAqo0LDaH2PyrN+sSgSc+j+U9gJqeTxkGoKdd/xfZfY0iQw2MQ/h7XmUbYEY2OrBLwIQNE+1NEqZw=="
+  "resolved" "https://registry.npmjs.org/vxe-table/-/vxe-table-2.10.0.tgz"
+  "version" "2.10.0"
 
 "w3c-hr-time@^1.0.1":
   "integrity" "sha512-z8P5DvDNjKDoFIHK7q8r8lackT6l+jo/Ye3HOle7l9nICP9lf1Ci25fy9vHd0JOWewkIFzXIEig3TdKT7JQ5fQ=="
@@ -10783,6 +10822,11 @@
   "version" "1.0.7"
   dependencies:
     "makeerror" "1.0.x"
+
+"watch-size@^2.0.0":
+  "integrity" "sha512-M92R89dNoTPWyCD+HuUEDdhaDnh9jxPGOwlDc0u51jAgmjUvzqaEMynXSr3BaWs+QdHYk4KzibPy1TFtjLmOZQ=="
+  "resolved" "https://registry.npmjs.org/watch-size/-/watch-size-2.0.0.tgz"
+  "version" "2.0.0"
 
 "watchpack-chokidar2@^2.0.0":
   "integrity" "sha512-9TyfOyN/zLUbA288wZ8IsMZ+6cbzvsNyEzSBp6e/zkifi6xxbl8SmQ/CxQq32k8NNqrdVEVUVSEf56L4rQ/ZxA=="
@@ -11091,6 +11135,11 @@
   "integrity" "sha512-D3RuNkynyHmEJIpD2qrgVkc9DQ23OrN/moAwZX4L8DfvszsJxpjQuUq3LMx6HoYji9fbIOBY18XWBsAux1ZZUA=="
   "resolved" "https://registry.yarnpkg.com/ws/-/ws-7.3.1.tgz"
   "version" "7.3.1"
+
+"xe-utils@^2.8.1":
+  "integrity" "sha512-NVAy7Z9paSqvPyvP8pjWVUAXpuLd3cI5VexcJ3bU4nf808QO4a6RA4CxRmTWTsVAc8h2NBlznWqp7F8Yhcd6nw=="
+  "resolved" "https://registry.npmjs.org/xe-utils/-/xe-utils-2.8.1.tgz"
+  "version" "2.8.1"
 
 "xml-name-validator@^3.0.0":
   "integrity" "sha512-A5CUptxDsvxKJEU3yO6DuWBSJz/qizqzJKOMIfUJHETbBw/sFaDxgd6fxm1ewUaM0jZ444Fc5vC5ROYurg/4Pw=="
