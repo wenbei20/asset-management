@@ -5,6 +5,7 @@
     width="830px"
     title="添加成员"
     class="settings_qiyongDialog"
+    :close-on-click-modal="false"
     @close="close"
   >
 
@@ -39,8 +40,26 @@
       </div>
     </div>
     <div v-else class="tabscnt">
-      <el-row style="min-height:260px;">
-        <el-tree :data="data" :props="defaultProps" show-checkbox />
+      <el-row v-loading="treeLoading" style="min-height:260px;">
+        <el-col :span="8" :gutter="20">
+
+          <el-tree
+            :props="defaultProps"
+            node-key="groupId"
+            :load="loadNode"
+            :expand-on-click-node="false"
+            lazy
+            highlight-current
+            @node-click="handleNodeClick"
+          />
+        </el-col>
+        <el-col v-loading="checkboxLoading" :span="16" style="min-height:260px;" class="treeCheckList">
+          <el-checkbox-group v-model="treeCheckList">
+            <el-checkbox v-for="(ele ,i ) in orgAllPerson" :key="i" :label="ele.reguserId">{{ ele.chineseName }}</el-checkbox>
+          </el-checkbox-group>
+          <div v-if="!activeGroupId" class="treeCheckboxTips">请选择组织</div>
+          <div v-if="activeGroupId && !checkboxLoading && orgAllPerson.length === 0" class="treeCheckboxTips">暂无成员</div>
+        </el-col>
       </el-row>
 
       <el-row style="text-align:right;">
@@ -59,7 +78,7 @@
 </template>
 
 <script>
-import { getListRegUserByChineseName } from '@/api/settings'
+import { getListRegUserByChineseName, getOrganizationGroup, getListRegUserByGroupId } from '@/api/settings'
 import elDragDialog from '@/directive/el-drag-dialog'
 export default {
   directives: { elDragDialog },
@@ -74,6 +93,9 @@ export default {
   },
   data() {
     return {
+      activeGroupId: '',
+      treeLoading: true,
+      checkboxLoading: false,
       addUserInfoSeleReguser: '',
       selectedPersons: [],
       activeName: 'email',
@@ -90,9 +112,16 @@ export default {
       data: [],
       defaultProps: {
         children: 'children',
-        label: 'label'
+        label: 'groupName',
+        isLeaf: 'leaf'
       },
-      confirmLoading: false
+      confirmLoading: false,
+      treeCheckList: [],
+      orgAllPerson: [],
+      allOrgAllPerson: {
+        allperson: [],
+        alreadyGroupId: []
+      }
     }
   },
   computed: {
@@ -132,8 +161,63 @@ export default {
     forAddpersonTree() {
       this.showAddPersonTree = true
     },
+    handleNodeClick(item) {
+      console.log('handleNodeClick', item)
+      this.activeGroupId = item.groupId
+      this.checkboxLoading = true
+      getListRegUserByGroupId({ groupId: item.groupId }).then(res => {
+        if (res.code === 0 && res.data.length) {
+          this.orgAllPerson = res.data
+          if (this.allOrgAllPerson.alreadyGroupId.findIndex(ele => ele === item.groupId) === -1) {
+            this.allOrgAllPerson.alreadyGroupId.push(item.groupId)
+            this.allOrgAllPerson.allperson = this.allOrgAllPerson.allperson.concat(res.data)
+          }
+        } else {
+          this.orgAllPerson = []
+        }
+      }).catch(err => {
+        this.orgAllPerson = []
+        console.log('err', err)
+      }).finally(() => {
+        this.checkboxLoading = false
+      })
+    },
+    loadNode(node, resolve) {
+      const key = node.key ? node.key : ''
+      this.getTreeNodeData(key).then(arr => {
+        console.log('arr', arr)
+        if (!key) {
+          this.treeLoading = false
+        }
+        resolve(arr)
+      })
+    },
+    getTreeNodeData(id) {
+      return new Promise(function(resolve, reject) {
+        getOrganizationGroup({ parentId: id }).then(res => {
+          // console.log('res', res)
+          if (res.code === 0 && res.data && Array.isArray(res.data)) {
+            resolve(res.data)
+          } else {
+            resolve([])
+          }
+        }).catch(err => {
+          console.log('err', err)
+          resolve([])
+        })
+      })
+    },
     AddtreePerson() {
       this.showAddPersonTree = false
+      console.log('treeCheckList', this.treeCheckList)
+      console.log('allOrgAllPerson', this.allOrgAllPerson)
+      this.treeCheckList.forEach(ele => {
+        const idx = this.allOrgAllPerson.allperson.findIndex(item => item.reguserId === ele)
+        if (idx !== -1) {
+          this.selectedPersons.push({ ...this.allOrgAllPerson.allperson[idx] })
+        }
+      })
+      console.log('selectedPersons', this.selectedPersons)
     },
     querySearchAsync(queryString, cb) {
       if (queryString) {
@@ -397,5 +481,19 @@ export default {
     display: inline-block;
     width: 20px;
     height: 10px;
+}
+.treeCheckboxTips {
+  line-height: 220px;
+  text-align: left;
+  color: #67707b;
+  font-size: 16px;
+  text-align: center;
+}
+.treeCheckList {
+  padding: 20px;
+  padding-left: 40px;
+}
+.treeCheckList >>> .el-checkbox {
+  width: 33%;
 }
 </style>

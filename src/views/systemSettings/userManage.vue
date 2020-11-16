@@ -64,7 +64,7 @@
           style="text-align:right;margin-top:20px;height:30px;"
           @pagination="getList"
         />
-        <el-dialog title="添加成员" :visible.sync="showAddDialog" width="600px">
+        <el-dialog title="添加成员" :visible.sync="showAddDialog" width="600px" :close-on-click-modal="false" @close="closeAddDialog">
           <el-form ref="addUserInfo" :model="addUserInfo" label-position="right" style="padding-right:20px;" :rules="addUserInfoRules">
             <el-form-item label="手机号" :label-width="formLabelWidth" prop="mobile">
               <el-input v-model="addUserInfo.mobile" />
@@ -104,18 +104,18 @@
             <el-form-item label="允许补充资产字段" :label-width="formLabelWidth" prop="addFiledsFlag">
               <el-radio-group v-model="addUserInfo.addFiledsFlag">
                 <el-radio :label="1">允许</el-radio>
-                <el-radio :label="2">不允许</el-radio>
+                <el-radio :label="0">不允许</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-form>
 
           <div slot="footer" class="dialog-footer">
-            <el-button @click="showAddDialog=false">取 消</el-button>
+            <el-button @click="closeAddDialog">取 消</el-button>
             <el-button type="primary" @click="createConfirm">确 定</el-button>
           </div>
         </el-dialog>
 
-        <el-dialog :title="editDialogTitle" :visible.sync="showEditDialog" width="600px" @click="editDialogClose">
+        <el-dialog :title="editDialogTitle" :visible.sync="showEditDialog" width="600px" @close="editDialogClose">
           <el-form ref="EditDialog" :model="DialogData" label-position="right" style="padding-right:20px;" :rules="EditRules">
             <el-form-item v-if="editDialogStatus !== 'setPrincipal'" prop="name" :label="editDialogLabel" label-width="120px" required>
               <el-input v-model="DialogData.name" />
@@ -135,8 +135,8 @@
             </el-form-item>
           </el-form>
           <div slot="footer" class="dialog-footer">
-            <el-button @click="editDialogClose">取 消</el-button>
-            <el-button type="primary" @click="editConfirm">确 定</el-button>
+            <el-button :loading="addOrganizeBtnLoading" @click="editDialogClose">取 消</el-button>
+            <el-button type="primary" :loading="addOrganizeBtnLoading" @click="editConfirm">确 定</el-button>
           </div>
         </el-dialog>
 
@@ -146,7 +146,6 @@
 </template>
 <script>
 import { saveOrganizationGroup, getOrganizationGroup, getSysUserList, deleteSysUserList, getListRegUserByChineseName, addSysUserList } from '@/api/settings'
-import { mapState } from 'vuex'
 import Pagination from '@/components/Pagination'
 import navTree from '@/components/leftTreeNav'
 import { isMobileNumber } from '@/utils/validate'
@@ -171,6 +170,7 @@ export default {
       }
     }
     return {
+      addOrganizeBtnLoading: false,
       SearchType: '',
       navTreeShow: true,
       showAddDialog: false,
@@ -192,7 +192,7 @@ export default {
         chineseName: '',
         activeFlag: 1,
         groupId: '',
-        addFiledsFlag: 2
+        addFiledsFlag: 0
       },
       addUserInfoRules: {
         mobile: [
@@ -233,7 +233,8 @@ export default {
         pageNo: 1,
         pageSize: 10,
         reguserName: '',
-        groupId: ''
+        groupId: '',
+        userType: 2
       },
       tableLoading: false,
       checkedDepartment: [],
@@ -249,15 +250,14 @@ export default {
       checkedDepartTags: ''
     }
   },
-  computed: {
-    ...mapState({
-      merchantId: state => state.user.merchantId
-    })
-  },
   created() {
     this.getList()
   },
   methods: {
+    closeAddDialog() {
+      this.$refs.addUserInfo.clearValidate()
+      this.showAddDialog = false
+    },
     handleAddNodeClick(item) {
       console.log('item', item)
       this.addUserInfo.groupId = item.groupId
@@ -292,12 +292,22 @@ export default {
       // })
       // this.defaultCheckedKeys = []
       // this.checkedDepartment = []
+      this.checkedDepartTags = ''
+      this.addUserInfo = {
+        mobile: '',
+        email: '',
+        reguserName: '',
+        chineseName: '',
+        activeFlag: 1,
+        groupId: '',
+        addFiledsFlag: 0
+      }
       this.showAddDialog = true
     },
     navTreeOperation(operate, data) {
       console.log('data', data)
       // this.checkedDepartment = []
-      this.thisOperationNode = { ...data }
+      // this.thisOperationNode = { ...data }
       if (operate !== 'addperson') {
         this.DialogData.name = ''
         this.editDialogStatus = operate
@@ -315,8 +325,8 @@ export default {
             this.editDialogTitle = '修改名称'
             break
           case 'addSonCompany':
-            this.editDialogTitle = '添加(子)分公司'
-            this.editDialogLabel = '(子)分公司名称'
+            this.editDialogTitle = '添加子(分)公司'
+            this.editDialogLabel = '子(分)公司名称'
             break
         }
       } else {
@@ -324,12 +334,15 @@ export default {
         // this.checkedDepartment = [{ ...data }]
         // this.defaultCheckedKeys = []
         // this.defaultCheckedKeys.push(data.groupId)
+        this.checkedDepartTags = data.groupName
+        this.addUserInfo.groupId = data.groupId
       }
     },
     editConfirm() {
-      this.$ref.EditDialog.validate(validate => {
+      this.$refs.EditDialog.validate(validate => {
         if (validate) {
-          if (this.editDialogStatus === 'addSonDepartment' && this.editDialogStatus === 'addSonCompany') {
+          if (this.editDialogStatus === 'addSonDepartment' || this.editDialogStatus === 'addSonCompany') {
+            this.addOrganizeBtnLoading = true
             const obj = {
               parentId: this.thisOperationNode.groupId,
               nodeType: this.editDialogStatus === 'addSonDepartment' ? 1 : 0,
@@ -340,21 +353,23 @@ export default {
               if (res.code === 0) {
                 this.$message({
                   type: 'success',
-                  message: this.editDialogTitle + '成功'
+                  message: this.editDialogTitle + '添加成功'
                 })
               } else {
                 this.$message({
                   type: 'error',
-                  message: this.editDialogTitle + '失败，请稍后再试'
+                  message: this.editDialogTitle + '添加失败，请稍后再试'
                 })
               }
+              this.addOrganizeBtnLoading = false
               this.editDialogClose()
             }).catch(err => {
               this.$message({
                 type: 'error',
-                message: this.editDialogTitle + '失败，请稍后再试'
+                message: this.editDialogTitle + '添加失败，请稍后再试'
               })
               console.log('err', err)
+              this.addOrganizeBtnLoading = false
               this.editDialogClose()
             })
           }
@@ -435,8 +450,7 @@ export default {
       })
     },
     loadNode(node, resolve) {
-      console.log('node', node)
-      const key = node.key ? node.key : this.merchantId
+      const key = node.key ? node.key : ''
       this.getTreeNodeData(key).then(arr => {
         console.log('arr', arr)
         resolve(arr)
@@ -450,7 +464,6 @@ export default {
       }
     },
     handleNodeClick(data) {
-      console.log('lala', data)
       if (data.groupId) {
         // getListRegUserByGroupId({ groupId: data.groupId }).then(res => {
         //   console.log('res', res)
@@ -467,6 +480,8 @@ export default {
     },
     editSysUser(row) {
       console.log('row', row)
+      this.addUserInfo = { ...row }
+      this.showAddDialog = true
     },
     deleteSysUser(row) {
       console.log('row', row)

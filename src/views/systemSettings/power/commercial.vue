@@ -3,19 +3,19 @@
     <div class="yonghuzu">
       <div class="tit">用户组</div>
       <ul v-loading="addGroupLoading" class="yonghuGroup">
-        <li v-for="(item,i) in groupList" :key="i" class="normal" :class="{'active' : item.roleId === activeGroupName}" @click="activeThisGroup(item)">
+        <li v-for="(item,i) in groupList" :key="i" class="normal" :class="{'active' : item.roleId === activeGroupName}" @click.stop="activeThisGroup(item)">
           <div v-if="!item.editing" class="icon">
             <i class="el-icon-s-custom" />
           </div>
           <div v-if="!item.editing">
 
             <div class="cnt">{{ item.roleName }}</div>
-            <i class="el-icon-more" @click="item.showMenu = true" />
+            <i class="el-icon-more" @click.stop="item.showMenu = true" />
             <div v-if="item.showMenu" class="menu">
-              <div @click="reNameGoup(item)">重命名</div>
-              <div @click="removeGoup(item)">删除</div>
+              <div @click.stop="reNameGoup(item)">重命名</div>
+              <div @click.stop="removeGoup(item)">删除</div>
             </div>
-            <div v-if="item.showMenu" class="dialogmenu" @click="item.showMenu = false" />
+            <div v-if="item.showMenu" class="dialogmenu" @click.stop="item.showMenu = false" />
           </div>
           <div v-else class="addGroupBox" style="padding:0 20px 0 0;">
             <el-input ref="addGroupipt" v-model="editGroupName" type="text" placeholder="输入用户组名称" />
@@ -38,9 +38,9 @@
     <div class="other">
       <div class="chengyuan">
         <div class="tit">
-          <b>用户组成员· </b>
-          <span>{{ chengyuannum }}</span>
-          <span class="settings_add Link_disabled_click" @click="addMember">
+          <b>用户组成员</b>
+          <span>{{ groupUserList.length ? '· ' + groupUserList.length : '' }}</span>
+          <span v-if="activeGroupName" class="settings_add Link_disabled_click" @click="addMember">
             <i class="el-icon-plus" />
             <!-- showAddPerson=true -->
             添加成员
@@ -81,7 +81,6 @@
 <script>
 import { getlistRole, saveRole, updateRole, deleteRole, getlistRegUserByRoleId, getListRightsByRoleId, saveRoleRights, saveRoleUser } from '@/api/settings'
 import addPerson from '@/components/Dialog/addPerson'
-import { mapState } from 'vuex'
 export default {
   components: { addPerson },
   filters: {
@@ -118,11 +117,6 @@ export default {
 
     }
   },
-  computed: {
-    ...mapState({
-      merchantId: state => state.user.merchantId
-    })
-  },
 
   created() {
     this.getRoleList()
@@ -157,21 +151,29 @@ export default {
       }
     },
     removeGoup(item) {
-      deleteRole({ roleId: item.roleId }, item.roleId).then(res => {
-        if (res.code === 0) {
-          this.$message({ type: 'success', message: '删除成功' })
-        } else {
-          this.$message({ type: 'error', message: '删除失败，请稍后再试' })
-        }
-        item.editing = false
-        item.showMenu = false
+      item.editing = false
+      this.$confirm('此操作将永久删除该用户组, 是否继续?', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }).then(() => {
+        deleteRole({ roleId: item.roleId }, item.roleId).then(res => {
+          if (res.code === 0) {
+            this.$message({ type: 'success', message: '删除成功' })
 
-        this.getRoleList()
-      }).catch(err => {
-        console.log('err', err)
-        this.$message({ type: 'error', message: '删除失败，请稍后再试' })
-        item.editing = false
-        item.showMenu = false
+            if (this.activeGroupName === item.roleId) {
+              this.groupUserList = []
+              this.rightsList = []
+            }
+          } else {
+            this.$message({ type: 'error', message: '删除失败，请稍后再试' })
+          }
+          item.showMenu = false
+
+          this.getRoleList()
+        }).catch(err => {
+          console.log('err', err)
+          this.$message({ type: 'error', message: '删除失败，请稍后再试' })
+          item.showMenu = false
+        })
+      }).catch(() => {
+        this.$message({ type: 'info', message: '已取消删除' })
       })
     },
     reNameGoup(item) {
@@ -240,7 +242,8 @@ export default {
       })
     },
     activeThisGroup(row) {
-      console.log('row', row)
+      if (this.activeGroupName === row.roleId) return
+
       this.activeGroupName = row.roleId
       if (row.roleId) {
         this.getGroupAllUser(row.roleId)
@@ -330,6 +333,9 @@ export default {
 </script>
 <style lang="scss" scoped>
 
+.hasTagsView .app-main .settings-container .yonghuzu {
+    height: calc(100vh - 134px);;
+}
 .app-main .settings-container .yonghuzu {
     height: calc(100vh - 100px);
 }
@@ -349,11 +355,10 @@ export default {
         width: 200px;
         border-right: #E5E5E5 1px solid;
         background-color: #F9F9F9;
+        min-height: calc(100vh - 50px);
         // margin-left: -25px;
         border-top:#E5E5E5 1px solid;
         font-size: 14px;
-        min-height: calc(100vh - 50px);
-
         .tit {
             height: 56px;
             line-height: 56px;
