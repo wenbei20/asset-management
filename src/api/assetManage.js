@@ -47,6 +47,10 @@ export function copyAsset(data) {
   })
 }
 
+export function getListChild(data) {
+  return request({
+    url: '/assets/listChild' })
+}
 /*
 ***************
 ***  资产调拨管理

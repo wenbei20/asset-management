@@ -8,6 +8,7 @@
       :props="defaultProps"
       node-key="groupId"
       :load="loadNode"
+      :expand-on-click-node="false"
       lazy
       @node-click="handleNodeClick"
     >
@@ -31,7 +32,6 @@
 
 import drapDown from '@/components/drapdownMenu'
 import { getOrganizationGroup } from '@/api/settings'
-import { mapState } from 'vuex'
 export default {
   components: { drapDown },
   props: {
@@ -113,11 +113,6 @@ export default {
       showTopMenu: true
     }
   },
-  computed: {
-    ...mapState({
-      merchantId: state => state.user.merchantId
-    })
-  },
   created() {
     // this.getTreeNodeData(0)
   },
@@ -138,7 +133,7 @@ export default {
       })
     },
     loadNode(node, resolve) {
-      const key = node.key ? node.key : this.merchantId
+      const key = node.key ? node.key : ''
       this.getTreeNodeData(key).then(arr => {
         arr.forEach(item => {
           item.showTopMenu = false

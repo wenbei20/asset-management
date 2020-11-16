@@ -120,6 +120,7 @@ export function data2FormData(obj) {
   const fd = new FormData()
   for (const key in obj) {
     if (Array.isArray(obj[key])) {
+      console.error('使用stringify', obj)
       fd.append(key, JSON.stringify(obj[key]))
     } else {
       fd.append(key, obj[key])

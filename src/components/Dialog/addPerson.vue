@@ -5,86 +5,33 @@
     width="830px"
     title="添加成员"
     class="settings_qiyongDialog"
+    :close-on-click-modal="false"
     @close="close"
   >
 
-    <!-- <el-tabs v-model="activeName" @tab-click="handleClick">
-      <el-tab-pane label="邮件邀请" name="email">
-        <div class="tabscnt">
-          <el-input v-model="addinfo.email" type="textarea" class="textarea" placeholder="通过邮箱添加新成员, 可输入多个邮箱, 空格或回车分隔" />
-
-          <div class="yonghuzu">
-            <span>并将以上成员加入用户组</span>
-            <el-dropdown trigger="click" placement="bottom-start">
-              <span class="el-dropdown-link">
-                {{ selectedGroup }}<i class="el-icon-arrow-down el-icon--right" />
-              </span>
-
-              <el-dropdown-menu slot="dropdown" class="com_dropdownmenu">
-                <div class="Search">
-                  <el-input
-                    v-model="searchgroup"
-                    prefix-icon="el-icon-search"
-                    size="small"
-                  /></div>
-                <el-checkbox-group v-model="addinfo.group">
-                  <el-checkbox label="管理员" />
-                  <el-checkbox label="普通成员" />
-                  <el-checkbox label="用户组1" />
-                  <el-checkbox label="普通用户组01" />
-                </el-checkbox-group>
-              </el-dropdown-menu>
-            </el-dropdown>
-          </div>
-        </div>
-
-      </el-tab-pane>
-      <el-tab-pane label="导入公司成员" name="putin">
-        <div class="tabscnt">
-          <el-input v-model="addinfo.putin" type="textarea" class="textarea" placeholder="请输入公司已有成员的昵称" />
-
-          <div class="yonghuzu">
-            <span class="putinAdd">
-              <i class="el-icon-user-solid" />
-              通过组织架构添加
-            </span>
-
-          </div>
-        </div>
-      </el-tab-pane>
-      <el-tab-pane label="从已有项目复制" name="copy">
-        <div class="tabscnt">
-
-          <div class="yonghuzu">
-            <span>并将以上成员加入用户组</span>
-            <el-dropdown trigger="click" placement="bottom-start">
-              <span class="el-dropdown-link">
-                {{ addinfo.copy }}<i class="el-icon-arrow-down el-icon--right" />
-              </span>
-
-              <el-dropdown-menu slot="dropdown" class="com_dropdownmenu">
-                <div class="Search">
-                  <el-input
-                    v-model="searchgroup"
-                    prefix-icon="el-icon-search"
-                    size="small"
-                  />
-                </div>
-
-                <el-dropdown-item>--空--</el-dropdown-item>
-                <el-dropdown-item>轻量团队模板</el-dropdown-item>
-                <el-dropdown-item>敏捷开发管理</el-dropdown-item>
-              </el-dropdown-menu>
-            </el-dropdown>
-          </div>
-        </div>
-      </el-tab-pane>
-    </el-tabs> -->
-
     <div v-if="!showAddPersonTree" class="tabscnt">
-      <el-input v-model="addinfo.putin" type="textarea" class="textarea" placeholder="请输入公司已有成员的昵称" />
+      <div class="inputOuter" :class="{noStructure:noStructure}" @click="$refs.autocomplete.focus()">
+        <span v-for="(ele , i) in selectedPersons" :key="i" class="selectedPersons">
+          {{ ele.chineseName }}
+          <i class="el-icon-close" @click.stop="delectThisPserson(ele)" />
+        </span>
 
-      <div class="yonghuzu">
+        <!-- <el-input v-model="addinfo.putin" class="textarea" placeholder="请输入已有成员的昵称" /> -->
+        <el-autocomplete
+          ref="autocomplete"
+          v-model="addUserInfoSeleReguser"
+          class="textarea"
+          :fetch-suggestions="querySearchAsync"
+          placeholder="请输入内容"
+          @select="handleSelect"
+        >
+          <template slot-scope="{ item }">
+            <span> {{ item.chineseName }} </span>
+          </template>
+        </el-autocomplete>
+      </div>
+
+      <div v-if="!noStructure" class="yonghuzu">
         <span class="putinAdd" @click="forAddpersonTree">
           <i class="el-icon-user-solid" />
           通过组织架构添加
@@ -93,8 +40,26 @@
       </div>
     </div>
     <div v-else class="tabscnt">
-      <el-row style="min-height:260px;">
-        <el-tree :data="data" :props="defaultProps" show-checkbox />
+      <el-row v-loading="treeLoading" style="min-height:260px;">
+        <el-col :span="8" :gutter="20">
+
+          <el-tree
+            :props="defaultProps"
+            node-key="groupId"
+            :load="loadNode"
+            :expand-on-click-node="false"
+            lazy
+            highlight-current
+            @node-click="handleNodeClick"
+          />
+        </el-col>
+        <el-col v-loading="checkboxLoading" :span="16" style="min-height:260px;" class="treeCheckList">
+          <el-checkbox-group v-model="treeCheckList">
+            <el-checkbox v-for="(ele ,i ) in orgAllPerson" :key="i" :label="ele.reguserId">{{ ele.chineseName }}</el-checkbox>
+          </el-checkbox-group>
+          <div v-if="!activeGroupId" class="treeCheckboxTips">请选择组织</div>
+          <div v-if="activeGroupId && !checkboxLoading && orgAllPerson.length === 0" class="treeCheckboxTips">暂无成员</div>
+        </el-col>
       </el-row>
 
       <el-row style="text-align:right;">
@@ -105,7 +70,7 @@
     <div v-if="!showAddPersonTree" slot="footer" class="dialog-footer">
       <el-row>
         <el-col :span="6" :offset="18" class="footer_btns">
-          <el-button type="primary" @click="confirm">导入成员</el-button>
+          <el-button type="primary" :loading="confirmLoading" @click="confirm">导入成员</el-button>
         </el-col>
       </el-row>
     </div>
@@ -113,16 +78,26 @@
 </template>
 
 <script>
+import { getListRegUserByChineseName, getOrganizationGroup, getListRegUserByGroupId } from '@/api/settings'
 import elDragDialog from '@/directive/el-drag-dialog'
 export default {
   directives: { elDragDialog },
   props: {
     dialogVisible: {
       type: Boolean
+    },
+    noStructure: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
     return {
+      activeGroupId: '',
+      treeLoading: true,
+      checkboxLoading: false,
+      addUserInfoSeleReguser: '',
+      selectedPersons: [],
       activeName: 'email',
       innerVisible: false,
       searchgroup: '',
@@ -134,44 +109,18 @@ export default {
         joinGroup: []
       },
       showAddPersonTree: false,
-      data: [{
-        label: '一级 1',
-        children: [{
-          label: '二级 1-1',
-          children: [{
-            label: '三级 1-1-1'
-          }]
-        }]
-      }, {
-        label: '一级 2',
-        children: [{
-          label: '二级 2-1',
-          children: [{
-            label: '三级 2-1-1'
-          }]
-        }, {
-          label: '二级 2-2',
-          children: [{
-            label: '三级 2-2-1'
-          }]
-        }]
-      }, {
-        label: '一级 3',
-        children: [{
-          label: '二级 3-1',
-          children: [{
-            label: '三级 3-1-1'
-          }]
-        }, {
-          label: '二级 3-2',
-          children: [{
-            label: '三级 3-2-1'
-          }]
-        }]
-      }],
+      data: [],
       defaultProps: {
         children: 'children',
-        label: 'label'
+        label: 'groupName',
+        isLeaf: 'leaf'
+      },
+      confirmLoading: false,
+      treeCheckList: [],
+      orgAllPerson: [],
+      allOrgAllPerson: {
+        allperson: [],
+        alreadyGroupId: []
       }
     }
   },
@@ -193,8 +142,14 @@ export default {
   },
   methods: {
     confirm() {
-      this.$emit('update:dialogVisible', false)
-      this.innerVisible = false
+      // this.$emit('update:dialogVisible', false)
+      this.confirmLoading = true
+      this.$emit('confirmData', this.selectedPersons)
+      // this.innerVisible = false
+    },
+    cancalLoading() {
+      this.confirmLoading = false
+      this.selectedPersons = []
     },
     close() {
       this.$emit('update:dialogVisible', false)
@@ -206,8 +161,87 @@ export default {
     forAddpersonTree() {
       this.showAddPersonTree = true
     },
+    handleNodeClick(item) {
+      console.log('handleNodeClick', item)
+      this.activeGroupId = item.groupId
+      this.checkboxLoading = true
+      getListRegUserByGroupId({ groupId: item.groupId }).then(res => {
+        if (res.code === 0 && res.data.length) {
+          this.orgAllPerson = res.data
+          if (this.allOrgAllPerson.alreadyGroupId.findIndex(ele => ele === item.groupId) === -1) {
+            this.allOrgAllPerson.alreadyGroupId.push(item.groupId)
+            this.allOrgAllPerson.allperson = this.allOrgAllPerson.allperson.concat(res.data)
+          }
+        } else {
+          this.orgAllPerson = []
+        }
+      }).catch(err => {
+        this.orgAllPerson = []
+        console.log('err', err)
+      }).finally(() => {
+        this.checkboxLoading = false
+      })
+    },
+    loadNode(node, resolve) {
+      const key = node.key ? node.key : ''
+      this.getTreeNodeData(key).then(arr => {
+        console.log('arr', arr)
+        if (!key) {
+          this.treeLoading = false
+        }
+        resolve(arr)
+      })
+    },
+    getTreeNodeData(id) {
+      return new Promise(function(resolve, reject) {
+        getOrganizationGroup({ parentId: id }).then(res => {
+          // console.log('res', res)
+          if (res.code === 0 && res.data && Array.isArray(res.data)) {
+            resolve(res.data)
+          } else {
+            resolve([])
+          }
+        }).catch(err => {
+          console.log('err', err)
+          resolve([])
+        })
+      })
+    },
     AddtreePerson() {
       this.showAddPersonTree = false
+      console.log('treeCheckList', this.treeCheckList)
+      console.log('allOrgAllPerson', this.allOrgAllPerson)
+      this.treeCheckList.forEach(ele => {
+        const idx = this.allOrgAllPerson.allperson.findIndex(item => item.reguserId === ele)
+        if (idx !== -1) {
+          this.selectedPersons.push({ ...this.allOrgAllPerson.allperson[idx] })
+        }
+      })
+      console.log('selectedPersons', this.selectedPersons)
+    },
+    querySearchAsync(queryString, cb) {
+      if (queryString) {
+        getListRegUserByChineseName({ chineseName: queryString }).then(res => {
+          if (res.code === 0) {
+            return cb(res.data)
+          }
+        })
+        // cb([])
+      } else {
+        cb([])
+      }
+    },
+    handleSelect(item) {
+      const ishave = this.selectedPersons.some(ele => { return ele.chineseName === item.chineseName })
+      if (!ishave) {
+        this.selectedPersons.push(item)
+      }
+    },
+    delectThisPserson(item) {
+      const index = this.selectedPersons.findIndex(ele => ele.reguserId === item.reguserId)
+      if (index !== -1) {
+        this.selectedPersons.splice(index, 1)
+      }
     }
   }
 }
@@ -290,9 +324,18 @@ export default {
     border-radius: 8px;
     background-color: rgba(0,0,0,0);
 }
+.inputOuter {
+  height: 212px;
+  border: 1px solid #e5e5e5;
+  padding: 10px;
+  cursor: text;
+  &.noStructure {
+    height: 300px;
+  }
+}
 .tabscnt {
     .textarea {
-        height: 212px;
+      width: 180px;
 
     }
 }
@@ -354,8 +397,22 @@ export default {
     }
 }
 
+.selectedPersons {
+  display: inline-block;
+  color: #6a8df9;
+  background-color: #e3f2fd;
+  padding: 5px 10px;
+  margin-right: 10px;
+  i {
+    cursor: pointer;
+  }
+}
+
 </style>
 <style  scoped>
+.inputOuter >>> .el-input__inner {
+  border: none;
+}
 .Search >>> .el-input__inner {
             border: none;
             border-bottom: 1px solid #DCDFE6;
@@ -424,5 +481,19 @@ export default {
     display: inline-block;
     width: 20px;
     height: 10px;
+}
+.treeCheckboxTips {
+  line-height: 220px;
+  text-align: left;
+  color: #67707b;
+  font-size: 16px;
+  text-align: center;
+}
+.treeCheckList {
+  padding: 20px;
+  padding-left: 40px;
+}
+.treeCheckList >>> .el-checkbox {
+  width: 33%;
 }
 </style>
