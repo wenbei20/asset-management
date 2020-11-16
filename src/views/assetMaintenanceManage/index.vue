@@ -32,7 +32,6 @@
         <vxe-table-column field="eventID" title="维修单号" />
         <vxe-table-column field="diedai" title="维修花费" />
         <vxe-table-column field="status" title="状态" />
-
         <vxe-table-column field="date" title="修理日期" />
         <vxe-table-column field="person" title="处理人" />
         <vxe-table-column field="name" title="报修人" />
@@ -42,21 +41,26 @@
             --
           </template>
         </vxe-table-column>
-
+        <vxe-table-column field="assetCash" title="资产费用" />
       </vxe-table>
 
       <el-pagination
         background
         layout="prev, pager, next, jumper"
         style="text-align:right;margin-top:20px;"
-        :total="1000"
+        :total="pageTotal"
       />
     </el-row>
-    <add-dialog :visible.sync="showAddDialog" />
+    <!--新增/编辑-->
+    <add-dialog
+      v-if="showAddDialog"
+      :visible.sync="showAddDialog"
+    />
   </div>
 </template>
 
 <script>
+import { queryAssetRepairList, saveAssetRepair } from '@/api/assetManage'
 import addDialog from './components/addnew'
 export default {
   name: 'AssetMaintenanceManage',
@@ -64,6 +68,10 @@ export default {
   data() {
     return {
       showAddDialog: false,
+      modalType: 'new',
+      pageNo: 1,
+      pageSize: 10,
+      pageTotal: 0,
       tableData: [
         {
           id: 1,
@@ -311,6 +319,26 @@ export default {
           endTime: '2019-03-01'
         }
       ]
+    }
+  },
+  mounted() {
+    this.getList()
+  },
+  methods: {
+    // 资源维修列表
+    getList() {
+      const params = {
+        pageNo: this.pageNo,
+        pageSize: this.pageSize
+      }
+      queryAssetRepairList(params).then((res) => {
+        console.log('资源维修列表', res)
+        if(res.code === 0 && res.data) {
+          this.tableData = res.data.items
+          this.pageTotal = res.data.total
+        }
+      })
+      .catch((err) => { console.log('err', err) })
     }
   }
 }

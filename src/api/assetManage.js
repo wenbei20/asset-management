@@ -105,7 +105,7 @@ export function updateAssetAllot(data) {
 }
 
 // 获取新增页面资产列表信息
-export function queryNewAssetList(params) {
+export function queryNewAssetAllotList(params) {
   return request({
     url: '/sys/allot/findAsset',
     method: 'get',
@@ -215,5 +215,38 @@ export function assetDiscardExport() {
   return request({
     url: '/sys/discard/export',
     method: 'post'
+  })
+}
+
+/*
+********************
+********* 资产维修管理
+********************
+**/
+
+// 资产维修列表
+export function queryAssetRepairList(params) {
+  return request({
+    url: '/sys/repair/listRepair',
+    method: 'get',
+    params
+  })
+}
+
+// 新建资产维修信息
+export function saveAssetRepair(data) {
+  return request({
+    url: '/sys/repair/saveRepair',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+// 获取新增页面资产列表信息
+export function queryNewAssetRepairList(params) {
+  return request({
+    url: '/sys/repair/findAsset',
+    method: 'get',
+    params
   })
 }

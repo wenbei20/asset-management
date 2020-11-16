@@ -38,7 +38,8 @@ module.exports = {
     },
     proxy: {
       '/dev-api': {
-        target: 'http://192.168.12.98:8000/',
+        // target: 'http://192.168.12.98:8000/',
+        target: 'http://111.225.216.36:8879/',
         ws: true,
         changeOrigin: true,
         pathRewrite: {
