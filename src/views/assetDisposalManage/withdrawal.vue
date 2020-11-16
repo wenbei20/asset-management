@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-row>
       <el-button type="primary" icon="el-icon-plus" @click="showAddDialog=true">新建</el-button>
-      <el-dropdown :style="{ marginLeft: '5px' }">
+      <!-- <el-dropdown :style="{ marginLeft: '5px' }">
         <el-button type="default" icon="el-icon-edit" plain>
           编辑<i class="el-icon-arrow-down el-icon--right" />
         </el-button>
@@ -11,7 +11,7 @@
           <el-dropdown-item>复制</el-dropdown-item>
           <el-dropdown-item>删除</el-dropdown-item>
         </el-dropdown-menu>
-      </el-dropdown>
+      </el-dropdown> -->
       <el-dropdown :style="{ marginLeft: '5px' }">
         <el-button type="default" icon="el-icon-printer" plain>
           打印<i class="el-icon-arrow-down el-icon--right" />
@@ -20,7 +20,7 @@
           <el-dropdown-item>打印资产标签</el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
-      <el-button icon="el-icon-receiving" style="margin-left:5px">导出</el-button>
+      <el-button icon="el-icon-receiving" style="margin-left:5px" @click="handleExport">导出</el-button>
     </el-row>
     <el-row style="padding-top:20px;">
       <vxe-table
@@ -49,26 +49,6 @@
         <vxe-table-column field="youxian" title="业务所属单位" />
         <vxe-table-column field="status" title="退库后使用公司" />
         <vxe-table-column field="eventID" title="退库后区域" />
-        <!-- <vxe-table-column width="32" class="meuntd" :resizable="false" :edit-render="{}">
-          <template>
-            <div class="moreOuter">
-              <i class="el-icon-more" />
-
-            </div>
-          </template>
-          <template slot="edit">
-            <i class="el-icon-more" style="position:relative;top:-2px;" />
-
-            <div class="editmenu">
-              <div class="item">编辑</div>
-              <div class="item">复制</div>
-              <div class="item">关注</div>
-              <div class="item">删除</div>
-              <div class="item create">创建子需求</div>
-            </div>
-          </template>
-        </vxe-table-column> -->
-        <!-- <vxe-table-column field="eventID" title="ID" /> -->
         <vxe-table-column field="title" title="退库后存放地点" tree-node width="300">
           <template slot="header">
             <i v-if="isAllExpand" class="el-icon-remove-outline biaotiicon" />
@@ -82,71 +62,26 @@
           </template>
 
         </vxe-table-column>
-        <!-- <vxe-table-column field="youxian" title="优先级" :edit-render="{}">
-
-          <template #default="{ row }">
-            <span class="youxianspan" :class="row.youxian">{{ row.youxian }}</span>
-          </template>
-
-          <template slot="edit" slot-scope="scope">
-            <span>{{ scope.row.youxian }}</span>
-            <div class="edityouxian">
-              <ul>
-                <li class="empty">--空--</li>
-                <li class="high">High</li>
-                <li class="middle">Middle</li>
-                <li class="low">Low</li>
-                <li class="nice">Nice to Have</li>
-              </ul>
-            </div>
-          </template>
-
-        </vxe-table-column> -->
-
-        <!-- <vxe-table-column field="diedai" title="迭代">
-          <template #default="{ row }">
-            <span>{{ row.diedai ? row.diedai : '--' }}</span>
-          </template>
-
-        </vxe-table-column> -->
-
-        <!-- <vxe-table-column field="status" title="状态">
-          <template #default="{ row }">
-            <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
-          </template>
-
-        </vxe-table-column> -->
 
         <vxe-table-column field="startTime" title="退库说明" :edit-render="{}">
           <template #default="{ row }">
             {{ row.startTime ? row.startTime : '--' }}
           </template>
-
           <template slot="edit" slot-scope="scope">
-
             <el-date-picker
               v-model="scope.row.startTime"
               type="date"
               placeholder="选择日期"
             />
           </template>
-
         </vxe-table-column>
 
-        <!-- <vxe-table-column field="endTime" title="预计结束" :edit-render="{}">
-          <template #default="{ row }">
-            {{ row.endTime ? row.endTime : '--' }}
+        <vxe-table-column title="操作">
+          <template slot-scope="scope">
+            <el-button size="small" plain @click="editItem(scope.row)">编辑</el-button>
+            <el-button size="small" plain @click="deleteItem(scope.row)">删除</el-button>
           </template>
-          <template slot="edit" slot-scope="scope">
-
-            <el-date-picker
-              v-model="scope.row.endTime"
-              type="date"
-              placeholder="选择日期"
-            />
-          </template>
-
-        </vxe-table-column> -->
+        </vxe-table-column>
 
       </vxe-table>
 
@@ -154,15 +89,19 @@
         background
         layout="prev, pager, next, jumper"
         style="text-align:right;margin-top:20px;"
-        :total="1000"
+        :total="pageTotal"
       />
     </el-row>
-    <add-dialog :visible.sync="showAddDialog" />
+    <add-dialog
+      :visible.sync="showAddDialog"
+      :group-list="groupList"
+      :modal-type="modalType"
+    />
   </div>
 </template>
 <script>
 import addDialog from './components/addNewDialog'
-import { queryAssetBackList } from '@/api/assetManage'
+import { queryAssetBackList, assetBackBaseCode, assetBackExport } from '@/api/assetManage'
 export default {
   components: { addDialog },
   filters: {
@@ -185,6 +124,12 @@ export default {
     return {
       isAllExpand: false,
       showAddDialog: false,
+      modalType: 'new',
+      groupList: [],
+      pageNo: 1,
+      pageSize: 10,
+      pageTotal: 0,
+      tableLoading: false,
       tableData: [
         {
           id: 1,
@@ -434,16 +379,50 @@ export default {
       ]
     }
   },
+  mounted() {
+    this.getBaseCode()
+    this.getList()
+  },
   methods: {
-    // 获取
+    // 资产调拨新增和修改页面中的码表接口
+    getBaseCode() {
+      assetBackBaseCode().then(res => {
+        if (res.code === 0 && res.data) {
+          this.areaList = res.data.areaList
+          this.groupList = res.data.groupList
+        }
+      }).catch(err => {
+        console.log('err', err)
+      })
+    },
+    // 获取退运列表信息
     getList() {
-      queryAssetBackList().then((res) => {
+      const params = {
+        pageNo: this.pageNo,
+        pageSize: this.pageSize
+      }
+      queryAssetBackList(params).then((res) => {
         if(res.code === 0) {
-
+          this.tableData = res.data.items
+          this.pageTotal = res.data.total
         }
       })
       .catch((err) => {
         console.log('err', err)
+      })
+    },
+    // 编辑项
+    editItem(item) {
+      console.log('编辑', item);
+    },
+    // 删除项
+    deleteItem(item) {
+      console.log('删除', item);
+    },
+    // 导出
+    handleExport() {
+      assetBackExport().then((res) => {
+        console.log(409, res)
       })
     }
   }

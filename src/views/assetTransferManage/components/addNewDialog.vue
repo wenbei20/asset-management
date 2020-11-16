@@ -64,7 +64,6 @@
         resizable
         highlight-hover-row
         :auto-resize="true"
-        stripe
         class="vxetable"
         :v-loading="tableLoading"
         :edit-config="{trigger: 'click', mode: 'cell', showIcon: false}"
@@ -220,14 +219,13 @@ export default {
     },
     // 表单确认
     submitForm(formName) {
-      const _this = this
       this.$refs[formName].validate((valid) => {
         if (valid) {
           this.confirmSave(this.xjzyxxForm)
           .then((res) => {
             // if (res.code === 0) {
-              _this.$emit('update:visible', false)
-              _this.$parent.getList()
+              this.$emit('update:visible', false)
+              this.$parent.getList()
             // }
           })
           .catch((err) => { console.log('err', err) })

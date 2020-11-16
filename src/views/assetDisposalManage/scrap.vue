@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-row>
       <el-button type="primary" icon="el-icon-plus" @click="showAddDialog=true">新建</el-button>
-      <el-button icon="el-icon-plus">还原</el-button>
+      <el-button icon="el-icon-refresh" @click="revert">还原</el-button>
       <el-dropdown :style="{ marginLeft: '5px' }">
         <el-button type="default" icon="el-icon-edit" plain>
           编辑<i class="el-icon-arrow-down el-icon--right" />
@@ -35,19 +35,17 @@
       >
         <vxe-table-column type="checkbox" width="40" :resizable="false" />
         <vxe-table-column field="eventID" title="报废单号" />
-
         <vxe-table-column field="date" title="清理日期" />
         <vxe-table-column field="person" title="清理人" />
         <vxe-table-column field="status" title="业务所属单位" />
         <vxe-table-column field="title" title="清理说明" />
-
       </vxe-table>
 
       <el-pagination
         background
         layout="prev, pager, next, jumper"
         style="text-align:right;margin-top:20px;"
-        :total="1000"
+        :total="pageTotal"
       />
     </el-row>
     <add-dialog :visible.sync="showAddDialog" />
@@ -56,6 +54,7 @@
 
 <script>
 import addDialog from './components/addScrap'
+import { assetDiscardBaseCode, queryAssetDiscardList, assetDiscardReturn } from '@/api/assetManage'
 export default {
   components: { addDialog },
   filters: {
@@ -78,6 +77,10 @@ export default {
     return {
       isAllExpand: false,
       showAddDialog: false,
+      selection: [],
+      pageNo: 1,
+      pageSize: 10,
+      pageTotal: 0,
       tableData: [
         {
           id: 1,
@@ -325,6 +328,49 @@ export default {
           endTime: '2019-03-01'
         }
       ]
+    }
+  },
+  mounted() {
+    this.getBaseCode()
+    this.getList();
+  },
+  methods: {
+    // 资产调拨新增和修改页面中的码表接口
+    getBaseCode() {
+      assetDiscardBaseCode().then(res => {
+        if (res.code === 0 && res.data) {
+          this.areaList = res.data.areaList
+          this.groupList = res.data.groupList
+        }
+      }).catch(err => {
+        console.log('err', err)
+      })
+    },
+    // 资源报废列表
+    getList() {
+      const params = {
+        pageNo: this.pageNo,
+        pageSize: this.pageSize
+      }
+      queryAssetDiscardList(params)
+      .then((res) => {
+        if (res.code === 0 && res.data) {
+          this.areaList = res.data.areaList
+          this.groupList = res.data.groupList
+        }
+      })
+      .catch((err) => { console.log('err', err) })
+    },
+    // 还原
+    revert() {
+      assetDiscardReturn({ discardIds: this.selection })
+      .then((res) => {
+        if(res.code === 0) {
+          this.tableData = res.data.items
+          this.pageTotal = res.data.total
+        }
+      })
+      .catch((err) => { console.log('err', err) })
     }
   }
 }

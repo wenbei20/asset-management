@@ -48,9 +48,9 @@ export function copyAsset(data) {
 }
 
 /*
-**
-********* 资产调拨管理
-**
+***************
+***  资产调拨管理
+***************
 **/
 
 // 资产调拨新增和修改页面中的码表接口
@@ -114,16 +114,106 @@ export function queryNewAssetList(params) {
 }
 
 /*
-**
+***************************
 ********* 资产处置管理 —— 退运
-**
+***************************
 **/
 
 // 退运列表
-export function queryAssetBackList(data) {
+export function queryAssetBackList(params) {
   return request({
     url: '/sys/back/listBack',
+    method: 'get',
+    params
+  })
+}
+
+// 删除资产退运信息
+export function deleteAssetBack(id) {
+  return request({
+    url: '/sys/back/deleteBack/' + id,
+    method: 'get'
+  })
+}
+
+// 资产退运新增和修改页面中的码表接口
+export function assetBackBaseCode() {
+  return request({
+    url: '/sys/back/baseCode',
+    method: 'post'
+  })
+}
+
+// 新建资产退运
+export function saveAssetBack(data) {
+  return request({
+    url: '/sys/back/saveBack',
     method: 'post',
     data: data2FormData(data)
+  })
+}
+
+// 修改资产退运信息
+export function updateAssetBack(data) {
+  return request({
+    url: '/sys/back/updateBack',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+// 列表导出
+export function assetBackExport() {
+  return request({
+    url: '/sys/back/export',
+    method: 'post'
+  })
+}
+
+/*
+***************************
+********* 资产处置管理 —— 报废
+***************************
+**/
+
+// 资产报废列表
+export function queryAssetDiscardList(params) {
+  return request({
+    url: '/sys/discard/listDiscard',
+    method: 'get',
+    params
+  })
+}
+
+// 删除资产报废信息
+export function deleteAssetDiscard(id) {
+  return request({
+    url: '/sys/back/deleteBack/' + id,
+    method: 'get'
+  })
+}
+
+// 资产报废还原
+export function assetDiscardReturn(params) {
+  return request({
+    url: '/sys/discard/returnDiscord',
+    method: 'get',
+    params
+  })
+}
+
+// 资产报废新增和修改页面中的码表接口
+export function assetDiscardBaseCode() {
+  return request({
+    url: '/sys/discard/baseCode',
+    method: 'post'
+  })
+}
+
+// 列表导出
+export function assetDiscardExport() {
+  return request({
+    url: '/sys/discard/export',
+    method: 'post'
   })
 }
