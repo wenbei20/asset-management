@@ -18,15 +18,15 @@
         <el-card>
           <el-row type="flex" justify="space-between">
             <el-col :span="8">
-              <h4 style="margin: 10px 0;">资产占比</h4>
+              <h4 style="margin: 10px 0;">资产状态占比</h4>
             </el-col>
     
           </el-row>
           <div id="myChart1" :style="{width: '100%', height: '300px'}" />
           <div :style="{ textAlign: 'right' }">
             <el-radio-group v-model="radio1" size="mini">
-              <el-radio-button label="数量" />
-              <el-radio-button label="金额" />
+              <el-radio-button label="数量" @click.native="getZczb('num')"/>
+              <el-radio-button label="金额" @click.native="getZczb('money')"/>
             </el-radio-group>
           </div>
         </el-card>
@@ -54,15 +54,15 @@
         <el-card>
           <el-row type="flex" justify="space-between">
             <el-col :span="8">
-              <h4 style="margin: 10px 0;">部门使用占比</h4>
+              <h4 style="margin: 10px 0;">区域使用占比</h4>
             </el-col>
       
           </el-row>
           <div id="myChart3" :style="{width: '100%', height: '300px'}" />
           <div :style="{ textAlign: 'right' }">
             <el-radio-group v-model="radio3" size="mini">
-              <el-radio-button label="数量" />
-              <el-radio-button label="金额" />
+              <el-radio-button label="数量" @click.native="getQy('num')"/>
+              <el-radio-button label="金额" @click.native="getQy('money')"/>
             </el-radio-group>
           </div>
         </el-card>
@@ -89,7 +89,7 @@
 </template>
 
 <script>
-import { getData,getZcfl,getGssy,getZczb } from '@/api/home.js'
+import { getData,getZcfl,getGssy,getZczb,getQy } from '@/api/home.js'
 export default {
   name: 'Home',
   data() {
@@ -171,7 +171,7 @@ export default {
             radius: [50, 100],
             center: ['30%', '50%'],
             data: [
-              { value: 3, name: '1. 测试公司' }
+           
             ]
           }
         ]
@@ -198,12 +198,12 @@ export default {
         },
         series: [
           {
-            name: '公司使用占比',
+            name: '区域使用占比',
             type: 'pie',
             radius: [50, 100],
             center: ['30%', '50%'],
             data: [
-              { value: 3, name: '无部门' }
+           
             ]
           }
         ]
@@ -230,7 +230,7 @@ export default {
         },
         series: [
           {
-            name: '业务警种',
+            name: '资产分类统计',
             type: 'pie',
             radius: [50, 100],
             center: ['30%', '50%'],
@@ -252,10 +252,10 @@ export default {
   },
   mounted() {
     this.getData()
-    this.getZczb()
+    this.getZczb('num')
     this.getZcfl('num')
     this.getGssy('num')
-    this.drawLine('3')
+    this.getQy('num')
 
   },
   methods: {
@@ -308,14 +308,36 @@ export default {
           this.drawLine('2')
       })
     },
-    getZczb(){
+    getZczb(type){
+       this.option1.series[0].data=[]
       getZczb().then(response => {
           let zczb=[]
           response.data.assetStatusCount.forEach(function (item){
-            zczb.push({ value: item.count_num,name: item.status_name })
+            if(type === 'num'){
+              zczb.push({ value: item.count_num,name: item.status_name })
+            }else{
+              zczb.push({ value: item.sum_money,name: item.status_name })
+            }
+            
           })
           this.option1.series[0].data=zczb
           this.drawLine('1')
+      })
+    },
+     getQy(type){
+       this.option3.series[0].data=[]
+      getQy().then(response => {
+          let zczb=[]
+          response.data.assetAreaCount.forEach(function (item){
+            if(type === 'num'){
+              zczb.push({ value: item.count_num,name: item.area_name })
+            }else{
+              zczb.push({ value: item.sum_money,name: item.area_name })
+            }
+            
+          })
+          this.option3.series[0].data=zczb
+          this.drawLine('3')
       })
     }
   }

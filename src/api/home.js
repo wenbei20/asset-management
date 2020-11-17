@@ -28,3 +28,10 @@ export function getZczb() {
     method: 'post'
   })
 }
+
+export function getQy() {
+  return request({
+    url: '/home/zoneStatistics',
+    method: 'post'
+  })
+}
