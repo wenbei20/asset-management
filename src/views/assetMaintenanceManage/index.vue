@@ -42,6 +42,10 @@
           </template>
         </vxe-table-column>
         <vxe-table-column field="assetCash" title="资产费用" />
+        <vxe-table-column field="options" title="操作">
+          <el-button size="small" plain>修改</el-button>
+          <el-button size="small" plain>删除</el-button>
+        </vxe-table-column>
       </vxe-table>
 
       <el-pagination
@@ -61,7 +65,7 @@
 </template>
 
 <script>
-import { queryAssetRepairList, saveAssetRepair } from '@/api/assetManage'
+import { queryAssetRepairList, saveAssetRepair, updateAssetRepair } from '@/api/assetManage'
 import addDialog from './components/addnew'
 export default {
   name: 'AssetMaintenanceManage',
@@ -334,12 +338,12 @@ export default {
       }
       queryAssetRepairList(params).then((res) => {
         console.log('资源维修列表', res)
-        if(res.code === 0 && res.data) {
+        if (res.code === 0 && res.data) {
           this.tableData = res.data.items
           this.pageTotal = res.data.total
         }
       })
-      .catch((err) => { console.log('err', err) })
+        .catch((err) => { console.log('err', err) })
     },
     // 确认提交（新建/修改）
     submitForm(params, id) {
@@ -347,7 +351,7 @@ export default {
       this.submitMethods(params, id).then((res) => {
         console.log('348 res', res)
       })
-      .catch((err) => { console.log('err', err) })
+        .catch((err) => { console.log('err', err) })
     },
     // 确认提交方法
     submitMethods(params, id) {
