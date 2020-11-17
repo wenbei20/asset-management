@@ -1,6 +1,7 @@
 <template>
   <div class="app-container">
     <nav-tree
+      ref="navtree"
       title="公司组织架构"
       class="navtree"
       @show="hidenavtree"
@@ -64,19 +65,25 @@
           style="text-align:right;margin-top:20px;height:30px;"
           @pagination="getList"
         />
-        <el-dialog title="添加成员" :visible.sync="showAddDialog" width="600px" :close-on-click-modal="false" @close="closeAddDialog">
+        <el-dialog :title="addDialogTitle" :visible.sync="showAddDialog" width="600px" :close-on-click-modal="false" @close="closeAddDialog">
           <el-form ref="addUserInfo" :model="addUserInfo" label-position="right" style="padding-right:20px;" :rules="addUserInfoRules">
-            <el-form-item label="手机号" :label-width="formLabelWidth" prop="mobile">
+            <el-form-item label="手机号" :label-width="formLabelWidth" :prop="addDialogTitle === '编辑成员' ? 'editMobile' : 'mobile'">
               <el-input v-model="addUserInfo.mobile" />
             </el-form-item>
             <el-form-item label="邮箱" :label-width="formLabelWidth" prop="email">
               <el-input v-model="addUserInfo.email" />
             </el-form-item>
-            <el-form-item label="账号" :label-width="formLabelWidth" prop="reguserName">
+            <el-form-item label="账号" :label-width="formLabelWidth" :prop="addDialogTitle === '编辑成员' ? 'editReguserName' : 'reguserName'">
               <el-input v-model="addUserInfo.reguserName" />
             </el-form-item>
             <el-form-item label="真实姓名" :label-width="formLabelWidth" prop="chineseName">
               <el-input v-model="addUserInfo.chineseName" />
+            </el-form-item>
+            <el-form-item v-if="addDialogTitle === '添加成员'" label="密码" prop="power" :label-width="formLabelWidth">
+              <el-input v-model="addUserInfo.power" autocomplete="off" type="password" />
+            </el-form-item>
+            <el-form-item v-if="addDialogTitle === '添加成员'" label="确认密码" prop="rePower" :label-width="formLabelWidth">
+              <el-input v-model="addUserInfo.rePower" autocomplete="off" type="password" />
             </el-form-item>
             <el-form-item label="启用/停用" :label-width="formLabelWidth" prop="activeFlag">
               <el-radio-group v-model="addUserInfo.activeFlag">
@@ -115,9 +122,9 @@
           </div>
         </el-dialog>
 
-        <el-dialog :title="editDialogTitle" :visible.sync="showEditDialog" width="600px" @close="editDialogClose">
-          <el-form ref="EditDialog" :model="DialogData" label-position="right" style="padding-right:20px;" :rules="EditRules">
-            <el-form-item v-if="editDialogStatus !== 'setPrincipal'" prop="name" :label="editDialogLabel" label-width="120px" required>
+        <el-dialog :title="editDialogTitle" :visible.sync="showEditDialog" width="600px" :close-on-click-modal="false" @close="editDialogClose">
+          <el-form ref="EditDialog" v-loading="editUserLoading && editDialogTitle === '编辑成员'" :model="DialogData" label-position="right" style="padding-right:20px;" :rules="EditRules">
+            <el-form-item v-if="editDialogStatus !== 'setPrincipal'" prop="name" :label="editDialogLabel" label-width="120px">
               <el-input v-model="DialogData.name" />
             </el-form-item>
             <el-form-item v-else label="部门负责人" label-width="100px" prop="person">
@@ -145,7 +152,7 @@
   </div>
 </template>
 <script>
-import { saveOrganizationGroup, getOrganizationGroup, getSysUserList, deleteSysUserList, getListRegUserByChineseName, addSysUserList } from '@/api/settings'
+import { saveOrganizationGroup, getOrganizationGroup, getSysUserList, deleteSysUserList, getListRegUserByChineseName, addSysUserList, updateGroup, deleteGroup, getRegUser, checkMobileExist, checkReguserNameExist, editSysUserList } from '@/api/settings'
 import Pagination from '@/components/Pagination'
 import navTree from '@/components/leftTreeNav'
 import { isMobileNumber } from '@/utils/validate'
@@ -162,14 +169,102 @@ export default {
     }
     var validateMobile = (rule, value, callback) => {
       if (value === '') {
-        callback(new Error('请输入手机号'))
+        callback(new Error('请输入手机号码'))
       } else if (!isMobileNumber(value)) {
-        callback(new Error('手机号格式错误'))
+        callback(new Error('手机号码格式错误'))
+      } else {
+        checkMobileExist(value).then(res => {
+          if (res.code === 0) {
+            res.data ? callback(new Error('手机号码已存在')) : callback()
+          } else {
+            callback(new Error('检查手机号码失败'))
+          }
+        }).catch(err => {
+          console.log('err', err)
+          callback(new Error('检查手机号码失败'))
+        })
+      }
+    }
+    var validateEditMobile = (rule, value, callback) => {
+      value = this.addUserInfo.mobile
+      if (value === '') {
+        callback(new Error('请输入手机号码'))
+      } else if (!isMobileNumber(value)) {
+        callback(new Error('手机号码格式错误'))
+      } else if (value === this.EditCopyInfo.mobile) {
+        callback()
+      } else {
+        checkMobileExist(value).then(res => {
+          if (res.code === 0) {
+            res.data ? callback(new Error('手机号码已存在')) : callback()
+          } else {
+            callback(new Error('检查手机号码失败'))
+          }
+        }).catch(err => {
+          console.log('err', err)
+          callback(new Error('检查手机号码失败'))
+        })
+      }
+    }
+    var validatePass = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请输入密码'))
+      } else {
+        if (this.addUserInfo.rePower !== '') {
+          this.$refs.addUserInfo.validateField('rePower')
+        }
+        callback()
+      }
+    }
+    var validatePass2 = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请再次输入密码'))
+      } else if (value !== this.addUserInfo.power) {
+        callback(new Error('两次输入密码不一致!'))
       } else {
         callback()
       }
     }
+
+    var validateReguserName = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请输入账号'))
+      } else {
+        checkReguserNameExist(value).then(res => {
+          if (res.code === 0) {
+            res.data ? callback(new Error('账号已存在')) : callback()
+          } else {
+            callback(new Error('检查账号失败'))
+          }
+        }).catch(err => {
+          console.log('err', err)
+          callback(new Error('检查账号失败'))
+        })
+      }
+    }
+    var validateEditReguserName = (rule, value, callback) => {
+      value = this.addUserInfo.reguserName
+      if (value === '') {
+        callback(new Error('请输入账号'))
+      } else if (value === this.EditCopyInfo.reguserName) {
+        callback()
+      } else {
+        checkReguserNameExist(value).then(res => {
+          if (res.code === 0) {
+            res.data ? callback(new Error('账号已存在')) : callback()
+          } else {
+            callback(new Error('检查账号失败'))
+          }
+        }).catch(err => {
+          console.log('err', err)
+          callback(new Error('检查账号失败'))
+        })
+      }
+    }
     return {
+
+      editUserLoading: false,
+      addDialogTitle: '添加成员',
       addOrganizeBtnLoading: false,
       SearchType: '',
       navTreeShow: true,
@@ -192,18 +287,26 @@ export default {
         chineseName: '',
         activeFlag: 1,
         groupId: '',
-        addFiledsFlag: 0
+        addFiledsFlag: 0,
+        power: '',
+        rePower: ''
       },
       addUserInfoRules: {
         mobile: [
           { validator: validateMobile, trigger: 'blur', required: true }
+        ],
+        editMobile: [
+          { validator: validateEditMobile, trigger: 'blur', required: true }
         ],
         email: [
           { message: '请输入邮箱地址', trigger: 'blur', required: true },
           { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
         ],
         reguserName: [
-          { message: '请输入账号', trigger: 'blur', required: true }
+          { validator: validateReguserName, trigger: 'blur', required: true }
+        ],
+        editReguserName: [
+          { validator: validateEditReguserName, trigger: 'blur', required: true }
         ],
         chineseName: [
           { message: '请输入真实姓名', trigger: 'blur', required: true }
@@ -212,10 +315,16 @@ export default {
           { required: true, message: '请选择状态', trigger: 'change' }
         ],
         groupId: [
-          { required: true, message: '请选择单位/部门', trigger: 'change' }
+          { required: true, message: '请选择单位/部门', trigger: 'blur' }
         ],
         addFiledsFlag: [
           { required: true, message: '请选择补充资产字段', trigger: 'change' }
+        ],
+        power: [
+          { validator: validatePass, trigger: 'blur', required: true }
+        ],
+        rePower: [
+          { validator: validatePass2, trigger: 'blur', required: true }
         ]
       },
       tableData: [],
@@ -246,17 +355,23 @@ export default {
         person: [
           { validator: validate, trigger: 'blur', required: true }
         ]
+
       },
+      EditCopyInfo: {},
       checkedDepartTags: ''
     }
   },
   created() {
     this.getList()
+    console.log('refs', this.$refs)
   },
   methods: {
     closeAddDialog() {
-      this.$refs.addUserInfo.clearValidate()
       this.showAddDialog = false
+      this.checkedDepartTags = ''
+      this.addUserInfo.groupId = ''
+      this.thisOperationNode = ''
+      this.$refs.addUserInfo.clearValidate()
     },
     handleAddNodeClick(item) {
       console.log('item', item)
@@ -292,6 +407,7 @@ export default {
       // })
       // this.defaultCheckedKeys = []
       // this.checkedDepartment = []
+      this.addDialogTitle = '添加成员'
       this.checkedDepartTags = ''
       this.addUserInfo = {
         mobile: '',
@@ -307,8 +423,8 @@ export default {
     navTreeOperation(operate, data) {
       console.log('data', data)
       // this.checkedDepartment = []
-      // this.thisOperationNode = { ...data }
-      if (operate !== 'addperson') {
+      this.thisOperationNode = { ...data }
+      if (operate !== 'addperson' && operate !== 'deletePart') {
         this.DialogData.name = ''
         this.editDialogStatus = operate
         this.showEditDialog = true
@@ -323,19 +439,56 @@ export default {
             break
           case 'changeName':
             this.editDialogTitle = '修改名称'
+            this.editDialogLabel = '新名称'
             break
           case 'addSonCompany':
             this.editDialogTitle = '添加子(分)公司'
             this.editDialogLabel = '子(分)公司名称'
             break
         }
-      } else {
+      } else if (operate === 'addperson') {
+        this.addDialogTitle = '添加成员'
+        this.addUserInfo = {
+          mobile: '',
+          email: '',
+          reguserName: '',
+          chineseName: '',
+          activeFlag: 1,
+          groupId: '',
+          addFiledsFlag: 0
+        }
         this.showAddDialog = true
         // this.checkedDepartment = [{ ...data }]
         // this.defaultCheckedKeys = []
         // this.defaultCheckedKeys.push(data.groupId)
         this.checkedDepartTags = data.groupName
         this.addUserInfo.groupId = data.groupId
+      } else if (operate === 'deletePart') {
+        const departName = data.nodeType ? '部门' : '单位'
+        this.$confirm(`此操作将永久删除该${departName}, 是否继续?`, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          deleteGroup(data.groupId).then(res => {
+            if (res.code === 0) {
+              this.$message({ type: 'success', message: '删除成功!' })
+              this.$nextTick(() => {
+                this.$refs.navtree.deleteNode(data.groupId)
+              })
+            } else {
+              this.$message({ type: 'error', message: '删除失败，请稍后再试' })
+            }
+          }).catch(err => {
+            this.$message({ type: 'error', message: '删除失败，请稍后再试' })
+            console.log('err', err)
+          })
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          })
+        })
       }
     },
     editConfirm() {
@@ -355,6 +508,9 @@ export default {
                   type: 'success',
                   message: this.editDialogTitle + '添加成功'
                 })
+                this.$nextTick(() => {
+                  this.$refs.navtree.updataNode('', obj.parentId)
+                })
               } else {
                 this.$message({
                   type: 'error',
@@ -372,31 +528,77 @@ export default {
               this.addOrganizeBtnLoading = false
               this.editDialogClose()
             })
+          } else if (this.editDialogStatus === 'changeName') {
+            const obj = {
+              parentId: this.thisOperationNode.parentId,
+              nodeType: this.thisOperationNode.nodeType,
+              groupName: this.DialogData.name,
+              groupId: this.thisOperationNode.groupId
+            }
+            console.log('updateGroup', obj)
+            updateGroup(obj).then(res => {
+              if (res.code === 0) {
+                this.$message({
+                  type: 'success',
+                  message: this.editDialogTitle + '成功'
+                })
+                this.$nextTick(() => {
+                  this.$refs.navtree.updataNode(obj.groupId, obj.parentId)
+                })
+              } else {
+                this.$message({
+                  type: 'error',
+                  message: this.editDialogTitle + '失败，请稍后再试'
+                })
+              }
+            }).catch(err => {
+              this.$message({
+                type: 'error',
+                message: this.editDialogTitle + '失败，请稍后再试'
+              })
+              console.log('err', err)
+            }).finally(() => {
+              this.addOrganizeBtnLoading = false
+              this.editDialogClose()
+            })
           }
-          // else if () {
-
-          // }
         }
       })
     },
     createConfirm() {
       this.$refs.addUserInfo.validate(validate => {
         if (validate) {
-          // this.addUserInfo.merchantId = this.merchantId
           this.addUserInfo.userType = 2
-          console.log('addUserInfo', this.addUserInfo)
-          addSysUserList({ ...this.addUserInfo }).then(res => {
-            if (res.code === 0) {
-              this.$message({ type: 'success', message: '添加用户成功' })
-            } else {
-              this.$message({ type: 'success', message: '添加用户失败，请稍后再试' })
-            }
-            this.showAddDialog = false
-          }).catch(err => {
-            console.log('err', err)
-            this.$message({ type: 'success', message: '添加用户失败，请稍后再试' })
-            this.showAddDialog = false
-          })
+          if (this.addDialogTitle === '添加成员') {
+            console.log('addUserInfo', this.addUserInfo)
+            addSysUserList({ ...this.addUserInfo }).then(res => {
+              if (res.code === 0) {
+                this.$message({ type: 'success', message: this.addDialogTitle + '成功' })
+                this.getList()
+              } else {
+                this.$message({ type: 'error', message: this.addDialogTitle + '失败，请稍后再试' })
+              }
+              this.showAddDialog = false
+            }).catch(err => {
+              console.log('err', err)
+              this.$message({ type: 'error', message: this.addDialogTitle + '失败，请稍后再试' })
+              this.showAddDialog = false
+            })
+          } else {
+            editSysUserList({ ...this.addUserInfo }).then(res => {
+              if (res.code === 0) {
+                this.$message({ type: 'success', message: this.addDialogTitle + '成功' })
+                this.getList()
+              } else {
+                this.$message({ type: 'error', message: this.addDialogTitle + '失败，请稍后再试' })
+              }
+              this.showAddDialog = false
+            }).catch(err => {
+              console.log('err', err)
+              this.$message({ type: 'error', message: this.addDialogTitle + '失败，请稍后再试' })
+              this.showAddDialog = false
+            })
+          }
         }
       })
     },
@@ -417,7 +619,10 @@ export default {
       this.reguserName = e.chineseName
     },
     clearSearchRes() {
-
+      this.pageQuery.chineseName = ''
+      this.pageQuery.reguserName = ''
+      this.pageQuery.pageNo = 1
+      this.getList()
     },
     searchList() {
       if (!this.SearchType) {
@@ -431,6 +636,7 @@ export default {
 
       this.pageQuery[this.SearchType] = this.searchIpt
       this.pageQuery.pageNo = 1
+      this.getList()
     },
 
     // 新建成员树结构
@@ -471,7 +677,7 @@ export default {
         //   console.log('err', err)
         // })
         this.pageQuery.pageNo = 1
-        this.pageQuery.pageSize = 2
+        this.pageQuery.pageSize = 10
         this.pageQuery.groupId = data.groupId
         this.getList()
       } else {
@@ -479,9 +685,29 @@ export default {
       }
     },
     editSysUser(row) {
+      this.addDialogTitle = '编辑成员'
+
       console.log('row', row)
       this.addUserInfo = { ...row }
       this.showAddDialog = true
+      this.editUserLoading = true
+      getRegUser(row.reguserId).then(res => {
+        if (res.code === 0) {
+          this.EditCopyInfo = { ...res.data }
+          this.checkedDepartTags = res.data.groupName
+          for (const key in this.addUserInfo) {
+            this.addUserInfo[key] = res.data[key]
+          }
+        } else {
+          this.$message({ type: 'warning', message: '获取用户信息失败，请稍后再试' })
+          this.showAddDialog = false
+        }
+      }).catch(err => {
+        this.showAddDialog = false
+        console.log('err', err)
+      }).finally(() => {
+        this.editUserLoading = false
+      })
     },
     deleteSysUser(row) {
       console.log('row', row)

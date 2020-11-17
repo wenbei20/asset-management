@@ -7,8 +7,8 @@ const getDefaultState = () => {
     token: getToken(),
     name: '',
     avatar: '',
-    merchantId: 'c5e3bcce38e848cd8aca30dad8d73760',
     introduction: '',
+    merchantName: '',
     roles: [],
     type: ''
   }
@@ -34,6 +34,9 @@ const mutations = {
   },
   SET_TYPE: (state, type) => {
     state.type = type
+  },
+  SET_MERCHART_NAME: (state, merchantName) => {
+    state.merchantName = merchantName
   }
 }
 
@@ -46,6 +49,7 @@ const actions = {
         console.log(response)
         if (response.code === 0) {
           commit('SET_TOKEN', response.data.token)
+          commit('SET_MERCHART_NAME', response.data.merchantName)
 
           setToken(response.data.token)
           // getPermission().then(res=>{

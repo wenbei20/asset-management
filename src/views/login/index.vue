@@ -76,7 +76,7 @@ export default {
   name: 'Login',
   data() {
     const validateUsername = (rule, value, callback) => {
-       if (value.length === 0) {
+      if (value.length === 0) {
         callback(new Error('请输入用户名'))
       } else {
         callback()
@@ -160,34 +160,33 @@ export default {
             .then(() => {
               console.log(this.$route)
               // 登录成功后，暂时先进入引导页面
-               
+
               this.$router.push({ path: '/home' })
               // this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
               this.loading = false
             })
             .catch((error) => {
+              // console.log(error)
+              let err = ''
+              // console.log('err', err.message === "Network Error")
 
-             // console.log(error)
-                  let err = ''
-        // console.log('err', err.message === "Network Error")
-         
-              if(!error.message){
-                  err = error
-              }else  if(error.message === 'Network Error'){
+              if (!error.message) {
+                err = error
+              } else if (error.message === 'Network Error') {
                 err = '网络连接失败，请稍后重试！'
-              }else {
+              } else {
                 err = '连接超时，请稍后重试！'
               }
               // Message.error(error || '登陆失败，请稍后重试！')
               this.$message({
-                  type:'error',
-                  message: err,
-                  duration:2000
+                type: 'error',
+                message: err,
+                duration: 2000
               })
               this.loading = false
             })
         } else {
-          //console.log('error submit!!')
+          // console.log('error submit!!')
           return false
         }
       })

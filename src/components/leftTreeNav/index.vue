@@ -1,10 +1,11 @@
 <template>
   <div class="navTree" :class="{'hide':!show}">
-    <div class="companyName">国网北京电科院</div>
+    <div class="companyName">{{ merchantName }}</div>
     <div class="title">{{ title }}</div>
     <!-- :data="treeData" -->
     <el-tree
       v-if="show"
+      ref="leftNavTree"
       :props="defaultProps"
       node-key="groupId"
       :load="loadNode"
@@ -32,6 +33,7 @@
 
 import drapDown from '@/components/drapdownMenu'
 import { getOrganizationGroup } from '@/api/settings'
+import { mapState } from 'vuex'
 export default {
   components: { drapDown },
   props: {
@@ -95,13 +97,28 @@ export default {
       type: Object,
       default: () => {
         return {
-          top: [{ name: '添加成员', className: '', operate: 'addperson' }, { name: '添加(子)分公司', className: '', operate: 'addSonCompany' }, { name: '添加子部门', className: '', operate: 'addSonDepartment' }],
-          sub: [{ name: '添加成员', className: '', operate: 'addperson' }, { name: '添加(子)分公司', className: '', operate: 'addSonCompany' }, { name: '添加子部门', className: '', operate: 'addSonDepartment' }, { name: '修改名称', className: '', operate: 'changeName' }, { name: '删除部门', className: 'deletePart' }],
-          department: [{ name: '添加成员', className: '', operate: 'addperson' }, { name: '添加子部门', className: '', operate: 'addSonDepartment' }, { name: '修改名称', className: '', operate: 'changeName' }, { name: '删除部门', className: 'deletePart' }]
+          top: [
+            { name: '添加成员', className: '', operate: 'addperson' },
+            { name: '添加(子)分公司', className: '', operate: 'addSonCompany' },
+            { name: '添加子部门', className: '', operate: 'addSonDepartment' }],
+          sub: [
+            { name: '添加成员', className: '', operate: 'addperson' },
+            { name: '添加(子)分公司', className: '', operate: 'addSonCompany' },
+            { name: '添加子部门', className: '', operate: 'addSonDepartment' },
+            { name: '修改名称', className: '', operate: 'changeName' },
+            { name: '删除部门', className: 'deletePart', operate: 'deletePart' }
+          ],
+          department: [
+            { name: '添加成员', className: '', operate: 'addperson' },
+            { name: '添加子部门', className: '', operate: 'addSonDepartment' },
+            { name: '修改名称', className: '', operate: 'changeName' },
+            { name: '删除部门', className: 'deletePart', operate: 'deletePart' }
+          ]
         }
       }
     }
   },
+
   data() {
     return {
       show: true,
@@ -112,6 +129,11 @@ export default {
       },
       showTopMenu: true
     }
+  },
+  computed: {
+    ...mapState({
+      merchantName: state => state.user.merchantName
+    })
   },
   created() {
     // this.getTreeNodeData(0)
@@ -167,6 +189,23 @@ export default {
         this.$emit('operation', e.operate, data)
       }
       data.showTopMenu = false
+    },
+    updataNode(id, parentId) {
+      this.getTreeNodeData(parentId).then(res => {
+        // const idx = res.findIndex(ele => ele.groupId === id)
+
+        // if (idx !== -1) {
+        //   this.$refs.leftNavTree.updateKeyChildren(id, res[idx])
+        // }
+        res.forEach(item => {
+          item.showTopMenu = false
+          item.position = item.nodeType === 1 ? 'department' : 'sub'
+        })
+        this.$refs.leftNavTree.updateKeyChildren(parentId, res)
+      })
+    },
+    deleteNode(id) {
+      this.$refs.leftNavTree.remove(id)
     }
   }
 }
