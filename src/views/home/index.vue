@@ -20,11 +20,7 @@
             <el-col :span="8">
               <h4 style="margin: 10px 0;">资产占比</h4>
             </el-col>
-            <el-col :span="8">
-              <el-select v-model="selectValue1" placeholder="请选择">
-                <el-option label="全部" value="all" />
-              </el-select>
-            </el-col>
+    
           </el-row>
           <div id="myChart1" :style="{width: '100%', height: '300px'}" />
           <div :style="{ textAlign: 'right' }">
@@ -43,17 +39,13 @@
             <el-col :span="8">
               <h4 style="margin: 10px 0;">公司使用占比</h4>
             </el-col>
-            <el-col :span="8">
-              <el-select v-model="selectValue1" placeholder="请选择">
-                <el-option label="全部" value="all" />
-              </el-select>
-            </el-col>
+         
           </el-row>
           <div id="myChart2" :style="{width: '100%', height: '300px'}" />
           <div :style="{ textAlign: 'right' }">
             <el-radio-group v-model="radio2" size="mini">
-              <el-radio-button label="数量" />
-              <el-radio-button label="金额" />
+              <el-radio-button label="数量" @click.native="getGssy('num')"/>
+              <el-radio-button label="金额" @click.native="getGssy('money')"/>
             </el-radio-group>
           </div>
         </el-card>
@@ -64,11 +56,7 @@
             <el-col :span="8">
               <h4 style="margin: 10px 0;">部门使用占比</h4>
             </el-col>
-            <el-col :span="8">
-              <el-select v-model="selectValue1" placeholder="请选择">
-                <el-option label="全部" value="all" />
-              </el-select>
-            </el-col>
+      
           </el-row>
           <div id="myChart3" :style="{width: '100%', height: '300px'}" />
           <div :style="{ textAlign: 'right' }">
@@ -85,17 +73,13 @@
             <el-col :span="8">
               <h4 style="margin: 10px 0;">资产分类统计</h4>
             </el-col>
-            <el-col :span="8">
-              <el-select v-model="selectValue1" placeholder="请选择">
-                <el-option label="全部" value="all" />
-              </el-select>
-            </el-col>
+
           </el-row>
           <div id="myChart4" :style="{width: '100%', height: '300px'}" />
           <div :style="{ textAlign: 'right' }">
             <el-radio-group v-model="radio4" size="mini">
-              <el-radio-button label="数量" />
-              <el-radio-button label="金额" />
+              <el-radio-button label="数量" @click.native="getZcfl('num')"/>
+              <el-radio-button label="金额" @click.native="getZcfl('money')"/>
             </el-radio-group>
           </div>
         </el-card>
@@ -105,17 +89,18 @@
 </template>
 
 <script>
+import { getData,getZcfl,getGssy,getZczb } from '@/api/home.js'
 export default {
   name: 'Home',
   data() {
     return {
       statisGroup: [
-        { name: '报修资产数', count: 0 },
+        /*{ name: '报修资产数', count: 0 },
         { name: '待确认调拨单', count: 21 },
         { name: '安全库存警报', count: 5 },
         { name: '待盘点任务数量', count: 0 },
         { name: '资产总数', count: 12 },
-        { name: '资产总金额', count: 7 }
+        { name: '资产总金额', count: 7 }*/
       ],
       selectValue1: 'all',
       radio1: '数量',
@@ -147,14 +132,14 @@ export default {
             name: '资产状态占比',
             type: 'pie',
             radius: [50, 100],
-            center: ['30%', '50%'],
+            center: ['40%', '50%'],
             data: [
-              { value: 20, name: '闲置' },
+              /*{ value: 20, name: '闲置' },
               { value: 30, name: '在用' },
               { value: 25, name: '借用' },
               { value: 25, name: '维修中' },
               { value: 20, name: '调拨中' },
-              { value: 35, name: '报废' }
+              { value: 35, name: '报废' }*/
             ]
           }
         ]
@@ -250,30 +235,88 @@ export default {
             radius: [50, 100],
             center: ['30%', '50%'],
             data: [
-              { value: 20, name: '闲置' },
+              /*{ value: 20, name: '闲置' },
               { value: 30, name: '在用' },
               { value: 25, name: '借用' },
               { value: 25, name: '维修中' },
               { value: 20, name: '调拨中' },
-              { value: 35, name: '报废' }
+              { value: 35, name: '报废' }*/
             ]
           }
         ]
       }
     }
   },
+  created(){
+
+  },
   mounted() {
-    this.drawLine('1')
-    this.drawLine('2')
+    this.getData()
+    this.getZczb()
+    this.getZcfl('num')
+    this.getGssy('num')
     this.drawLine('3')
-    this.drawLine('4')
+
   },
   methods: {
     drawLine(id) {
       // 基于准备好的dom，初始化echarts实例
       const myChart = this.$echarts.init(document.getElementById(`myChart${id}`))
+        myChart.showLoading({
+        text: '数据正在努力加载...',
+        textStyle: { fontSize: 30, color: '#444' },
+        effectOption: { backgroundColor: 'rgba(0, 0, 0, 0)' }
+      })
       // 绘制图表
       myChart.setOption(this[`option${id}`])
+      myChart.hideLoading()
+    },
+    getData(){
+      getData().then(response => {
+        this.statisGroup=response.data.everyCount
+      })
+    },
+    getZcfl(type){
+      this.option4.series[0].data=[]
+      getZcfl().then(response => {
+          let zcfl=[]
+          response.data.propAssetsCount.forEach(function (item){
+            if(type === 'num'){
+              zcfl.push({ value: item.count_num,name: item.assetkind_name })
+            }else{
+              zcfl.push({ value: item.sum_money,name: item.assetkind_name })
+            }
+            
+          })
+          this.option4.series[0].data=zcfl
+          this.drawLine('4')
+      })
+    },
+    getGssy(type){
+      this.option2.series[0].data = [];
+      getGssy().then(response => {
+          let gssy=[]
+          response.data.compCount.forEach(function (item){
+            if(type === 'num'){
+              gssy.push({ value: item.group_num,name: item.group_name })
+            }else{
+               gssy.push({ value: item.group_money,name: item.group_name })
+            }
+
+          })
+          this.option2.series[0].data=gssy
+          this.drawLine('2')
+      })
+    },
+    getZczb(){
+      getZczb().then(response => {
+          let zczb=[]
+          response.data.assetStatusCount.forEach(function (item){
+            zczb.push({ value: item.count_num,name: item.status_name })
+          })
+          this.option1.series[0].data=zczb
+          this.drawLine('1')
+      })
     }
   }
 }

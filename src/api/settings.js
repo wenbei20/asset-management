@@ -40,6 +40,14 @@ export function getListGroup(params) {
   })
 }
 
+export function getRegUser(id) {
+  return request({
+    url: '/sys/regUser/getRegUser/' + id,
+    method: 'get',
+    params: { reguserId: id }
+  })
+}
+
 // 用户管理
 
 export function getOrganizationGroup(params) {
@@ -74,6 +82,13 @@ export function getlistMerchant(params) {
   })
 }
 
+export function findUsersByMerchant() {
+  return request({
+    url: '/sys/merchant/findUsersByMerchant',
+    method: 'post'
+  })
+}
+
 // export function deleteMerchant(id) {
 //   return request({
 //     url: '/sys/merchant/deleteMerchant/' + id,
@@ -97,6 +112,13 @@ export function getListRegUserByChineseName(params) {
   })
 }
 
+export function getMerchant(id) {
+  return request({
+    url: '/sys/merchant/getMerchant/' + id,
+    method: 'get',
+    params: { merchantId: id }
+  })
+}
 // 用户组
 
 export function getlistRole(params) {
@@ -139,3 +161,26 @@ export function deleteRole(params, id) {
   })
 }
 
+export function getListRightsByRoleId(params) {
+  return request({
+    url: '/sys/role/listRightsByRoleId',
+    method: 'get',
+    params
+  })
+}
+
+export function saveRoleRights(data) {
+  return request({
+    url: '/sys/role/saveRoleRights',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function saveRoleUser(data) {
+  return request({
+    url: '/sys/role/saveRoleUser',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}

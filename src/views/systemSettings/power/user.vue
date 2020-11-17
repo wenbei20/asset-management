@@ -1,44 +1,31 @@
 <template>
-  <div :class="[noNavbar?'noNavbar':'' , 'settings']">
+  <div class="settings">
     <div class="yonghuzu">
       <div class="tit">用户组</div>
-      <ul>
-        <li>
-          <div class="icon">
+      <ul v-loading="addGroupLoading" class="yonghuGroup">
+        <li v-for="(item,i) in groupList" :key="i" class="normal" :class="{'active' : item.roleId === activeGroupName}" @click.stop="activeThisGroup(item)">
+          <div v-if="!item.editing" class="icon">
             <i class="el-icon-s-custom" />
           </div>
-          <div>
-            <div class="cnt">管理员</div>
-            <span>系统分组</span>
-          </div>
-        </li>
-        <li class="active">
-          <div class="icon">
-            <i class="el-icon-s-custom" />
-          </div>
-          <div>
-            <div class="cnt">普通成员</div>
-            <span>系统分组</span>
-          </div>
-        </li>
+          <div v-if="!item.editing">
 
-        <li v-for="(item,i) in groupList" :key="i" class="normal">
-          <div class="icon">
-            <i class="el-icon-s-custom" />
-          </div>
-          <div>
-            <div class="cnt">{{ item.name }}</div>
-            <i class="el-icon-more" @click="item.showMenu = true" />
+            <div class="cnt">{{ item.roleName }}</div>
+            <i class="el-icon-more" @click.stop="item.showMenu = true" />
             <div v-if="item.showMenu" class="menu">
-              <div>重命名</div>
-              <div>删除</div>
+              <div @click.stop="reNameGoup(item)">重命名</div>
+              <div @click.stop="removeGoup(item)">删除</div>
             </div>
-            <div v-if="item.showMenu" class="dialogmenu" @click="item.showMenu = false" />
+            <div v-if="item.showMenu" class="dialogmenu" @click.stop="item.showMenu = false" />
+          </div>
+          <div v-else class="addGroupBox" style="padding:0 20px 0 0;">
+            <el-input ref="addGroupipt" v-model="editGroupName" type="text" placeholder="输入用户组名称" />
+            <el-button type="primary" size="mini" @click="configEdit(true ,item)">确定</el-button>
+            <el-button size="mini" @click="configEdit(false ,item)">取消</el-button>
           </div>
         </li>
       </ul>
       <div style="padding:10px;" :class="{'adding_group':isAddingGroup}">
-        <el-link v-if="!isAddingGroup" type="primary" :underline="false" @click="addGroup">
+        <el-link v-if="!isAddingGroup" type="primary" :underline="false" @click="isAddingGroup = true">
           <i class="el-icon-plus" />添加用户组
         </el-link>
         <div v-else class="addGroupBox">
@@ -51,175 +38,295 @@
     <div class="other">
       <div class="chengyuan">
         <div class="tit">
-          <b>用户组成员· </b>
-          <span>{{ chengyuannum }}</span>
-          <span class="settings_add Link_disabled_click" @click="showAddPerson=true">
+          <b>用户组成员</b>
+          <span>{{ groupUserList.length ? '· ' + groupUserList.length : '' }}</span>
+          <span v-if="activeGroupName" class="settings_add Link_disabled_click" @click="addMember">
             <i class="el-icon-plus" />
+            <!-- showAddPerson=true -->
             添加成员
           </span>
         </div>
       </div>
-      <div class="imgbox">
-        <div>
-          <i>PP</i>
-          <span>pp</span>
+      <div v-loading="groupUserLoading" class="imgbox">
+        <div v-for="(item ,i) in groupUserList" :key="i">
+          <i>{{ item.chinese_name | getFirstString }}</i>
+          <span>{{ item.chinese_name }}</span>
+        </div>
+        <div v-if="groupUserList.length === 0" class="nores">
+          暂无成员，快来添加成员吧
         </div>
       </div>
 
       <div class="checkouter">
         <div class="toptit">用户组2</div>
-        <table cellspacing="0">
-          <colgroup>
-            <col style="width: 10%;">
-            <col style="width: 85%;">
-            <col style="width: 5%;">
-
-          </colgroup>
-          <thead>
-            <tr>
-              <th>操作对象</th>
-              <th>权限</th>
-              <th>全选</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="tit">
-                <div>公司管理</div>
-              </td>
-              <td class="group">
-                <span v-for="(item,i) in checkgroup1" :key="i" class="checkitem">
-                  <el-checkbox v-model="item.checked" :label="item.name" />
-                </span>
-              </td>
-              <td class="allselect">
-                <el-checkbox v-model="allCheck" />
-              </td>
-            </tr>
-            <tr>
-              <td class="tit">
-                <div>项目设置</div>
-              </td>
-              <td class="group">
-                <span v-for="(item,i) in checkgroup2" :key="i" class="checkitem">
-                  <el-checkbox v-model="item.checked" :label="item.name" />
-                </span>
-              </td>
-              <td class="allselect">
-                <el-checkbox v-model="allCheck" />
-              </td>
-            </tr>
-            <tr>
-              <td class="tit">
-                <div>安全与集成</div>
-              </td>
-              <td class="group">
-                <span v-for="(item,i) in checkgroup3" :key="i" class="checkitem">
-                  <el-checkbox v-model="item.checked" :label="item.name" />
-                </span>
-              </td>
-              <td class="allselect">
-                <el-checkbox v-model="allCheck" />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="confirm">
-          <el-button type="primary">保存</el-button>
+        <el-tree
+          ref="rightsTree"
+          v-loading="rightTreeLoading"
+          :props="props"
+          node-key="rightkeyId"
+          show-checkbox
+          :data="rightsList"
+          :default-expand-all="true"
+          :default-checked-keys="defaultCheckedList"
+        />
+        <div v-if="rightsList.length" class="confirm">
+          <el-button type="primary" :loading="saveBtnLoading" @click="saveGroupRights">保存</el-button>
         </div>
       </div>
     </div>
-    <add-person :dialog-visible.sync="showAddPerson" />
+    <add-person ref="addperson" :dialog-visible.sync="showAddPerson" @confirmData="confirmData" />
   </div>
 </template>
 
 <script>
+import { getlistRole, saveRole, updateRole, deleteRole, getlistRegUserByRoleId, getListRightsByRoleId, saveRoleRights, saveRoleUser } from '@/api/settings'
 import addPerson from '@/components/Dialog/addPerson'
 export default {
   components: { addPerson },
-  props: {
-    info: {
-      type: Object,
-      default: () => { return {} }
-    },
-    noNavbar: {
-      type: Boolean,
-      default: false
+  filters: {
+    getFirstString(val) {
+      return val ? val.substring(0, 1) : ''
     }
   },
   data() {
     return {
+      saveBtnLoading: false,
+      editGroupName: '',
+      rightTreeLoading: false,
+      groupUserLoading: false,
       showAddPerson: false,
       isAddingGroup: false,
+      addGroupLoading: false,
       addGroupName: '',
-      groupList: [
-        { name: 'test001', showMenu: false },
-        { name: '用户组1', showMenu: false },
-        { name: '用户组2', showMenu: false },
-        { name: '用户组3', showMenu: false },
-        { name: '用户组4', showMenu: false }
-      ],
+      activeGroupName: '',
+      groupList: [],
       chengyuannum: 1,
-      checkgroup1: [
-        { name: '保密需求', checked: false },
-        { name: '删除需求', checked: false },
-        { name: '复制需求', checked: false },
-        { name: '导入需求', checked: false },
-        { name: '导出需求', checked: false },
-        { name: '移动需求', checked: false },
-        { name: '需求分类管理', checked: false },
-        { name: '创建需求', checked: false },
-        { name: '编辑需求', checked: false },
-        { name: '附件上传/关联', checked: false },
-        { name: '附件下载/预览', checked: false },
-        { name: '附件删除/解除关联', checked: false },
-        { name: '需求批量流转', checked: false }
-      ],
-      checkgroup2: [
-        { name: '创建迭代', checked: false },
-        { name: '编辑迭代', checked: false },
-        { name: '删除迭代', checked: false },
-        { name: '导出迭代', checked: false },
-        { name: '规划迭代', checked: false },
-        { name: '工作分配', checked: false },
-        { name: '迭代转发布', checked: false },
-        { name: '迭代开启/关闭', checked: false }
-      ],
-      checkgroup3: [
-        { name: '创建任务', checked: false },
-        { name: '编辑任务', checked: false },
-        { name: '导入任务', checked: false },
-        { name: '导出任务', checked: false },
-        { name: '删除任务', checked: false },
-        { name: '任务状态流转', checked: false },
-        { name: '附件上传/关联', checked: false },
-        { name: '附件下载/预览', checked: false },
-        { name: '附件删除/解除关联', checked: false }
-      ],
-      allCheck: false
+      // checkgroup1: [],
+      // checkgroup2: [],
+      // checkgroup3: [],
+      allCheck: false,
+      props: {
+        label: 'rightkeyName',
+        children: 'children'
+
+      },
+      groupUserList: [],
+      rightsList: [],
+      defaultCheckedList: [],
+      roleKind: 2
+
     }
   },
-  computed: {
 
-  },
   created() {
-
+    this.getRoleList()
   },
   methods: {
-    addGroup() {
-      this.isAddingGroup = true
-      this.$nextTick(() => {
-        this.$refs.addGroupipt.focus()
+    confirmData(iptData) {
+      console.log('iptData', iptData)
+      // if (this.roleKind !== 2) {
+      if (iptData && iptData.length) {
+        const query = {
+          roleId: this.activeGroupName,
+          userIds: iptData.map(item => item.reguserId).join(',')
+        }
+        saveRoleUser(query).then(res => {
+          if (res.code === 0) {
+            this.$message({ type: 'success', message: '添加成员成功！' })
+            this.getGroupAllUser(this.activeGroupName)
+          } else {
+            this.$message({ type: 'error', message: '添加成员失败，请稍后再试！' })
+          }
+          this.$refs.addperson.cancalLoading()
+          this.showAddPerson = false
+        }).catch(err => {
+          console.log('err', err)
+          this.$message({ type: 'error', message: '添加成员失败，请稍后再试！' })
+          this.$refs.addperson.cancalLoading()
+          this.showAddPerson = false
+        })
+      } else {
+        this.$message({ type: 'warning', message: '请选择要添加的成员' })
+      }
+      // }
+    },
+    removeGoup(item) {
+      item.editing = false
+      this.$confirm('此操作将永久删除该用户组, 是否继续?', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }).then(() => {
+        deleteRole({ roleId: item.roleId }, item.roleId).then(res => {
+          if (res.code === 0) {
+            this.$message({ type: 'success', message: '删除成功' })
+
+            if (this.activeGroupName === item.roleId) {
+              this.groupUserList = []
+              this.rightsList = []
+            }
+          } else {
+            this.$message({ type: 'error', message: '删除失败，请稍后再试' })
+          }
+          item.showMenu = false
+
+          this.getRoleList()
+        }).catch(err => {
+          console.log('err', err)
+          this.$message({ type: 'error', message: '删除失败，请稍后再试' })
+          item.showMenu = false
+        })
+      }).catch(() => {
+        this.$message({ type: 'info', message: '已取消删除' })
+      })
+    },
+    reNameGoup(item) {
+      this.editGroupName = item.roleName
+      item.editing = true
+    },
+    configEdit(bool, item) {
+      console.log('item', item)
+      if (!bool) {
+        item.editing = false
+        item.showMenu = false
+        return
+      }
+
+      if (!this.editGroupName) {
+        this.$message({ type: 'error', message: '请输入名称' })
+        item.editing = false
+        item.showMenu = false
+        return
+      }
+      const obj = {
+        readme: item.readme,
+        roleId: item.roleId,
+        roleKind: item.roleKind,
+        roleName: this.editGroupName
+      }
+
+      updateRole(obj, obj.roleId).then(res => {
+        if (res.code === 0) {
+          this.$message({ type: 'success', message: '修改成功' })
+        } else {
+          this.$message({ type: 'error', message: '修改失败，请稍后再试' })
+        }
+        item.editing = false
+        item.showMenu = false
+
+        this.getRoleList()
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'error', message: '修改失败，请稍后再试' })
+        item.editing = false
+        item.showMenu = false
+      })
+    },
+    getRoleList() {
+      getlistRole({ roleKind: this.roleKind }).then(res => {
+        console.log('res', res)
+        if (res.code === 0) {
+          res.data.forEach(item => {
+            item.showMenu = false
+            item.editing = false
+          })
+
+          this.groupList = res.data
+        }
+      })
+    },
+    getRightCheckedKey(arr) {
+      arr.forEach(item => {
+        if (item.checked) {
+          this.defaultCheckedList.push(item.rightkeyId)
+        }
+        if (Array.isArray(item.children)) {
+          this.getRightCheckedKey(item.children)
+        }
+      })
+    },
+    activeThisGroup(row) {
+      if (this.activeGroupName === row.roleId) return
+      this.activeGroupName = row.roleId
+      if (row.roleId) {
+        this.getGroupAllUser(row.roleId)
+        this.getListRights(row.roleId)
+      }
+    },
+    getGroupAllUser(roleId) {
+      this.groupUserLoading = true
+      getlistRegUserByRoleId({ roleId }).then(res => {
+        if (res.code === 0) {
+          console.log('res', res)
+          this.groupUserList = res.data
+        }
+        this.groupUserLoading = false
+      }).catch(err => {
+        this.groupUserLoading = false
+        console.log('err', err)
+      })
+    },
+    getListRights(roleId) {
+      this.rightTreeLoading = true
+      this.defaultCheckedList = []
+      getListRightsByRoleId({ roleId, rightkeyKind: 0 }).then(res => {
+        if (res.code === 0 && Array.isArray(res.data)) {
+          console.log('res', res)
+          this.getRightCheckedKey(res.data)
+          this.rightsList = res.data
+        }
+        this.rightTreeLoading = false
+      }).catch(err => {
+        this.rightTreeLoading = false
+        console.log('err', err)
       })
     },
     configAdd(bool) {
       if (bool) {
-        this.groupList.push({ name: this.addGroupName, showMenu: false })
+        if (!this.addGroupName) {
+          this.$message({ type: 'warning', message: '请输入用户组名称' })
+          return
+        }
+        saveRole({ roleKind: this.roleKind, roleName: this.addGroupName }).then(res => {
+          if (res.code === 0) {
+            this.$message({ type: 'success', message: '保存用户组成功' })
+            this.getRoleList()
+          } else {
+            this.$message({ type: 'error', message: '保存用户组失败，请稍后再试' })
+          }
+          this.isAddingGroup = false
+        }).catch(err => {
+          console.log('err', err)
+          this.$message({ type: 'error', message: '保存用户组失败，请稍后再试' })
+          this.isAddingGroup = false
+        })
+      } else {
+        this.isAddingGroup = false
       }
-      this.addGroupName = ''
-      this.isAddingGroup = false
+    },
+    saveGroupRights() {
+      const checkedList = this.$refs.rightsTree.getCheckedNodes().map(ele => ele.rightkeyId).join(',')
+      console.log('checkedList', checkedList)
+      this.saveBtnLoading = true
+      saveRoleRights({ rightkeyIds: checkedList, roleId: this.activeGroupName }).then(res => {
+        if (res.code === 0) {
+          this.$message({ type: 'success', message: '修改权限成功！' })
+        } else {
+          this.$message({ type: 'error', message: '修改权限失败，请稍后再试！' })
+        }
+        this.getListRights(this.activeGroupName)
+        this.saveBtnLoading = false
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'error', message: '修改权限失败，请稍后再试！' })
+        this.getListRights(this.activeGroupName)
+        this.saveBtnLoading = false
+      })
+    },
+    addMember() {
+      if (this.activeGroupName) {
+        this.showAddPerson = true
+      } else {
+        this.$message({ type: 'info', message: '请先选择用户组' })
+      }
     }
+
   }
 }
 </script>
@@ -250,6 +357,7 @@ export default {
         // margin-left: -25px;
         border-top:#E5E5E5 1px solid;
         font-size: 14px;
+        min-height: calc(100vh - 50px);
         .tit {
             height: 56px;
             line-height: 56px;
@@ -261,7 +369,8 @@ export default {
             margin: 0;
         }
         li {
-            height: 56px;
+            // height: 56px;
+            padding-bottom: 15px;
             list-style: none;
             padding-left: 15px;
             display: flex;
@@ -360,23 +469,35 @@ export default {
             padding: 20px 15px;
             background: #f8f8f8;
             overflow: hidden;
+            .nores {
+              width: 100%;
+              text-align: center;
+              color: #3f4a56;
+              font-size: 14px;
+            }
             >div {
                 width: 140px;
-                height: 20px;
                 margin-bottom: 15px;
                 margin-right: 15px;
-                float: left;
+                display: inline-block;
                 i {
                     display: inline-block;
                     height: 24px;
+                    width: 24px;
+                    text-align: center;
                     line-height: 24px;
                     background: #b9cdef;
-                    border-radius: 10px;
+                    border-radius: 12px;
                     color: #fff;
                     padding: 0 4px;
                     font-size: 10px;
                     font-style: normal;
                     margin-right: 6px;
+                }
+                span {
+                  display: inline-block;
+                  position: relative;
+                  top: 2px;;
                 }
             }
         }
@@ -428,11 +549,17 @@ export default {
 .adding_group {
   background-color: #fff;
 }
-
 </style>
 <style scoped>
 .addGroupBox >>> .el-input__inner {
   border-radius: 2px;
   margin-bottom: 16px;
+}
+
+.checkouter >>> .el-tree-node__content {
+  height: auto;
+  padding-bottom: 6px;
+  padding-top: 6px;
+
 }
 </style>

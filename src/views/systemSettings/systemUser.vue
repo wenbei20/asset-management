@@ -61,7 +61,7 @@
         @pagination="getList"
       />
       <el-dialog :title="addDialogTitle" :visible.sync="showAddDialog" width="600px" @close="cancalAddUser">
-        <el-form ref="addUser" :rules="addFormRules" :model="addUserInfo" status-icon label-position="right">
+        <el-form ref="addUser" v-loading="addDialogLoading" :rules="addFormRules" :model="addUserInfo" status-icon label-position="right">
           <el-form-item label="用户名" prop="reguserName" :label-width="formLabelWidth">
             <el-input v-model="addUserInfo.reguserName" />
           </el-form-item>
@@ -97,10 +97,9 @@
   </div>
 </template>
 <script>
-import { getSysUserList, addSysUserList, deleteSysUserList, editSysUserList } from '@/api/settings'
+import { getSysUserList, addSysUserList, deleteSysUserList, editSysUserList, getRegUser } from '@/api/settings'
 import { isMobileNumber } from '@/utils/validate'
 import Pagination from '@/components/Pagination'
-import { mapState } from 'vuex'
 export default {
   components: { Pagination },
   data() {
@@ -165,7 +164,8 @@ export default {
         email: '',
         mobile: '',
         power: '',
-        rePower: ''
+        rePower: '',
+        userType: 0
       },
       tableLoading: true,
       tableData: [],
@@ -177,16 +177,13 @@ export default {
         mobile: '',
         pageNo: 1,
         pageSize: 10,
-        reguserName: ''
+        reguserName: '',
+        userType: 0
       },
       addDialogTitle: '添加成员',
-      addDialogSysUserID: ''
+      EditUserData: {},
+      addDialogLoading: false
     }
-  },
-  computed: {
-    ...mapState({
-      merchantId: state => state.user.merchantId
-    })
   },
   created() {
     this.getList()
@@ -211,14 +208,13 @@ export default {
     },
     cancalAddUser() {
       this.$refs.addUser.clearValidate()
-      this.addUserInfo = { reguserName: '', chineseName: '', email: '', mobile: '', power: '', rePower: '' }
+      this.addUserInfo = { reguserName: '', chineseName: '', email: '', mobile: '', power: '', rePower: '', userType: 0 }
       this.showAddDialog = false
     },
     confirmAdd() {
       this.$refs.addUser.validate(valid => {
         if (valid && this.addDialogTitle === '添加成员') {
           const obj = { ...this.addUserInfo }
-          obj.merchantId = this.merchantId
           obj.userType = 0
           obj.addFiledsFlag = 0
           addSysUserList(obj).then(res => { // 添加用户
@@ -244,7 +240,18 @@ export default {
             this.showAddDialog = false
           })
         } else if (valid && this.addDialogTitle === '编辑成员') { // 修改用户
-          editSysUserList({ ...this.addUserInfo }, this.addDialogSysUserID).then(res => {
+          const keyArr = ['activeFlag', 'reguserId', 'addFiledsFlag', 'groupId']
+          const otherQuery = {}
+          keyArr.forEach(ele => {
+            otherQuery[ele] = this.EditUserData[ele]
+          })
+          const query = {
+            ...this.addUserInfo,
+            ...otherQuery
+          }
+          console.log('query', query)
+
+          editSysUserList(query, query.reguserId).then(res => {
             if (res.code === 0) {
               this.$message({
                 type: 'success',
@@ -280,12 +287,12 @@ export default {
         return
       }
 
-      this.pageQuery = { chineseName: '', email: '', mobile: '', pageNo: 1, pageSize: 10, reguserName: '' }
+      this.pageQuery = { chineseName: '', email: '', mobile: '', pageNo: 1, pageSize: 10, reguserName: '', userType: 0 }
       this.pageQuery[this.SearchType] = this.searchIpt
       this.getList()
     },
     clearSearchRes() {
-      this.pageQuery = { chineseName: '', email: '', mobile: '', pageNo: 1, pageSize: 10, reguserName: '' }
+      this.pageQuery = { chineseName: '', email: '', mobile: '', pageNo: 1, pageSize: 10, reguserName: '', userType: 0 }
       this.getList()
     },
     deleteSysUser(row) {
@@ -305,13 +312,25 @@ export default {
     },
     editSysUser(row) {
       this.addDialogTitle = '编辑成员'
-      this.addDialogSysUserID = row.sysuserId
       this.showAddDialog = true
-      console.log('row', row)
-      for (const key in this.addUserInfo) {
-        this.addUserInfo[key] = row[key]
-      }
-      this.addUserInfo.rePower = row.power
+      this.addDialogLoading = true
+      getRegUser(row.reguserId).then(res => {
+        if (res.code === 0) {
+          this.EditUserData = res.data
+          for (const key in this.addUserInfo) {
+            this.addUserInfo[key] = res.data[key]
+          }
+        } else {
+          this.$message({ type: 'warning', message: '获取用户信息失败，请稍后再试' })
+          this.showAddDialog = false
+        }
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'warning', message: '获取用户信息失败，请稍后再试' })
+        this.showAddDialog = false
+      }).finally(() => {
+        this.addDialogLoading = false
+      })
     },
     addNewUser() {
       this.addDialogTitle = '添加成员'

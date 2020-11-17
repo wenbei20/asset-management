@@ -95,7 +95,7 @@
 <script>
 import Treeselect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-import { queryNewAssetList, saveAssetAllot, updateAssetAllot } from '@/api/assetManage'
+import { queryNewAssetAllotList, saveAssetAllot, updateAssetAllot } from '@/api/assetManage'
 export default {
   props: {
     modalType: {
@@ -207,7 +207,7 @@ export default {
         pageSize: this.pageSize
       }
       this.tableLoading = true
-      queryNewAssetList(params).then((res) => {
+      queryNewAssetAllotList(params).then((res) => {
         if (res.code === 0 && res.data && res.data.items) {
           this.assetList = res.data.items
         }

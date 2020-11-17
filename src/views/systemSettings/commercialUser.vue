@@ -41,8 +41,8 @@
         style="text-align:right;margin-top:20px;"
         @pagination="getList"
       />
-      <el-dialog title="添加成员" :visible.sync="showAddDialog" width="600px">
-        <el-form :model="addUserInfo" label-position="right" :rules="EditRules">
+      <el-dialog :title=" isEditMerchant ? '编辑商户' : '添加成员'" :visible.sync="showAddDialog" width="600px">
+        <el-form v-loading="addDialogLoading" :model="addUserInfo" label-position="right" :rules="EditRules">
           <el-form-item label="公司/机构名称" prop="merchantName" :label-width="formLabelWidth">
             <el-input v-model="addUserInfo.merchantName" />
           </el-form-item>
@@ -53,11 +53,11 @@
             <el-input v-model="addUserInfo.mobile" />
           </el-form-item>
           <el-form-item label="当前管理员" :label-width="formLabelWidth">
-            <el-avatar> pp </el-avatar>
-            <span class="avatarSpan">pp</span>
+            <el-avatar> {{ addUserInfo.chineseName | getFirstString }}</el-avatar>
+            <span class="avatarSpan"> {{ addUserInfo.chineseName }}</span>
           </el-form-item>
           <el-form-item label="变更管理员" :label-width="formLabelWidth">
-            <el-autocomplete
+            <!-- <el-autocomplete
               v-model="addUserInfoSeleReguser"
               :fetch-suggestions="querySearchAsync"
               placeholder="请输入内容"
@@ -66,9 +66,14 @@
               <template slot-scope="{ item }">
                 <span> {{ item.chineseName }} </span>
               </template>
-            </el-autocomplete>
-            <!-- </el-select> -->
-          </el-form-item></el-form>
+            </el-autocomplete> -->
+
+            <el-select v-model="addUserInfo.reguserId" placeholder="请选择成员">
+              <el-option v-for="(item , i) in EditAdminPersonList" :key="i" :label="item.chineseName" :value="item.reguserId" />
+            </el-select>
+
+          </el-form-item>
+        </el-form>
 
         <div slot="footer" class="dialog-footer">
           <el-button @click="showAddDialog=false">取 消</el-button>
@@ -131,12 +136,16 @@
   </div>
 </template>
 <script>
-import { getlistMerchant, getOrganizationGroup, getListRegUserByChineseName, updateMerchant } from '@/api/settings'
+import { getlistMerchant, getOrganizationGroup, getListRegUserByChineseName, updateMerchant, getMerchant, findUsersByMerchant } from '@/api/settings'
 import { isMobileNumber } from '@/utils/validate'
-import { mapState } from 'vuex'
 import Pagination from '@/components/Pagination'
 export default {
   components: { Pagination },
+  filters: {
+    getFirstString(val) {
+      return val ? val.substring(0, 1) : ''
+    }
+  },
   data() {
     var validateMobile = (rule, value, callback) => {
       if (value === '') {
@@ -148,6 +157,9 @@ export default {
       }
     }
     return {
+      EditAdminPersonList: [],
+      addDialogLoading: false,
+      isEditMerchant: false,
       showDataPowerDialog: false,
       showAddDialog: false,
       formLabelWidth: '120px',
@@ -155,8 +167,7 @@ export default {
         mobile: '',
         email: '',
         merchantName: '',
-        // createTime: '',
-        // dataStatus: '',
+        chineseName: '',
         merchantId: '',
         reguserId: ''
       },
@@ -195,11 +206,7 @@ export default {
   computed: {
     checkedDepartTags() {
       return this.checkedDepartment.map(item => item.groupName).join(';')
-    },
-    ...mapState({
-      merchantId: state => state.user.merchantId
-    })
-
+    }
   },
   created() {
     this.getList()
@@ -249,68 +256,88 @@ export default {
       })
     },
     loadNode(node, resolve) {
-      const key = node.key ? node.key : this.merchantId
+      const key = node.key ? node.key : ''
       this.getTreeNodeData(key).then(arr => {
         console.log('arr', arr)
         resolve(arr)
       })
     },
     deleteMerchant(row) {
-      console.log('row', row)
-      // deleteMerchant().then(res=>{
-
-      // })
     },
     EditMerchant(row) {
       console.log('row', row)
-      // eslint-disable-next-line prefer-const
-      for (let key in this.addUserInfo) {
-        this.addUserInfo[key] = row[key]
+      this.isEditMerchant = true
+      this.addDialogLoading = true
+      if (row.merchantId) {
+        this.showAddDialog = true
+        getMerchant(row.merchantId).then(res => {
+          if (res.code === 0) {
+            for (const key in this.addUserInfo) {
+              this.addUserInfo[key] = res.data[key]
+            }
+          } else {
+            this.$message({ type: 'warning', message: '获取商户信息失败，请稍后再试' })
+            this.showAddDialog = false
+          }
+        }).catch(err => {
+          console.log('err', err)
+          this.$message({ type: 'warning', message: '获取商户信息失败，请稍后再试' })
+          this.showAddDialog = false
+        }).finally(() => {
+          this.addDialogLoading = false
+        })
+
+        findUsersByMerchant().then(res => {
+          if (res.data && res.data.length) {
+            this.EditAdminPersonList = res.data
+          }
+        })
+      } else {
+        this.$message({ type: 'warning', message: '获取商户信息失败，请稍后再试' })
       }
-      this.showAddDialog = true
     },
     editChangeMerchant() {
       updateMerchant(this.addUserInfo, this.addUserInfo.merchantId).then(res => {
         if (res.code === 0) {
           this.$message({
             type: 'success',
-            message: '修改用户成功'
+            message: '修改商户成功'
           })
           this.getList()
         } else {
           this.$message({
             type: 'error',
-            message: '修改用户失败，请稍后再试'
+            message: '修改商户失败，请稍后再试'
           })
         }
         this.showAddDialog = false
       }).catch(err => {
         this.$message({
           type: 'error',
-          message: '修改用户失败，请稍后再试'
+          message: '修改商户失败，请稍后再试'
         })
         console.log('err', err)
         this.showAddDialog = false
       })
       this.addUserInfoSeleReguser = ''
-    },
-    querySearchAsync(queryString, cb) {
-      if (queryString) {
-        getListRegUserByChineseName({ chineseName: queryString }).then(res => {
-          if (res.code === 0) {
-            return cb(res.data)
-          }
-        })
-        cb([])
-      } else {
-        cb([])
-      }
-    },
-    handleSelect(item) {
-      // console.log('item', item)
-      this.addUserInfo.reguserId = item.reguserId
-      this.addUserInfoSeleReguser = item.chineseName
     }
+    // querySearchAsync(queryString, cb) {
+    //   if (queryString) {
+    //     getListRegUserByChineseName({ chineseName: queryString }).then(res => {
+    //       if (res.code === 0) {
+    //         return cb(res.data)
+    //       }
+    //     })
+    //     cb([])
+    //   } else {
+    //     cb([])
+    //   }
+    // },
+    // handleSelect(item) {
+    //   // console.log('item', item)
+    //   this.addUserInfo.reguserId = item.reguserId
+    //   this.addUserInfoSeleReguser = item.chineseName
+    // }
   }
 }
 </script>
