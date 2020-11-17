@@ -86,8 +86,8 @@
       </el-row>
       <!--选择资产-->
       <DialogSelectAsset
-        :assetSelected="assetSelected"
-        :queryAssetList="queryAssetList"
+        :asset-selected="assetSelected"
+        :query-asset-list="queryAssetList"
         @changeAssetSelected="changeAssetSelected"
       />
 
@@ -105,21 +105,13 @@ import DialogSelectAsset from '@/components/Dialog/selectAsset'
 import { queryNewAssetRepairList } from '@/api/assetManage'
 import { mapGetters } from 'vuex'
 export default {
+  components: {
+    DialogSelectAsset
+  },
   props: {
     visible: {
       type: Boolean,
       default: false
-    }
-  },
-  components: {
-    DialogSelectAsset
-  },
-  computed: {
-    ...mapGetters([
-      'token'
-    ]),
-    queryAssetList() { // 把'调用资产列表'的方法当成参数传给子组件
-      return queryNewAssetRepairList
     }
   },
   data() {
@@ -149,6 +141,14 @@ export default {
       assetSelected: [] // 当前选中资产
     }
   },
+  computed: {
+    ...mapGetters([
+      'token'
+    ]),
+    queryAssetList() { // 把'调用资产列表'的方法当成参数传给子组件
+      return queryNewAssetRepairList
+    }
+  },
   watch: {
     visible: {
       handler(val) {
@@ -164,7 +164,6 @@ export default {
     },
     fileList: {
       handler(val) {
-        console.log('254 fileList', val)
         this.addOption.images = this.fileList.map((item) => ({
           name: item.name,
           path: item.response.data.virtualImageUrl
@@ -183,7 +182,6 @@ export default {
   methods: {
     // Fn: 移除图片
     handlePictureCardRemove(file, fileList) {
-      console.log('288 移除图片', file, fileList)
       this.fileList = fileList
     },
     // Fn: 上传图片
@@ -193,7 +191,6 @@ export default {
     },
     // Fn: 上创图片成功
     handlePictureCardSuccess(response, file, fileList) {
-      console.log('304 上传图片成功', response, file, fileList)
       this.fileList = fileList
     },
     // Fn: 取消模态框
@@ -209,14 +206,12 @@ export default {
             ...this.addOption,
             repairdate: dayjs(this.addOption.repairdate).format('YYYY-MM-DD')
           }
-          console.log(21444444, params)
           this.$emit('submit-form', params, this.addOption.id)
         }
       })
     },
     // Fn: 改变资产选中
     changeAssetSelected(val) {
-      console.log('233 改变资产选中', val)
       this.assetSelected = val
     }
   }
