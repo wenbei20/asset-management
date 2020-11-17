@@ -67,12 +67,14 @@
         <el-col :span="23">
           <el-form-item label="上传照片" :label-width="addOptionWidth">
             <el-upload
-              action="http://111.225.216.36:8879/sys/repair/uploadpic"
               list-type="picture-card"
               ref="upload"
+              :action="postUrl"
               :file-list="fileList"
               :on-preview="handlePictureCardPreview"
               :on-remove="handlePictureCardRemove"
+              :on-change="handlePictureCardChange"
+              :on-success="handlePictureCardSuccess"
             >
               <i class="el-icon-plus"></i>
             </el-upload>
@@ -212,8 +214,8 @@ export default {
         content: '', // 维修内容
         memo: '', // 说明
         userId: '', // 报修人
-        assetUuids: this.assetTableSelectionKeys,
-        images: this.fileList
+        assetUuids: [],
+        images: []
       },
       dialogImageUrl: '',
       dialogImageVisible: false,
@@ -241,6 +243,20 @@ export default {
         this.xjzyxxVisible = val
       },
       immediate: true
+    },
+    assetTableSelectionKeys: {
+      handler(val) {
+        console.log('247 assetTableSelectionKeys', val)
+        this.addOption.assetUuids = this.assetTableSelectionKeys
+      },
+      deep: true
+    },
+    fileList: {
+      handler(val) {
+        console.log('254 fileList', val)
+        this.addOption.images = this.fileList
+      },
+      deep: true
     }
   },
   created() {
@@ -270,12 +286,22 @@ export default {
     },
     // Fn: 移除图片
     handlePictureCardRemove(file, fileList) {
-      console.log(file, fileList);
+      console.log('288 移除图片', file, fileList)
+      this.fileList = fileList
     },
     // Fn: 上传图片
     handlePictureCardPreview(file) {
       this.dialogImageUrl = file.url;
       this.dialogImageVisible = true;
+    },
+    // Fn: 上传图片变换
+    handlePictureCardChange(file, fileList) {
+      console.log('297 上传图片变化', file, fileList)
+      this.fileList = fileList
+    },
+    // Fn: 上创图片成功
+    handlePictureCardSuccess(response, file, fileList) {
+      console.log('304 上传图片成功', response, file, fileList)
     },
     // Fn: 多选项转成id数组
     selection2keys(selection) {
@@ -284,11 +310,9 @@ export default {
     // Fn: 选择资产
     selectAsset() {
       this.innerVisible = true
-      console.log('选择资产啊', this.innerTableSelectionKeys)
     },
     // Fn: 删除资产
     deleteAsset() {
-      console.log('删除资产', this.assetTableSelection)
       if(!this.assetTableSelection.length) {
         this.$message({
           showClose: true,
@@ -311,9 +335,11 @@ export default {
     },
     // Fn: 确认
     handleConfirm() {
-      this.$refs.assetForm.validate(validate => {
+      console.log('确认');
+      this.$refs.assetForm.validate((validate) => {
+        console.log(314, validate)
         if (validate) {
-          this.$emit('confirm', this.addOption)
+          this.$emit('submit-form', this.addOption, this.addOption.id)
         }
       })
     },
@@ -333,7 +359,6 @@ export default {
     },
     // Fn: 确认（内层模态框）
     innerConfirm() {
-      console.log(297, this.innerTableSelection, this.innerTableData)
       this.assetTableData = [ ...this.innerTableSelection ]
       this.innerVisible = false
     },

@@ -246,6 +246,15 @@ export function saveAssetRepair(data) {
   })
 }
 
+// 修改资产维修信息
+export function updateAssetRepair(data, id) {
+  return request({
+    url: '/sys/repair/updateRepair/' + id,
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
 // 获取新增页面资产列表信息
 export function queryNewAssetRepairList(params) {
   return request({
