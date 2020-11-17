@@ -68,8 +68,8 @@
 </template>
 
 <script>
-import { validUsername } from '@/utils/validate'
-import { Message } from 'element-ui'
+// import { validUsername } from '@/utils/validate'
+// import { Message } from 'element-ui'
 import loginPic from '@/assets/login/login-pic.png'
 
 export default {

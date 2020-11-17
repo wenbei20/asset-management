@@ -52,9 +52,9 @@ export function getListChild(data) {
     url: '/assets/listChild' })
 }
 /*
-***************
-***  资产调拨管理
-***************
+*********************
+********* 资产调拨管理
+*********************
 **/
 
 // 资产调拨新增和修改页面中的码表接口
@@ -109,7 +109,7 @@ export function updateAssetAllot(data) {
 }
 
 // 获取新增页面资产列表信息
-export function queryNewAssetList(params) {
+export function queryNewAssetAllotList(params) {
   return request({
     url: '/sys/allot/findAsset',
     method: 'get',
@@ -118,9 +118,9 @@ export function queryNewAssetList(params) {
 }
 
 /*
-***************************
+****************************
 ********* 资产处置管理 —— 退运
-***************************
+****************************
 **/
 
 // 退运列表
@@ -219,5 +219,47 @@ export function assetDiscardExport() {
   return request({
     url: '/sys/discard/export',
     method: 'post'
+  })
+}
+
+/*
+********************
+********* 资产维修管理
+********************
+**/
+
+// 资产维修列表
+export function queryAssetRepairList(params) {
+  return request({
+    url: '/sys/repair/listRepair',
+    method: 'get',
+    params
+  })
+}
+
+// 新建资产维修信息
+export function saveAssetRepair(data) {
+  return request({
+    url: '/sys/repair/saveRepair',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+// 修改资产维修信息
+export function updateAssetRepair(data, id) {
+  return request({
+    url: '/sys/repair/updateRepair/' + id,
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+// 获取新增页面资产列表信息
+export function queryNewAssetRepairList(params) {
+  return request({
+    url: '/sys/repair/findAsset',
+    method: 'get',
+    params
   })
 }
