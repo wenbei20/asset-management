@@ -55,6 +55,7 @@
     <add-dialog
       v-if="showAddDialog"
       :visible.sync="showAddDialog"
+      @submit-form="submitForm"
     />
   </div>
 </template>
@@ -339,6 +340,18 @@ export default {
         }
       })
       .catch((err) => { console.log('err', err) })
+    },
+    // 确认提交（新建/修改）
+    submitForm(params, id) {
+      console.log('外层 submitForm', params, id)
+      this.submitMethods(params, id).then((res) => {
+        console.log('348 res', res)
+      })
+      .catch((err) => { console.log('err', err) })
+    },
+    // 确认提交方法
+    submitMethods(params, id) {
+      return this.modalType === 'new' ? saveAssetRepair(params) : updateAssetRepair(params, id)
     }
   }
 }
