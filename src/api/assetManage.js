@@ -1,9 +1,62 @@
 import request from '@/utils/request'
 import { data2FormData } from '@/utils'
 
+export function getRfid() {
+  return request({
+    url: '/sys/operCode/rfid',
+    method: 'post'
+  })
+}
+export function printTag(data) {
+  return request({
+    url: '/sys/assets/printTag',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+export function getReviewList(data) {
+  return request({
+    url: '/sys/review/list',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function getReceiveList(data) {
+  return request({
+    url: '/sys/receive/list',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function sendCard(data) {
+  return request({
+    url: '/sys/assets/sendCard',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function changeCard(data) {
+  return request({
+    url: '/sys/assets/changeCard',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function getAssetInfo(data) {
+  return request({
+    url: '/sys/assets/update',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
 export function createAssets(data) {
   return request({
-    url: '/assets/save',
+    url: '/sys/assets/save',
     method: 'post',
     data: data2FormData(data)
   })
@@ -11,7 +64,14 @@ export function createAssets(data) {
 
 export function updateAssets(data) {
   return request({
-    url: '/assets/update',
+    url: '/sys/assets/update',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+export function getAllMechartUser(data) {
+  return request({
+    url: '/sys/assets/useUser',
     method: 'post',
     data: data2FormData(data)
   })
@@ -19,21 +79,21 @@ export function updateAssets(data) {
 
 export function getAssetsList(data) {
   return request({
-    url: '/assets/list',
+    url: '/sys/assets/list',
     method: 'post',
     data: data2FormData(data)
   })
 }
 export function deleteAsset(data) {
   return request({
-    url: '/assets/delete',
+    url: '/sys/assets/delete',
     method: 'post',
     data: data2FormData(data)
   })
 }
 export function baseCode(data) {
   return request({
-    url: '/assets/baseCode',
+    url: '/sys/assets/baseCode',
     method: 'post',
     data: data2FormData(data)
   })
@@ -41,7 +101,7 @@ export function baseCode(data) {
 
 export function copyAsset(data) {
   return request({
-    url: '/assets/copy',
+    url: '/sys/assets/copy',
     method: 'post',
     data: data2FormData(data)
   })
@@ -49,7 +109,10 @@ export function copyAsset(data) {
 
 export function getListChild(data) {
   return request({
-    url: '/assets/listChild' })
+    url: '/sys/assets/listChild',
+    method: 'post',
+    data: data2FormData(data)
+  })
 }
 /*
 *********************

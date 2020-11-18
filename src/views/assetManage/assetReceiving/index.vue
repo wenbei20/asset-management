@@ -2,6 +2,21 @@
   <div class="app-container">
     <el-row>
       <el-col :span="18">
+        <el-dropdown ref="statusDrop" trigger="click" placement="bottom-start" style="margin-right:6px;">
+          <el-input v-model="checkedCompany" placeholder="请选择领用后使用单位" clearable />
+
+          <el-dropdown-menu slot="dropdown" class="innerTreeForDepart" style="min-width:200px;">
+            <el-tree
+              ref="companyTree"
+              node-key="assetkindId"
+              :props="defaultProps"
+              :data="allCompanyData"
+              :default-expand-all="true"
+              :expand-on-click-node="true"
+              @node-click="companyTreeClick"
+            />
+          </el-dropdown-menu>
+        </el-dropdown>
         <el-button type="primary" icon="el-icon-plus" @click="addNew">新建</el-button>
         <!-- <el-dropdown @command="editClick">
           <el-button type="default" icon="el-icon-edit" :style="{ marginLeft: '5px' }" plain>
@@ -20,168 +35,49 @@
           导出
         </el-button>
       </el-col>
-      <el-col :span="6" :style="{ textAlign: 'right' }">
-        <el-popover
-          placement="top-start"
-          width="200"
-          trigger="hover"
-          content="帮助文字..."
-        >
-          <el-button slot="reference" type="text"><i class="el-icon-question" :style="{ fontSize: '18px' }" /></el-button>
-        </el-popover>
-      </el-col>
     </el-row>
-    <el-row>
-      <el-col :span="24" :style="{ textAlign: 'right' }">
-        <el-button type="text" @click="gjssVisible = true">高级搜索</el-button>
-        <el-popover
-          v-model="settingVisible"
-          placement="bottom-end"
-          width="200"
-        >
-          <h4 :style="{ margin: '0', paddingBottom: '10px', borderBottom: '#eee solid 1px' }">列设置</h4>
-          <div class="popoverSwitchList">
-            <div v-for="item in popoverSwitchList" :key="item.name" class="item">
-              <el-switch
-                v-model="tableShowColumn[item.active]"
-                :active-text="item.name"
-                :disabled="item.disabled"
-              />
+    <div style="padding-top:40px;">
+
+      <vxe-table
+        ref="xTree"
+        resizable
+        highlight-hover-row
+        :auto-resize="true"
+        :footer-row-class-name="'lastRow'"
+        stripe
+        class="vxetable"
+        :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
+        :data="tableData"
+      >
+        <vxe-table-column type="checkbox" width="40" :resizable="false" />
+        <vxe-table-column width="32" class="meuntd" :resizable="false" :edit-render="{}">
+          <template>
+            <div class="moreOuter">
+              <i class="el-icon-more" />
+
             </div>
-          </div>
-          <div style="text-align: right; margin: 0">
-            <el-button size="mini" type="text" @click="settingVisible = false">取消</el-button>
-            <el-button type="primary" size="mini" @click="settingVisible = false">确定</el-button>
-          </div>
-          <el-button slot="reference" type="text" :style="{ marginLeft: '10px' }"><i class="el-icon-setting" /></el-button>
-        </el-popover>
-      <!--  <el-button type="text" :style="{ marginLeft: '10px' }"><i class="el-icon-lock" /></el-button> -->
-      </el-col>
-    </el-row>
+          </template>
+          <template slot="edit">
+            <i class="el-icon-more" style="position:relative;top:1px;left: -1px;" />
 
-    <vxe-table
-      ref="xTree"
-      resizable
-      highlight-hover-row
-      :auto-resize="true"
-      :footer-row-class-name="'lastRow'"
-      stripe
-      class="vxetable"
-      :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
-      :data="tableData"
-    >
-      <vxe-table-column type="checkbox" width="40" :resizable="false" />
-      <vxe-table-column width="32" class="meuntd" :resizable="false" :edit-render="{}">
-        <template>
-          <div class="moreOuter">
-            <i class="el-icon-more" />
+            <div class="editmenu">
+              <div class="item">编辑</div>
+              <div class="item">删除</div>
 
-          </div>
-        </template>
-        <template slot="edit">
-          <i class="el-icon-more" style="position:relative;top:1px;left: -1px;" />
+            </div>
+          </template>
+        </vxe-table-column>
+        <vxe-table-column title="领用单号" min-width="100">--</vxe-table-column>
+        <vxe-table-column title="领用日期" min-width="100" sortable>--</vxe-table-column>
+        <vxe-table-column title="领用人" min-width="80" sortable>--</vxe-table-column>
+        <vxe-table-column title="领用后使用单位" min-width="120" sortable>--</vxe-table-column>
+        <vxe-table-column title="领用后区域" min-width="100" sortable>--</vxe-table-column>
+        <vxe-table-column title="领用后存放地点" min-width="120">--</vxe-table-column>
+        <vxe-table-column title="处理人" min-width="80">--</vxe-table-column>
+        <vxe-table-column title="资产明细" min-width="100">--</vxe-table-column>
+      </vxe-table>
+    </div>
 
-          <div class="editmenu">
-            <div class="item">编辑</div>
-            <div class="item">复制</div>
-            <div class="item">删除</div>
-
-          </div>
-        </template>
-      </vxe-table-column>
-      <vxe-table-column title="办理状态" min-width="80" :visible="tableShowColumn.blzt">--</vxe-table-column>
-      <vxe-table-column title="领用单号" min-width="80" :visible="tableShowColumn.lydh">--</vxe-table-column>
-      <vxe-table-column title="领用日期" min-width="80" :visible="tableShowColumn.lyrq">--</vxe-table-column>
-      <vxe-table-column title="领用人" min-width="80" :visible="tableShowColumn.lyr">--</vxe-table-column>
-      <vxe-table-column title="领用后使用公司" min-width="120" :visible="tableShowColumn.lysygs">--</vxe-table-column>
-      <vxe-table-column title="领用后使用部门" min-width="120" :visible="tableShowColumn.lysybm">--</vxe-table-column>
-      <vxe-table-column title="领用后区域" min-width="100" :visible="tableShowColumn.lyly">--</vxe-table-column>
-      <vxe-table-column title="领用后存放地点" min-width="120" :visible="tableShowColumn.lycfdd">--</vxe-table-column>
-      <vxe-table-column title="领用备注" min-width="80" :visible="tableShowColumn.lybz">--</vxe-table-column>
-      <vxe-table-column title="处理人" min-width="80" :visible="tableShowColumn.clr">--</vxe-table-column>
-      <vxe-table-column title="资产明细" min-width="80" :visible="tableShowColumn.zcmx">--</vxe-table-column>
-    </vxe-table>
-
-    <!-- 模态框 -->
-    <el-dialog title="高级搜索" :visible.sync="gjssVisible" width="600px">
-      <el-form :model="form" label-position="left">
-        <el-form-item label="状态" :label-width="formLabelWidth">
-          <el-col :span="24">
-            <el-select v-model="form.status" placeholder="请选择状态" :style="{ width: '100%' }">
-              <el-option label="状态一" value="1" />
-            </el-select>
-          </el-col>
-        </el-form-item>
-        <el-form-item label="签字状态" :label-width="formLabelWidth">
-          <el-col :span="24">
-            <el-select v-model="form.signStatus" placeholder="请选择签字状态" :style="{ width: '100%' }">
-              <el-option label="签字状态" value="1" />
-            </el-select>
-          </el-col>
-        </el-form-item>
-        <el-form-item label="资产编码" :label-width="formLabelWidth">
-          <el-col :span="10">
-            <el-select v-model="form.assetCoding" placeholder="请选择条件" :style="{ width: '100%' }">
-              <el-option label="资产编码" value="1" />
-            </el-select>
-          </el-col>
-          <el-col :span="13" :offset="1">
-            <el-input v-model="form.assetCodingInput" placeholder="请输入资产编码" />
-          </el-col>
-        </el-form-item>
-        <el-form-item label="资产名称" :label-width="formLabelWidth">
-          <el-col :span="10">
-            <el-select v-model="form.assetName" placeholder="请选择条件" :style="{ width: '100%' }">
-              <el-option label="资产名称" value="1" />
-            </el-select>
-          </el-col>
-          <el-col :span="13" :offset="1">
-            <el-input v-model="form.assetNameInput" placeholder="请输入资产名称" />
-          </el-col>
-        </el-form-item>
-        <el-form-item label="RFID" :label-width="formLabelWidth">
-          <el-col :span="10">
-            <el-select v-model="form.rfidName" placeholder="请选择条件" :style="{ width: '100%' }">
-              <el-option label="RFID" value="1" />
-            </el-select>
-          </el-col>
-          <el-col :span="13" :offset="1">
-            <el-input v-model="form.rfidNameInput" placeholder="请输入RFID" />
-          </el-col>
-        </el-form-item>
-        <el-form-item label="资产类别" :label-width="formLabelWidth">
-          <el-col :span="24">
-            <el-select v-model="form.assetCategory" placeholder="请选择资产类别" :style="{ width: '100%' }">
-              <el-option label="资产类别" value="1" />
-            </el-select>
-          </el-col>
-        </el-form-item>
-        <el-form-item label="规格型号" :label-width="formLabelWidth">
-          <el-col :span="10">
-            <el-select v-model="form.specificationModel" placeholder="请选择条件" :style="{ width: '100%' }">
-              <el-option label="规格型号" value="1" />
-            </el-select>
-          </el-col>
-          <el-col :span="13" :offset="1">
-            <el-input v-model="form.specificationModelInput" placeholder="请输入规格型号" />
-          </el-col>
-        </el-form-item>
-        <el-form-item label="SN号" :label-width="formLabelWidth">
-          <el-col :span="10">
-            <el-select v-model="form.snNumber" placeholder="请选择条件" :style="{ width: '100%' }">
-              <el-option label="SN号" value="1" />
-            </el-select>
-          </el-col>
-          <el-col :span="13" :offset="1">
-            <el-input v-model="form.snNumberInput" placeholder="请输入SN号" />
-          </el-col>
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="gjssVisible = false">取 消</el-button>
-        <el-button type="primary" @click="gjssVisible = false">确 定</el-button>
-      </div>
-    </el-dialog>
     <Dialog
       :visible.sync="showAddOrEdit"
       :title="showAddOrEditTitle"
@@ -201,6 +97,7 @@
                 v-model="addOption.receiveDate"
                 type="date"
                 placeholder="请选择领用日期"
+                style="width:100%;"
               />
             </el-form-item>
           </el-col>
@@ -251,7 +148,7 @@
 
         </el-row>
         <el-row>
-          <el-col :span="24">
+          <el-col :span="23">
             <el-form-item label="说明" :label-width="addOptionWidth">
 
               <el-input v-model="addOption.receiveMemo" placeholder="说明" />
@@ -316,12 +213,20 @@
 </template>
 
 <script>
+import { getReceiveList } from '@/api/assetManage'
 import Dialog from '@/components/Dialog/index'
 export default {
   name: 'AssetInfoManage',
   components: { Dialog },
   data() {
     return {
+      checkedCompany: '',
+      allCompanyData: [],
+      defaultProps: {
+        children: 'children',
+        label: 'assetkindName',
+        isLeaf: 'leaf'
+      },
       showAddOrEditTitle: '',
       showAddOrEdit: false,
       addOptionWidth: '160px',
@@ -335,35 +240,8 @@ export default {
         receiveHandler: 'admin',
         receiveMemo: ''
       },
-      tableShowColumn: {
-        blzt: true,
-        lydh: true,
-        lyrq: true,
-        lyr: true,
-        lysygs: true,
-        lysybm: true,
-        lyly: true,
-        lycfdd: true,
-        lybz: true,
-        clr: true,
-        zcmx: true
-      },
-      gjssVisible: false,
       settingVisible: false,
       showSelectTable: false,
-      popoverSwitchList: [
-        { name: '办理状态', active: 'blzt', disabled: false },
-        { name: '领用单号', active: 'lydh', disabled: false },
-        { name: '领用日期', active: 'lyrq', disabled: false },
-        { name: '领用人', active: 'lyr', disabled: false },
-        { name: '领用后使用公司', active: 'lysygs', disabled: false },
-        { name: '领用后使用部门', active: 'lysybm', disabled: false },
-        { name: '领用后区域', active: 'lyly', disabled: false },
-        { name: '领用后存放地点', active: 'lycfdd', disabled: false },
-        { name: '领用备注', active: 'lybz', disabled: false },
-        { name: '处理人', active: 'clr', disabled: false },
-        { name: '资产明细', active: 'zcmx', disabled: false }
-      ],
       tableData: [
         { handleStatus: '12' },
         { handleStatus: '232' },
@@ -373,27 +251,44 @@ export default {
         { handleStatus: '' },
         { handleStatus: '' }
       ],
-      form: {
-        name: '',
-        status: '',
-        signStatus: '',
-        assetCoding: '',
-        assetCodingInput: '',
-        assetName: '',
-        assetNameInput: '',
-        rfidName: '',
-        rfidNameInput: '',
-        assetCategory: '',
-        specificationModel: '',
-        specificationModelInput: '',
-        snNumber: '',
-        snNumberInput: ''
+      formLabelWidth: '100px',
+      pageQuery: {
+        orderName: '',
+        orderType: '',
+        pageNo: 1,
+        pageSize: 10,
+        receiveMerchantId: '',
+        receivecode: '',
+        receivedate: ''
       },
-      formLabelWidth: '100px'
+      pageTotal: 0
 
     }
   },
   methods: {
+    companyTreeClick(item) {
+
+    },
+    getList(page) {
+      if (page && page.limit) this.pageQuery.pageSize = page.limit
+
+      this.tableLoading = true
+      getReceiveList(this.pageQuery).then(res => {
+        console.log('res', res)
+        if (res.code === 0 && res.data && res.data.items) {
+          // res.data.items.forEach(ele => { ele.hasChild = true })
+          this.tableData = res.data.items
+          this.pageTotal = res.data.total
+          this.pageQuery.pageSize = res.data.limit
+          this.pageQuery.pageNo = res.data.page
+        }
+
+        this.tableLoading = false
+      }).catch(err => {
+        console.log('err', err)
+        this.tableLoading = false
+      })
+    },
     toggleSelection(rows) {
       if (rows) {
         rows.forEach(row => {

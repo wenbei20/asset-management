@@ -60,7 +60,7 @@
         style="text-align:right;margin-top:20px;"
         @pagination="getList"
       />
-      <el-dialog :title="addDialogTitle" :visible.sync="showAddDialog" width="600px" @close="cancalAddUser">
+      <el-dialog :title="addDialogTitle" :visible.sync="showAddDialog" width="600px" :close-on-click-modal="false" @close="cancalAddUser">
         <el-form ref="addUser" v-loading="addDialogLoading" :rules="addFormRules" :model="addUserInfo" status-icon label-position="right">
           <el-form-item label="用户名" prop="reguserName" :label-width="formLabelWidth">
             <el-input v-model="addUserInfo.reguserName" />
@@ -97,7 +97,7 @@
   </div>
 </template>
 <script>
-import { getSysUserList, addSysUserList, deleteSysUserList, editSysUserList, getRegUser } from '@/api/settings'
+import { getSysUserList, addSysUserList, deleteSysUserList, editSysUserList, getRegUser, checkReguserNameExist, checkMobileExist } from '@/api/settings'
 import { isMobileNumber } from '@/utils/validate'
 import Pagination from '@/components/Pagination'
 export default {
@@ -124,11 +124,36 @@ export default {
     }
     var validateMobile = (rule, value, callback) => {
       if (value === '') {
-        callback(new Error('请输入手机号'))
+        callback(new Error('请输入手机号码'))
       } else if (!isMobileNumber(value)) {
-        callback(new Error('手机号格式错误'))
+        callback(new Error('手机号码格式错误'))
       } else {
-        callback()
+        checkMobileExist(value).then(res => {
+          if (res.code === 0) {
+            res.data ? callback(new Error('手机号码已存在')) : callback()
+          } else {
+            callback(new Error('检查手机号码失败'))
+          }
+        }).catch(err => {
+          console.log('err', err)
+          callback(new Error('检查手机号码失败'))
+        })
+      }
+    }
+    var validateReguserName = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请输入用户名'))
+      } else {
+        checkReguserNameExist(value).then(res => {
+          if (res.code === 0) {
+            res.data ? callback(new Error('用户名已存在')) : callback()
+          } else {
+            callback(new Error('检查用户名失败'))
+          }
+        }).catch(err => {
+          console.log('err', err)
+          callback(new Error('检查用户名失败'))
+        })
       }
     }
     return {
@@ -150,7 +175,7 @@ export default {
           { message: '请输入姓名', trigger: 'blur', required: true }
         ],
         reguserName: [
-          { message: '请输入用户名', trigger: 'blur', required: true }
+          { validator: validateReguserName, trigger: 'blur', required: true }
         ]
 
       },

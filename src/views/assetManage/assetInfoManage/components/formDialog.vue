@@ -5,20 +5,31 @@
       <svg-icon :icon-class="fullscreen | iconName" class-name="dialogIcon" @click="changeFullscreen" />
     </div>
     <div v-if="title === '新建副资产信息'" class="showFatherAssetCode"><span>父资产编码</span>{{ fatherAssetCode }}</div>
-    <el-form ref="assetForm" :model="xjzyxxForm" label-position="right" :rules="addDialogRoles">
+    <el-form ref="assetForm" v-loading="editAssetDialogLoading" :model="xjzyxxForm" label-position="right" :rules="addDialogRoles">
       <el-row :gutter="20">
         <el-col :span="8">
           <el-form-item label="资产类别" :label-width="formLabelWidth" prop="assetkindId">
-            <el-select v-model="xjzyxxForm.assetkindId" size="small" placeholder="请选择资产类别" :style="{ width: '100%' }">
-              <!-- <el-option label="资产类别" value="1" /> -->
-              <el-option v-for="(ele , i) in mainSortData.statusList" :key="i" :label="ele.status_name" :value="ele.status_id" />
-            </el-select>
+            <el-dropdown ref="statusInnerDrop" trigger="click" placement="bottom-start" style="width:100%">
+              <el-input v-model="checkedAssetkindId" size="small" placeholder="请选择资产类别" />
+
+              <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
+                <el-tree
+                  ref="statusTree"
+                  node-key="assetkindId"
+                  :props="defaultProps"
+                  :data="mainSortData.assetkindList"
+                  :default-expand-all="true"
+                  :expand-on-click-node="true"
+                  @node-click="assetkindTreeClick"
+                />
+              </el-dropdown-menu>
+            </el-dropdown>
           </el-form-item>
         </el-col>
         <el-col :span="8">
           <el-form-item label="标准型号" :label-width="formLabelWidth" prop="standardtypeId">
             <el-select v-model="xjzyxxForm.standardtypeId" size="small" placeholder="请选择标准型号" :style="{ width: '100%' }">
-              <el-option label="标准型号" value="1" />
+              <el-option v-for="(item,i) in mainSortData.standardtypeList" :key="i" :label="item.asset_name" :value="item.standardtype_id" />
             </el-select>
           </el-form-item>
         </el-col>
@@ -56,9 +67,10 @@
         </el-col>
         <el-col :span="8">
           <el-form-item label="所属单位" :label-width="formLabelWidth" prop="merchantId">
-            <el-select v-model="xjzyxxForm.merchantId" size="small" placeholder="请选择所属单位" :style="{ width: '100%' }">
+            <!-- <el-select v-model="xjzyxxForm.merchantId" size="small" placeholder="请选择所属单位" :style="{ width: '100%' }" disabled>
               <el-option label="所属单位1" value="1" />
-            </el-select>
+            </el-select> -->
+            <el-input v-model="thisMerchantName" size="small" placeholder="请输入所属单位" disabled />
           </el-form-item>
         </el-col>
         <el-col :span="8">
@@ -68,28 +80,43 @@
         </el-col>
         <el-col :span="8">
           <el-form-item label="管理员" :label-width="formLabelWidth" prop="adminReguserId">
-            <el-select v-model="xjzyxxForm.adminReguserId" size="small" placeholder="请选择管理员" :style="{ width: '100%' }">
-              <el-option label="管理员1" value="1" />
-            </el-select>
+            <el-input :value="thisUserName" size="small" placeholder="管理员" disabled />
+          </el-form-item>
+        </el-col>
+
+        <el-col :span="8">
+          <el-form-item label="使用单位" :label-width="formLabelWidth" prop="useMerchantId">
+            <!-- <el-select v-model="xjzyxxForm.useMerchantId" size="small" placeholder="请选择使用单位" :style="{ width: '100%' }">
+              <el-option label="使用单位1" value="1" />
+            </el-select> -->
+            <el-dropdown ref="mechartDrop" trigger="click" placement="bottom-start" style="width:100%">
+              <el-input v-model="checkedMerchartName" size="small" placeholder="请选择使用单位" />
+
+              <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
+
+                <el-tree
+                  ref="mechartTree"
+                  node-key="groupId"
+                  :props="mechartProps"
+                  :data="mainSortData.groupList"
+                  :default-expand-all="true"
+                  :expand-on-click-node="false"
+                  @node-click="mechartTreeNodeClick"
+                />
+              </el-dropdown-menu>
+            </el-dropdown>
           </el-form-item>
         </el-col>
         <el-col :span="8">
           <el-form-item label="使用人" :label-width="formLabelWidth" prop="userId">
-            <el-select v-model="xjzyxxForm.userId" size="small" placeholder="请选择使用人" :style="{ width: '100%' }">
-              <el-option label="使用人1" value="1" />
-            </el-select>
-          </el-form-item>
-        </el-col>
-        <el-col :span="8">
-          <el-form-item label="使用单位" :label-width="formLabelWidth" prop="useMerchantId">
-            <el-select v-model="xjzyxxForm.useMerchantId" size="small" placeholder="请选择使用单位" :style="{ width: '100%' }">
-              <el-option label="使用单位1" value="1" />
+            <el-select v-model="xjzyxxForm.userId" v-loading="allMechartUser.loading" size="small" placeholder="选择使用单位后，请选择使用人" :style="{ width: '100%' }" :disabled="!xjzyxxForm.useMerchantId">
+              <el-option v-for="(ele , i ) in allMechartUser.list" :key="i" :value="ele.reguserId" :label="ele.chineseName" />
             </el-select>
           </el-form-item>
         </el-col>
         <!-- <el-col :span="8">
-          <el-form-item label="使用部门" :label-width="formLabelWidth" prop="useBranchMerchantId">
-            <el-select v-model="xjzyxxForm.useBranchMerchantId" size="small" placeholder="请选择管理员" :style="{ width: '100%' }">
+          <el-form-item label="使用部门" :label-width="formLabelWidth" prop="">
+            <el-select v-model="xjzyxxForm." size="small" placeholder="请选择管理员" :style="{ width: '100%' }">
               <el-option label="管理员1" value="1" />
             </el-select>
           </el-form-item>
@@ -108,7 +135,7 @@
         <el-col :span="8">
           <el-form-item label="区域" :label-width="formLabelWidth" prop="areaId">
             <el-select v-model="xjzyxxForm.areaId" size="small" placeholder="请选择区域" :style="{ width: '100%' }">
-              <el-option label="区域1" value="1" />
+              <el-option v-for="(ele , i ) in mainSortData.areaList" :key="i" :value="ele.area_id" :label="ele.area_name" />
             </el-select>
           </el-form-item>
         </el-col>
@@ -119,8 +146,8 @@
         </el-col>
         <el-col :span="8">
           <el-form-item label="物资状态" :label-width="formLabelWidth" prop="statusId">
-            <el-select v-model="xjzyxxForm.statusId" size="small" placeholder="请选择物资状态" :style="{ width: '100%' }">
-              <el-option label="物资状态" value="1" />
+            <el-select v-model="xjzyxxForm.statusId" size="small" placeholder="请选择资产类别" :style="{ width: '100%' }">
+              <el-option v-for="(ele , i) in mainSortData.statusList" :key="i" :label="ele.status_name" :value="ele.status_id" />
             </el-select>
           </el-form-item>
         </el-col>
@@ -206,11 +233,12 @@
               :auto-upload="true"
               :show-file-list="true"
               :on-success="handleAvatarSuccess"
+              :headers="{'X-Token':XToken}"
               :before-upload="beforeAvatarUpload"
             >
               <i class="el-icon-plus avatar-uploader-icon" />
 
-              <div slot="file" slot-scope="{file}">
+              <template slot="file" slot-scope="{file}">
                 <img
                   class="el-upload-list__item-thumbnail"
                   :src="file.url"
@@ -230,8 +258,9 @@
                     <i class="el-icon-delete" />
                   </span>
                 </span>
-              </div>
+              </template>
             </el-upload>
+
           </el-form-item>
         </el-col>
       </el-row>
@@ -248,6 +277,8 @@
   </el-dialog>
 </template>
 <script>
+import { getAllMechartUser } from '@/api/assetManage'
+import { mapState } from 'vuex'
 export default {
   filters: {
     iconName(val) {
@@ -278,10 +309,29 @@ export default {
           statusList: []
         }
       }
+    },
+    editAssetDialogLoading: {
+      type: Boolean,
+      default: false
+    },
+    editAssetData: {
+      type: Object,
+      default: () => {}
     }
   },
   data() {
     return {
+      defaultProps: {
+        children: 'children',
+        label: 'assetkindName',
+        isLeaf: 'leaf'
+      },
+      mechartProps: {
+        children: 'children',
+        label: 'groupName'
+      },
+      checkedMerchartName: '',
+      checkedAssetkindId: '',
       innerVisible: false,
       fullscreen: false,
       postUrl: '',
@@ -289,7 +339,6 @@ export default {
       PerviewDialogVisible: false,
       PerviewDialogImageUrl: '',
       xjzyxxForm: {
-        assetSn: '',
         images: [],
         parentAssetcode: '',
         // 配置项
@@ -316,7 +365,6 @@ export default {
         supplier: '',
         tel: '',
         unitname: '',
-        useBranchMerchantId: '',
         useMerchantId: '',
         userId: ''
 
@@ -335,9 +383,21 @@ export default {
           { required: true, message: '请选择物资状态', trigger: 'change' }
         ]
 
+      },
+      allMechartUser: {
+        loading: false,
+        list: []
       }
 
     }
+  },
+  computed: {
+    ...mapState({
+      XToken: state => state.user.token,
+      thisMerchantName: state => state.user.merchantName,
+      thisUserName: state => state.user.userChname
+
+    })
   },
   watch: {
     visible: {
@@ -345,6 +405,13 @@ export default {
         this.innerVisible = val
       },
       immediate: true
+    },
+    'editAssetData.assetId': {
+      handler(val) {
+        if (Object.keys(this.editAssetData).length) {
+          this.copyEditData()
+        }
+      }
     }
   },
   created() {
@@ -356,6 +423,38 @@ export default {
     console.log('mainSortData', this.mainSortData)
   },
   methods: {
+    copyEditData() {
+      const obj = this.editAssetData
+      for (const key in obj) {
+        if (key === 'assetkindId') {
+          // this.checkedAssetkindId =
+          this.xjzyxxForm.assetkindId = obj.assetkindId
+        } else {
+          this.xjzyxxForm[key] = obj[key]
+        }
+      }
+    },
+    // findAssetKindOr
+    assetkindTreeClick(item) {
+      this.xjzyxxForm.assetkindId = item.assetkindId
+      this.checkedAssetkindId = item.assetkindName
+    },
+    mechartTreeNodeClick(item) {
+      this.xjzyxxForm.useMerchantId = item.groupId
+      this.checkedMerchartName = item.groupName
+      this.$nextTick(() => {
+        this.$refs.mechartDrop.hide()
+      })
+
+      this.allMechartUser.loading = true
+      getAllMechartUser({ groupId: item.groupId }).then(res => {
+        if (res.code === 0) {
+          this.allMechartUser.list = res.data
+        }
+      }).finally(() => {
+        this.allMechartUser.loading = false
+      })
+    },
     changeFullscreen() {
       this.fullscreen = !this.fullscreen
     },
@@ -376,11 +475,11 @@ export default {
       this.PerviewDialogVisible = true
     },
     beforeAvatarUpload(file) {
-      const isJPG = file.type === 'image/jpeg'
+      const isJPG = file.type === 'image/jpeg' || file.type === 'image/png'
       const isLt2M = file.size / 1024 / 1024 < 2
 
       if (!isJPG) {
-        this.$message.error('上传图片只能是 JPG 格式!')
+        this.$message.error('上传图片只能是 JPG 或 PNG 格式!')
       }
       if (!isLt2M) {
         this.$message.error('上传图片大小不能超过 2MB!')

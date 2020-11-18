@@ -341,21 +341,54 @@ export const constantRoutes = [
         meta: { title: 'menu2' }
       }
     ]
-  },
+  }
 
-  {
-    path: 'external-link',
-    component: Layout,
-    children: [
-      {
-        path: 'https://panjiachen.github.io/vue-element-admin-site/#/',
-        meta: { title: 'External Link', icon: 'link' }
-      }
-    ]
-  },
+  // {
+  //   path: '/systemSetting',
+  //   component: Layout,
+  //   meta: { title: '系统设置', icon: 'el-icon-s-help' },
+  //   children: [
+  //     {
+  //       path: 'systemUser',
+  //       name: 'systemUser',
+  //       component: () => import('@/views/systemSettings/systemUser'),
+  //       meta: { title: '系统用户管理', icon: 'table' }
+  //     },
+  //     {
+  //       path: 'commercialUser',
+  //       name: 'commercialUser',
+  //       component: () => import('@/views/systemSettings/commercialUser'),
+  //       meta: { title: '商户管理', icon: 'tree' }
+  //     },
+  //     {
+  //       path: 'userManage',
+  //       name: 'userManage',
+  //       component: () => import('@/views/systemSettings/userManage'),
+  //       meta: { title: '用户管理', icon: 'tree' }
+  //     },
+  //     {
+  //       path: 'userPower',
+  //       name: 'userPower',
+  //       component: () => import('@/views/systemSettings/power/user'),
+  //       meta: { title: '注册用户权限配置', icon: 'tree' }
+  //     },
+  //     {
+  //       path: 'sysUserPower',
+  //       name: 'sysUserPower',
+  //       component: () => import('@/views/systemSettings/power/systemUser'),
+  //       meta: { title: '系统用户权限配置', icon: 'tree' }
+  //     },
+  //     {
+  //       path: 'comUserPower',
+  //       name: 'comUserPower',
+  //       component: () => import('@/views/systemSettings/power/commercial'),
+  //       meta: { title: '商户权限配置', icon: 'tree' }
+  //     }
+  //   ]
+  // },
 
   // 404 page must be placed at the end !!!
-  { path: '*', redirect: '/404', hidden: true }
+
 ]
 
 const createRouter = () => new Router({

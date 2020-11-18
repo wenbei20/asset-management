@@ -2,9 +2,8 @@
   <div class="app-container">
     <el-row>
       <el-col :span="17">
-        <el-select v-model="companyValue" placeholder="请选择搜索类别" style="padding:0 6px;width: 160px;" @change="changeSelectdepartment">
-          <el-option label="使用部门" value="1" />
-          <el-option label="资产类别" value="2" />
+        <el-select v-model="companyValue" placeholder="请选择搜索类别" style="padding:0 6px;width: 160px;">
+          <el-option label="资产编号" value="2" />
           <el-option label="资产名称" value="3" />
         </el-select>
 
@@ -23,27 +22,16 @@
             操作<i class="el-icon-arrow-down el-icon--right" />
           </el-button>
           <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item :command="1">下载导入模板</el-dropdown-item>
+            <el-dropdown-item command="1">下载导入模板</el-dropdown-item>
             <el-dropdown-item>批量导入资产</el-dropdown-item>
             <el-dropdown-item>导出资产</el-dropdown-item>
-            <el-dropdown-item style="border-top:1px solid #dfe6ee;">批量打印标签</el-dropdown-item>
-            <el-dropdown-item>批量发卡</el-dropdown-item>
+            <el-dropdown-item command="pldybq" style="border-top:1px solid #dfe6ee;">批量打印标签</el-dropdown-item>
+            <el-dropdown-item command="plfk">批量发卡</el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
       </el-col>
-      <el-col :span="7">
-
-        <!-- <el-input
-          v-model="input1"
-          :style="{ width: '200px', float: 'right' }"
-          placeholder="搜索..."
-          suffix-icon="el-icon-search"
-        /> -->
-
-      </el-col>
     </el-row>
     <el-row type="flex" justify="space-between" align="middle" :style="{ fontSize: '12px' }">
-      <!-- <el-col :span="8">金额合计：0.00</el-col> -->
       <el-col :span="8" :offset="16" :style="{ textAlign: 'right' }">
         <el-button type="text" @click="gjssVisible = true">高级搜索</el-button>
         <el-popover
@@ -72,7 +60,7 @@
         <!-- <el-button type="text" :style="{ marginLeft: '10px' }"><i class="el-icon-lock" /></el-button> -->
       </el-col>
     </el-row>
-    <div class="maintable">
+    <div id="vxtable" class="maintable">
 
       <vxe-table
         ref="xTree"
@@ -83,7 +71,7 @@
         :auto-resize="true"
         stripe
         class="vxetable"
-        :tree-config="{children: 'children',iconOpen: 'el-icon-remove-outline', iconClose: 'el-icon-circle-plus-outline',expandAll:false, hasChild: 'hasChild' , lazy: true, loadMethod: loadChildrenMethod,}"
+        :tree-config="{children: 'children',iconOpen: 'el-icon-remove-outline', iconClose: 'el-icon-circle-plus-outline', hasChild: 'hasChild' , lazy: true, loadMethod: loadChildrenMethod,}"
         :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
         :sort-config="{remote:true}"
         :data="tableData"
@@ -101,18 +89,13 @@
             <i class="el-icon-more" style="position:relative;top:1px;left: -1px;" />
 
             <div class="editmenu">
-              <div class="item">编辑</div>
+              <div class="item" @click="EditThisAsset(scope.row)">编辑</div>
               <div class="item" @click="addNewDeputyAssets(scope.row)">副资产</div>
               <div class="item" @click="showCopyPage(scope.row)">复制</div>
-              <!-- <el-popconfirm
-                title="这是一段内容确定删除吗？"
-              >
-                <div slot="reference" class="item">删除</div>
-              </el-popconfirm> -->
               <div class="item" @click="deteleAsset(scope.row)">删除</div>
               <div v-if="!scope.row.rfidCode" class="item create" @click="expressCard('发卡',scope)">发卡</div>
               <div v-else class="item create" @click="expressCard('换卡',scope)">换卡</div>
-              <div class="item create">标签打印</div>
+              <div class="item create" @click="printSingleTag(scope.row)">标签打印</div>
             </div>
           </template>
         </vxe-table-column>
@@ -121,16 +104,7 @@
             <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
           </template>
         </vxe-table-column>
-        <!-- <vxe-table-column width="80" title="状态" :filters="[{ data: '' }]" :filter-method="filterStatusMethod" :filter-multiple="true">
-          <template #default="{ row }">
-            <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
-          </template>
-          <template v-slot:filter="{ $panel, column }">
-            <el-checkbox-group v-for="(option, index) in column.filters" :key="index" v-model="option.data" style="padding:10px" @change="$panel.changeOption($event, !!option.data, option)">
-              <el-checkbox v-for="(item,i) in MainSortData.statusList " :key="i" :label="item.status_name" style="display:block;" />
-            </el-checkbox-group>
-          </template>
-        </vxe-table-column> -->
+
         <vxe-table-column field="assetcode" title="资产编码" sortable min-width="100" :visible="tableShowColumn.zcbm" />
         <vxe-table-column field="assetname" title="资产名称" sortable tree-node width="300" :visible="tableShowColumn.zcmc">
           <template #default="{ row }">
@@ -138,15 +112,11 @@
           </template>
         </vxe-table-column>
 
-        <vxe-table-column field="assetkindName" title="资产类别" sortable min-width="100" :visible="tableShowColumn.zclb">--</vxe-table-column>
+        <vxe-table-column field="assetkindName" title="资产类别" sortable min-width="100" :visible="tableShowColumn.zclb" />
 
         <vxe-table-column field="standardtypeName" title="标准型号" sortable min-width="100" :visible="tableShowColumn.bzxh" />
 
-        <vxe-table-column field="norms" title="规格型号" sortable min-width="100" :visible="tableShowColumn.ggxh">
-          <template #default="{ row }">
-            <span>{{ row.diedai ? row.diedai : '--' }}</span>
-          </template>
-        </vxe-table-column>
+        <vxe-table-column field="norms" title="规格型号" sortable min-width="100" :visible="tableShowColumn.ggxh" />
 
         <vxe-table-column field="unitname" title="计量单位" min-width="100" sortable :visible="tableShowColumn.jldw" />
 
@@ -154,26 +124,17 @@
 
         <vxe-table-column field="groupName" title="所属单位" min-width="100" sortable :visible="tableShowColumn.ssdw" />
 
-        <vxe-table-column field="money" title="金额" min-width="100" sortable :visible="tableShowColumn.je">--</vxe-table-column>
+        <vxe-table-column field="money" title="金额" min-width="100" sortable :visible="tableShowColumn.je" />
 
         <vxe-table-column field="adminReguserName" title="管理员" sortable min-width="100" :visible="tableShowColumn.gly" />
         <vxe-table-column field="userName" title="使用人" min-width="100" sortable :visible="tableShowColumn.syr" />
         <vxe-table-column field="useMerchantName" title="使用单位" min-width="100" sortable :visible="tableShowColumn.sydw" />
-        <!-- <vxe-table-column field="useBranchMerchantName" title="使用部门" min-width="100" sortable :visible="tableShowColumn.sybm" /> -->
         <vxe-table-column field="limitdate" title="使用期限" min-width="100" sortable :visible="tableShowColumn.syqx" />
         <vxe-table-column field="areaName" title="区域" min-width="100" sortable :visible="tableShowColumn.qy" />
         <vxe-table-column field="posname" title="存放地点" min-width="100" sortable :visible="tableShowColumn.cfdd" />
         <vxe-table-column field="memo" title="备注信息" min-width="100" :visible="tableShowColumn.bzxx" />
         <vxe-table-column field="statusName" title="物资状态" min-width="100" sortable :visible="tableShowColumn.wzzt" />
-        <vxe-table-column field="rfidCode" title="RFID码" min-width="100" :visible="tableShowColumn.RFID" />
-        <!-- <vxe-table-column title="自定义字段1" min-width="120" sortable :visible="tableShowColumn.zdyzd1">--</vxe-table-column> -->
-        <!-- <vxe-table-column field="rfidCode" title="供应商" min-width="100" sortable :visible="tableShowColumn.gys" /> -->
-        <!-- <vxe-table-column title="联系人" min-width="100" sortable :visible="tableShowColumn.lxr">--</vxe-table-column>
-        <vxe-table-column title="联系方式" min-width="100" sortable :visible="tableShowColumn.lxfs">--</vxe-table-column>
-        <vxe-table-column title="负责人" min-width="100" sortable :visible="tableShowColumn.fzr">--</vxe-table-column>
-
-        <vxe-table-column field="endTime" title="维保时间" sortable min-width="120" :visible="tableShowColumn.wbsj" />
-        <vxe-table-column title="维保说明" min-width="100" sortable :visible="tableShowColumn.wbsm">--</vxe-table-column> -->
+        <vxe-table-column field="rfidCode" title="RFID码" min-width="200" :visible="tableShowColumn.RFID" />
 
       </vxe-table>
     </div>
@@ -181,7 +142,7 @@
       v-show="pageTotal>0"
       background
       :total="pageTotal"
-      layout="prev, pager, next, jumper"
+      layout=" sizes ,prev, pager, next, jumper"
       :page.sync="pageQuery.pageNo"
       :limit.sync="pageQuery.pageSize"
       style="text-align:right;margin-top:20px;"
@@ -194,6 +155,8 @@
       :title="xjzyxxTitle"
       :father-asset-code="fatherAssetCode"
       :main-sort-data="MainSortData"
+      :edit-asset-data="editAssetData"
+      :edit-asset-dialog-loading="EditAssetDialogLoading"
       @confirm="submitData"
     />
 
@@ -201,6 +164,7 @@
       :visible.sync="showCardDialog"
       :title="CardDialogTitle"
       :asset-info="CardDialogInfo"
+      @refreshNode="refreshNode"
     />
 
     <!-- 模态框 高级搜索-->
@@ -222,7 +186,7 @@
 
                 <el-dropdown-menu slot="dropdown">
                   <el-checkbox-group v-model="gjssForm.statusId" class="highSearchCheckbox">
-                    <el-checkbox v-for="(item,i) in MainSortData.statusList" :key="i" :label="item.status_name" :value="item.status_id" />
+                    <el-checkbox v-for="(item,i) in MainSortData.statusList" :key="i" :label="item" :value="item.status_id">{{ item.status_name }}</el-checkbox>
                   </el-checkbox-group>
                 </el-dropdown-menu>
               </el-dropdown>
@@ -260,38 +224,43 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="资产类别" :label-width="formLabelWidth">
-              <!-- <el-select v-model="gjssForm.assetkindId" size="small" placeholder="请选择资产类别" :style="{ width: '100%' }">
-                <el-option label="资产类别" value="1" />
-                <el-checkbox v-for="(item,i) in MainSortData.statusList" :key="i" :label="item.status_name" :value="item.status_id" />
 
-              </el-select> -->
-
-              <el-dropdown trigger="click" placement="bottom-start" style="width:100%" @visible-change="highSearchChangeAssetkind">
-                <el-input v-model="checkedDepartTags" size="small" />
+              <el-dropdown ref="statusDrop" trigger="click" placement="bottom-start" style="width:100%" @visible-change="highSearchChangeAssetkind">
+                <el-input v-model="checkedAssetkindId" size="small" placeholder="请选择资产类别" />
 
                 <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
-                  <!-- <el-tree
-                    ref="dialogTree"
-                    show-checkbox
-                    node-key="groupId"
+                  <el-tree
+                    ref="statusTree"
+                    node-key="assetkindId"
                     :props="defaultProps"
                     :data="MainSortData.assetkindList"
-                  /> -->
-                  <el-tree
-                    ref="dialogTree"
-                    show-checkbox
-                    node-key="status_id"
-                    :props="defaultProps"
-                    :data="MainSortData.statusList"
+                    :default-expand-all="true"
+                    :expand-on-click-node="true"
+                    @node-click="assetkindTreeClick"
                   />
                 </el-dropdown-menu>
               </el-dropdown>
+
+              <!-- <el-dropdown ref="mechartDrop" trigger="click" placement="bottom-start" style="width:100%" @visible-change="highSearchChangeAssetkind">
+                <el-input v-model="checkedMerchartName" size="small" />
+
+                <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
+
+                  <el-tree
+                    ref="mechartTree"
+                    node-key="groupId"
+                    :props="mechartProps"
+                    :data="MainSortData.groupList"
+                    @node-click="mechartTreeNodeClick"
+                  />
+                </el-dropdown-menu>
+              </el-dropdown> -->
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="标准型号" :label-width="formLabelWidth">
               <el-select v-model="gjssForm.standardtypeId" size="small" placeholder="请选择条件" :style="{ width: '100%' }">
-                <el-option label="标准型号" value="1" />
+                <el-option v-for="(item,i) in MainSortData.standardtypeList" :key="i" :label="item.asset_name" :value="item.standardtype_id" />
               </el-select>
 
             </el-form-item>
@@ -328,25 +297,6 @@
             </el-form-item>
           </el-col>
 
-          <!-- <el-col :span="12">
-            <el-form-item label="所属单位" :label-width="formLabelWidth">
-
-              <el-dropdown trigger="click" placement="bottom-start" style="width:100%" @visible-change="highSearchChangeAssetkind">
-                <el-input v-model="checkedDepartTags" size="small" />
-
-                <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
-
-                  <el-tree
-                    ref="dialogTree"
-                    show-checkbox
-                    node-key="status_id"
-                    :props="defaultProps"
-                    :data="MainSortData.statusList"
-                  />
-                </el-dropdown-menu>
-              </el-dropdown>
-            </el-form-item>
-          </el-col> -->
           <el-col :span="12">
             <el-form-item label="存放地点" :label-width="formLabelWidth">
               <el-col :span="10" style="padding:0px;">
@@ -364,29 +314,33 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="使用单位" :label-width="formLabelWidth">
-              <el-select v-model="gjssForm.useMerchantId" size="small" placeholder="请选择使用单位" :style="{ width: '100%' }">
+              <!-- <el-select v-model="gjssForm.useMerchantId" size="small" placeholder="请选择使用单位" :style="{ width: '100%' }">
                 <el-option label="使用单位" value="1" />
-              </el-select>
+              </el-select> -->
+              <el-dropdown ref="mechartDrop" trigger="click" placement="bottom-start" style="width:100%" @visible-change="highSearchChangeAssetkind">
+                <el-input v-model="checkedMerchartName" size="small" placeholder="请选择使用单位" />
+
+                <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
+
+                  <el-tree
+                    ref="mechartTree"
+                    node-key="groupId"
+                    :props="mechartProps"
+                    :data="MainSortData.groupList"
+                    :default-expand-all="true"
+                    :expand-on-click-node="true"
+                    @node-click="mechartTreeNodeClick"
+                  />
+                </el-dropdown-menu>
+              </el-dropdown>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="使用人" :label-width="formLabelWidth">
-              <!-- <el-select v-model="gjssForm.userId" size="small" placeholder="请先选择使用单位" :style="{ width: '100%' }" :disabled="!gjssForm.useMerchantId">
-                <el-option label="使用人1" value="1" />
-              </el-select> -->
-              <el-autocomplete
-                v-model="highSearchSeleUser"
-                :fetch-suggestions="querySearchAsync"
-                placeholder="请输入内容"
-                style="width:100%"
-                size="small"
-                :disabled="gjssForm.useMerchantId"
-                @select="handleSelect "
-              >
-                <template slot-scope="{ item }">
-                  <span> {{ item.chineseName }} </span>
-                </template>
-              </el-autocomplete>
+              <el-select v-model="gjssForm.userId" v-loading="allMechartUser.loading" size="small" placeholder="选择使用单位后，请选择使用人" :style="{ width: '100%' }" :disabled="!gjssForm.useMerchantId">
+                <el-option v-for="(ele , i ) in allMechartUser.list" :key="i" :value="ele.reguserId" :label="ele.chineseName" />
+              </el-select>
+
             </el-form-item>
           </el-col>
 
@@ -399,30 +353,17 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="区域" :label-width="formLabelWidth">
-              <!-- <el-select v-model="gjssForm.areaId" size="small" placeholder="请选择区域" :style="{ width: '100%' }">
-                <el-option label="区域" value="1" />
-              </el-select> -->
-              <el-dropdown trigger="click" placement="bottom-start" style="width:100%" @visible-change="highSearchChangeAssetkind">
-                <el-input v-model="checkedDepartTags" size="small" />
+              <el-select v-model="gjssForm.areaId" size="small" placeholder="请选择区域" :style="{ width: '100%' }">
+                <el-option v-for="(ele , i ) in MainSortData.areaList" :key="i" :value="ele.area_id" :label="ele.area_name" />
+              </el-select>
 
-                <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
-
-                  <el-tree
-                    ref="dialogTree"
-                    show-checkbox
-                    node-key="status_id"
-                    :props="defaultProps"
-                    :data="MainSortData.statusList"
-                  />
-                </el-dropdown-menu>
-              </el-dropdown>
             </el-form-item>
           </el-col>
 
         </el-row>
       </el-form>
       <div slot="footer" class="dialog-footer" style="padding-top:10px;">
-        <el-button @click="gjssVisible = false">取 消</el-button>
+        <el-button @click="cancalHighSearch">重 置</el-button>
         <el-button type="primary" @click="confirmHighSearch">确 定</el-button>
       </div>
     </el-dialog>
@@ -460,16 +401,19 @@
       </div>
 
     </el-dialog>
-
+    <!-- <div id="printArea">
+      <span class="red">aaaaaaaa</span>
+    </div> -->
   </div>
 </template>
 
 <script>
-import { getAssetsList, createAssets, deleteAsset, baseCode, copyAsset, getListChild } from '@/api/assetManage'
+import { getAssetsList, createAssets, deleteAsset, baseCode, copyAsset, getListChild, getAllMechartUser, getRfid, getAssetInfo, printTag, sendCard } from '@/api/assetManage'
 import { getListRegUserByChineseName } from '@/api/settings'
 import fromDialog from './components/formDialog'
 import cardDialog from './components/CardDialog'
 import Pagination from '@/components/Pagination'
+import print from 'print-js'
 export default {
   name: 'AssetInfoManage',
   components: { fromDialog, Pagination, cardDialog },
@@ -498,16 +442,19 @@ export default {
   },
   data() {
     return {
+      editAssetData: { assetId: '' },
+      testFilterList: [],
+      EditAssetDialogLoading: false,
       showCardDialog: false,
-      CardDialogTitle: '',
-      CardDialogInfo: {},
+      assetCopyVisible: false,
       isHighSearchFullscreen: false,
+      PerviewDialogVisible: false,
+      CardDialogTitle: '',
+      CardDialogInfo: { assetcode: '', assetname: '', assetId: '', RFID: '' },
       highSearchSeleUser: '',
       filterStatusList: [],
-      assetCopyVisible: false,
       fatherAssetCode: '',
       PerviewDialogImageUrl: '',
-      PerviewDialogVisible: false,
       copyNum: 1,
       assetCopyOptions: {
         assetsId: '',
@@ -631,25 +578,31 @@ export default {
       pageTotal: 0,
       tableLoading: false,
       MainSortData: {},
-      // defaultProps: {
-      //   children: 'zones',
-      //   label: 'groupName',
-      //   isLeaf: 'leaf'
-      // }
       defaultProps: {
         children: 'children',
-        label: 'status_name',
+        label: 'assetkindName',
         isLeaf: 'leaf'
-      }
+      },
+      mechartProps: {
+        children: 'children',
+        label: 'groupName'
+      },
+      checkedMerchartName: '',
+      allMechartUser: {
+        list: [],
+        loading: false
+      },
+      checkedAssetkindId: ''
     }
   },
   computed: {
     highSearch_status() {
-      return this.gjssForm.statusId.join(';')
+      return this.gjssForm.statusId.map(item => item.status_name).join(';')
     },
     checkedDepartTags() {
       return ''
     }
+
   },
   created() {
     this.getList()
@@ -658,17 +611,119 @@ export default {
         for (const key in res.data) {
           this.$set(this.MainSortData, key, res.data[key])
         }
+        // const xTable = this.$refs.xTable
+        // const column = xTable.getColumnByField('status')
+
+        // xTable.setFilter(column, [
+        //   { label: '包含 a', value: 'a' },
+        //   { label: '包含 b', value: 'b' },
+        //   { label: '包含 c', value: 'c', checked: true },
+        //   { label: '包含 h', value: 'h' },
+        //   { label: '包含 j', value: 'j' }
+        // ])
       }
-      // this.MainSortData = res.data ? res.data : {}
     })
   },
   methods: {
-    getList() {
+    batchGetRFID() {
+      const checkedArr = this.$refs.xTree.getCheckboxRecords()
+      if (!checkedArr.length) {
+        this.$message({ type: 'warning', message: '请勾选需要发卡的资产' })
+        return
+      }
+
+      const query = {
+        assetsIds: checkedArr.map(item => item.assetId).join(',')
+      }
+      sendCard(query).then(res => {
+        if (res.code === 0) {
+          this.$message({ type: 'success', message: '发卡成功' })
+          this.getList()
+        } else {
+          this.$message({ type: 'error', message: '发卡失败，请稍后再试' })
+        }
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'error', message: '发卡失败，请稍后再试' })
+      })
+    },
+    batchPrintTags() {
+      const checkedArr = this.$refs.xTree.getCheckboxRecords()
+      if (!checkedArr.length) {
+        this.$message({ type: 'warning', message: '请勾选需要发卡的资产' })
+        return
+      }
+
+      const query = {
+        assetsIds: checkedArr.map(item => item.assetId).join(',')
+      }
+      printTag(query).then(res => {
+        if (res.code === 0) {
+
+        } else {
+        }
+      }).catch(err => {
+        console.log('err', err)
+      })
+    },
+    mechartTreeNodeClick(item) {
+      this.gjssForm.useMerchantId = item.groupId
+      this.checkedMerchartName = item.groupName
+      this.$nextTick(() => {
+        this.$refs.mechartDrop.hide()
+      })
+
+      this.allMechartUser.loading = true
+      getAllMechartUser({ groupId: item.groupId }).then(res => {
+        if (res.code === 0) {
+          this.allMechartUser.list = res.data
+        }
+      }).finally(() => {
+        this.allMechartUser.loading = false
+      })
+    },
+    assetkindTreeClick(item) {
+      this.gjssForm.assetkindId = item.assetkindId
+      this.checkedAssetkindId = item.assetkindName
+      // this.$nextTick(() => {
+      //   this.$refs.statusTree.hide()
+      // })
+    },
+    statusSeleChange(val) {
+      console.log('val', val)
+    },
+    EditThisAsset(row) {
+      this.xjzyxxTitle = '编辑资源信息'
+      this.xjzyxxVisible = true
+      this.EditAssetDialogLoading = true
+      getAssetInfo({ assetsId: row.assetId }).then(res => {
+        if (res.code === 0) {
+          this.EditAssetDialogLoading = false
+          this.editAssetData = { ...res.data }
+        } else {
+          this.$message({ type: 'error', message: '获取资产信息失败，请稍后再试' })
+          setTimeout(() => {
+            this.EditAssetDialogLoading = false
+            this.xjzyxxVisible = false
+          }, 500)
+        }
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'error', message: '获取资产信息失败，请稍后再试' })
+        setTimeout(() => {
+          this.EditAssetDialogLoading = false
+          this.xjzyxxVisible = false
+        }, 500)
+      })
+    },
+    getList(page) {
+      if (page && page.limit) this.pageQuery.pageSize = page.limit
+
       this.tableLoading = true
       getAssetsList(this.pageQuery).then(res => {
         console.log('res', res)
         if (res.code === 0 && res.data && res.data.items) {
-          res.data.items.forEach(ele => { ele.hasChild = true })
+          // res.data.items.forEach(ele => { ele.hasChild = true })
           this.tableData = res.data.items
           this.pageTotal = res.data.total
           this.pageQuery.pageSize = res.data.limit
@@ -747,13 +802,21 @@ export default {
       this.getList()
     },
     operationSelect(command) {
-      console.log('command', command)
-      const a = document.createElement('a')
-      a.setAttribute('href', '/asset/static/img/wave.29c712eb.png')
-      a.setAttribute('download', '11222')
-      a.setAttribute('target', '_blank')
-      const clickEvent = new MouseEvent('click', { 'bubbles': true, 'cancelable': true })
-      a.dispatchEvent(clickEvent)
+      if (command === 'plfk') {
+        this.batchGetRFID()
+        return
+      } else if (command === 'pldybq') {
+        this.batchPrintTags()
+        return
+      } else if (command === '1') {
+        console.log('command', command)
+        const a = document.createElement('a')
+        a.setAttribute('href', '/asset/static/img/wave.29c712eb.png')
+        a.setAttribute('download', '11222')
+        a.setAttribute('target', '_blank')
+        const clickEvent = new MouseEvent('click', { 'bubbles': true, 'cancelable': true })
+        a.dispatchEvent(clickEvent)
+      }
     },
 
     showCopyPage(row) {
@@ -800,6 +863,7 @@ export default {
     },
     submitData(data) {
       console.log('data', data)
+      return
       createAssets(data).then(res => {
         console.log('createAssets', res)
         if (res.code === 0) {
@@ -815,12 +879,59 @@ export default {
       })
     },
     confirmHighSearch() {
-      const obj = { ...this.pageQuery, ...this.gjssForm }
-      obj.statusId = [...this.gjssForm.statusId]
-      console.log('obj', obj)
+      this.pageQuery = { ...this.pageQuery, ...this.gjssForm }
+      this.pageQuery.statusId = this.pageQuery.statusId.map(item => item.status_id).join(',')
+      this.pageQuery.pageNo = 1
+      this.pageQuery.pageSize = 10
+      this.getList()
+      this.gjssVisible = false
+    },
+    cancalHighSearch() {
+      for (const key in this.gjssForm) {
+        if (key !== 'statusId') {
+          this.gjssForm[key] = ''
+        } else {
+          this.gjssForm[key] = []
+        }
+      }
+      this.checkedAssetkindId = ''
+      this.checkedMerchartName = ''
+      this.allMechartUser.list = []
+      this.allMechartUser.loading = false
+      // this.pageQuery = {
+      //   orderType: '',
+      //   orderName: '',
+      //   pageNo: 1,
+      //   pageSize: 10
+      // }
+      this.pageQuery = {
+        orderType: '',
+        orderName: '',
+        pageNo: 1,
+        pageSize: 10
+      }
+      this.getList()
     },
     searchList() {
+      if (!this.searchIpt.trim()) {
+        this.$message({ type: 'warning', message: '请输入搜索内容' })
+        return
+      }
+      if (!this.companyValue) {
+        this.$message({ type: 'warning', message: '请选择搜索类型' })
+        return
+      }
 
+      this.pageQuery = {
+        orderType: '',
+        orderName: '',
+        pageNo: 1,
+        pageSize: 10
+      }
+
+      this.companyValue === '2' ? this.pageQuery.assetcode = this.searchIpt : this.pageQuery.assetname = this.searchIpt
+
+      this.getList()
     },
     clearSearchRes() {
 
@@ -887,11 +998,11 @@ export default {
           if (res.code === 0) {
             resolve(res.data)
           } else {
-            resolve([])
+            // resolve([])
           }
         }).catch(err => {
           console.log('err', err)
-          resolve([])
+          // resolve([])
         })
       })
     },
@@ -904,7 +1015,31 @@ export default {
       this.CardDialogInfo.assetname = row.assetname
       this.CardDialogInfo.assetId = row.assetId
       this.showCardDialog = true
+      getRfid().then(res => {
+        if (res.code === 0) {
+          this.CardDialogInfo.RFID = res.data
+        }
+      })
+    },
+    refreshNode() {
+      this.getList()
+    },
+    printSingleTag(row) {
+      printTag({ assetsIds: row.assetId }).then(res => {
+        if (res.code === 0) {
+          const style = '@page { size:auto;margin: 0cm 1cm 0cm 1cm; } @media print { .blueText{ color:#f00}  }'
+          print({
+            printable: 'vxtable',
+            type: 'html',
+            style: style,
+            scanStyles: false
+          })
+        }
+      }).catch(err => {
+        console.log('err', err)
+      })
     }
+
   }
 }
 </script>
