@@ -5,14 +5,25 @@
       <svg-icon :icon-class="fullscreen | iconName" class-name="dialogIcon" @click="changeFullscreen" />
     </div>
     <div v-if="title === '新建副资产信息'" class="showFatherAssetCode"><span>父资产编码</span>{{ fatherAssetCode }}</div>
-    <el-form ref="assetForm" :model="xjzyxxForm" label-position="right" :rules="addDialogRoles">
+    <el-form ref="assetForm" v-loading="editAssetDialogLoading" :model="xjzyxxForm" label-position="right" :rules="addDialogRoles">
       <el-row :gutter="20">
         <el-col :span="8">
           <el-form-item label="资产类别" :label-width="formLabelWidth" prop="assetkindId">
-            <el-select v-model="xjzyxxForm.assetkindId" size="small" placeholder="请选择资产类别" :style="{ width: '100%' }">
-              <!-- <el-option label="资产类别" value="1" /> -->
-              <el-option v-for="(ele , i) in mainSortData.statusList" :key="i" :label="ele.status_name" :value="ele.status_id" />
-            </el-select>
+            <el-dropdown ref="statusInnerDrop" trigger="click" placement="bottom-start" style="width:100%">
+              <el-input v-model="checkedAssetkindId" size="small" placeholder="请选择资产类别" />
+
+              <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
+                <el-tree
+                  ref="statusTree"
+                  node-key="assetkindId"
+                  :props="defaultProps"
+                  :data="mainSortData.assetkindList"
+                  :default-expand-all="true"
+                  :expand-on-click-node="true"
+                  @node-click="assetkindTreeClick"
+                />
+              </el-dropdown-menu>
+            </el-dropdown>
           </el-form-item>
         </el-col>
         <el-col :span="8">
@@ -89,6 +100,7 @@
                   :props="mechartProps"
                   :data="mainSortData.groupList"
                   :default-expand-all="true"
+                  :expand-on-click-node="false"
                   @node-click="mechartTreeNodeClick"
                 />
               </el-dropdown-menu>
@@ -123,7 +135,7 @@
         <el-col :span="8">
           <el-form-item label="区域" :label-width="formLabelWidth" prop="areaId">
             <el-select v-model="xjzyxxForm.areaId" size="small" placeholder="请选择区域" :style="{ width: '100%' }">
-              <el-option label="区域1" value="1" />
+              <el-option v-for="(ele , i ) in mainSortData.areaList" :key="i" :value="ele.area_id" :label="ele.area_name" />
             </el-select>
           </el-form-item>
         </el-col>
@@ -134,8 +146,8 @@
         </el-col>
         <el-col :span="8">
           <el-form-item label="物资状态" :label-width="formLabelWidth" prop="statusId">
-            <el-select v-model="xjzyxxForm.statusId" size="small" placeholder="请选择物资状态" :style="{ width: '100%' }">
-              <el-option label="物资状态" value="1" />
+            <el-select v-model="xjzyxxForm.statusId" size="small" placeholder="请选择资产类别" :style="{ width: '100%' }">
+              <el-option v-for="(ele , i) in mainSortData.statusList" :key="i" :label="ele.status_name" :value="ele.status_id" />
             </el-select>
           </el-form-item>
         </el-col>
@@ -297,15 +309,29 @@ export default {
           statusList: []
         }
       }
+    },
+    editAssetDialogLoading: {
+      type: Boolean,
+      default: false
+    },
+    editAssetData: {
+      type: Object,
+      default: () => {}
     }
   },
   data() {
     return {
+      defaultProps: {
+        children: 'children',
+        label: 'assetkindName',
+        isLeaf: 'leaf'
+      },
       mechartProps: {
         children: 'children',
         label: 'groupName'
       },
       checkedMerchartName: '',
+      checkedAssetkindId: '',
       innerVisible: false,
       fullscreen: false,
       postUrl: '',
@@ -313,7 +339,6 @@ export default {
       PerviewDialogVisible: false,
       PerviewDialogImageUrl: '',
       xjzyxxForm: {
-        assetSn: '',
         images: [],
         parentAssetcode: '',
         // 配置项
@@ -380,6 +405,13 @@ export default {
         this.innerVisible = val
       },
       immediate: true
+    },
+    'editAssetData.assetId': {
+      handler(val) {
+        if (Object.keys(this.editAssetData).length) {
+          this.copyEditData()
+        }
+      }
     }
   },
   created() {
@@ -391,6 +423,22 @@ export default {
     console.log('mainSortData', this.mainSortData)
   },
   methods: {
+    copyEditData() {
+      const obj = this.editAssetData
+      for (const key in obj) {
+        if (key === 'assetkindId') {
+          // this.checkedAssetkindId =
+          this.xjzyxxForm.assetkindId = obj.assetkindId
+        } else {
+          this.xjzyxxForm[key] = obj[key]
+        }
+      }
+    },
+    // findAssetKindOr
+    assetkindTreeClick(item) {
+      this.xjzyxxForm.assetkindId = item.assetkindId
+      this.checkedAssetkindId = item.assetkindName
+    },
     mechartTreeNodeClick(item) {
       this.xjzyxxForm.useMerchantId = item.groupId
       this.checkedMerchartName = item.groupName

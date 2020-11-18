@@ -41,13 +41,15 @@
         >
           <vxe-table-column type="checkbox" width="40" :resizable="false" />
           <vxe-table-column type="seq" title="序号" width="60" />
-          <vxe-table-column field="reguserName" title="用户名" />
+          <vxe-table-column field="reguserName" title="用户账号" />
           <vxe-table-column field="chineseName" title="姓名" />
           <vxe-table-column field="mobile" title="手机号" />
           <vxe-table-column field="email" title="邮箱" />
           <vxe-table-column title="操作">
             <template slot-scope="scope">
               <el-link type="primary" :underline="false" @click="editSysUser(scope.row)">编辑</el-link>
+              |
+              <el-link type="primary" :underline="false" @click="showDataPower(scope.row)">数据权限</el-link>
               |
               <el-link type="primary" :underline="false" @click="deleteSysUser(scope.row)">删除</el-link>
             </template>
@@ -65,89 +67,141 @@
           style="text-align:right;margin-top:20px;height:30px;"
           @pagination="getList"
         />
-        <el-dialog :title="addDialogTitle" :visible.sync="showAddDialog" width="600px" :close-on-click-modal="false" @close="closeAddDialog">
-          <el-form ref="addUserInfo" :model="addUserInfo" label-position="right" style="padding-right:20px;" :rules="addUserInfoRules">
-            <el-form-item label="手机号" :label-width="formLabelWidth" :prop="addDialogTitle === '编辑成员' ? 'editMobile' : 'mobile'">
-              <el-input v-model="addUserInfo.mobile" />
-            </el-form-item>
-            <el-form-item label="邮箱" :label-width="formLabelWidth" prop="email">
-              <el-input v-model="addUserInfo.email" />
-            </el-form-item>
-            <el-form-item label="账号" :label-width="formLabelWidth" :prop="addDialogTitle === '编辑成员' ? 'editReguserName' : 'reguserName'">
-              <el-input v-model="addUserInfo.reguserName" />
-            </el-form-item>
-            <el-form-item label="真实姓名" :label-width="formLabelWidth" prop="chineseName">
-              <el-input v-model="addUserInfo.chineseName" />
-            </el-form-item>
-            <el-form-item v-if="addDialogTitle === '添加成员'" label="密码" prop="power" :label-width="formLabelWidth">
-              <el-input v-model="addUserInfo.power" autocomplete="off" type="password" />
-            </el-form-item>
-            <el-form-item v-if="addDialogTitle === '添加成员'" label="确认密码" prop="rePower" :label-width="formLabelWidth">
-              <el-input v-model="addUserInfo.rePower" autocomplete="off" type="password" />
-            </el-form-item>
-            <el-form-item label="启用/停用" :label-width="formLabelWidth" prop="activeFlag">
-              <el-radio-group v-model="addUserInfo.activeFlag">
-                <el-radio :label="1">启用</el-radio>
-                <el-radio :label="0">停用</el-radio>
-              </el-radio-group>
-            </el-form-item>
-            <el-form-item label="单位/部门" :label-width="formLabelWidth" prop="groupId">
-              <el-dropdown trigger="click" placement="bottom-start" style="width:100%" @visible-change="changeDialogDepartment">
-                <el-input v-model="checkedDepartTags" />
-
-                <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
-                  <el-tree
-                    ref="dialogTree"
-                    node-key="groupId"
-                    :props="defaultProps"
-                    :load="loadNode"
-                    :expand-on-click-node="false"
-                    lazy
-                    @node-click="handleAddNodeClick"
-                  />
-                </el-dropdown-menu>
-              </el-dropdown>
-            </el-form-item>
-            <el-form-item label="允许补充资产字段" :label-width="formLabelWidth" prop="addFiledsFlag">
-              <el-radio-group v-model="addUserInfo.addFiledsFlag">
-                <el-radio :label="1">允许</el-radio>
-                <el-radio :label="0">不允许</el-radio>
-              </el-radio-group>
-            </el-form-item>
-          </el-form>
-
-          <div slot="footer" class="dialog-footer">
-            <el-button @click="closeAddDialog">取 消</el-button>
-            <el-button type="primary" @click="createConfirm">确 定</el-button>
-          </div>
-        </el-dialog>
-
-        <el-dialog :title="editDialogTitle" :visible.sync="showEditDialog" width="600px" :close-on-click-modal="false" @close="editDialogClose">
-          <el-form ref="EditDialog" v-loading="editUserLoading && editDialogTitle === '编辑成员'" :model="DialogData" label-position="right" style="padding-right:20px;" :rules="EditRules">
-            <el-form-item v-if="editDialogStatus !== 'setPrincipal'" prop="name" :label="editDialogLabel" label-width="120px">
-              <el-input v-model="DialogData.name" />
-            </el-form-item>
-            <el-form-item v-else label="部门负责人" label-width="100px" prop="person">
-              <el-autocomplete
-                v-model="reguserName"
-                :fetch-suggestions="querySearchAsync"
-                placeholder="请输入内容"
-                style="width:100%"
-                @select="handleSelect"
-              >
-                <template slot-scope="{ item }">
-                  <div class="name">{{ item.chineseName }}</div>
-                </template>
-              </el-autocomplete>
-            </el-form-item>
-          </el-form>
-          <div slot="footer" class="dialog-footer">
-            <el-button :loading="addOrganizeBtnLoading" @click="editDialogClose">取 消</el-button>
-            <el-button type="primary" :loading="addOrganizeBtnLoading" @click="editConfirm">确 定</el-button>
-          </div>
-        </el-dialog>
-
       </el-row>
+      <el-dialog :title="addDialogTitle" :visible.sync="showAddDialog" width="600px" :close-on-click-modal="false" @close="closeAddDialog">
+        <el-form ref="addUserInfo" :model="addUserInfo" label-position="right" style="padding-right:20px;" :rules="addUserInfoRules">
+          <el-form-item label="手机号" :label-width="formLabelWidth" :prop="addDialogTitle === '编辑成员' ? 'editMobile' : 'mobile'">
+            <el-input v-model="addUserInfo.mobile" />
+          </el-form-item>
+          <el-form-item label="邮箱" :label-width="formLabelWidth" prop="email">
+            <el-input v-model="addUserInfo.email" />
+          </el-form-item>
+          <el-form-item label="账号" :label-width="formLabelWidth" :prop="addDialogTitle === '编辑成员' ? 'editReguserName' : 'reguserName'">
+            <el-input v-model="addUserInfo.reguserName" />
+          </el-form-item>
+          <el-form-item label="真实姓名" :label-width="formLabelWidth" prop="chineseName">
+            <el-input v-model="addUserInfo.chineseName" />
+          </el-form-item>
+          <el-form-item v-if="addDialogTitle === '添加成员'" label="密码" prop="power" :label-width="formLabelWidth">
+            <el-input v-model="addUserInfo.power" autocomplete="off" type="password" />
+          </el-form-item>
+          <el-form-item v-if="addDialogTitle === '添加成员'" label="确认密码" prop="rePower" :label-width="formLabelWidth">
+            <el-input v-model="addUserInfo.rePower" autocomplete="off" type="password" />
+          </el-form-item>
+          <el-form-item label="启用/停用" :label-width="formLabelWidth" prop="activeFlag">
+            <el-radio-group v-model="addUserInfo.activeFlag">
+              <el-radio :label="1">启用</el-radio>
+              <el-radio :label="0">停用</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="单位/部门" :label-width="formLabelWidth" prop="groupId">
+            <el-dropdown trigger="click" placement="bottom-start" style="width:100%" @visible-change="changeDialogDepartment">
+              <el-input v-model="checkedDepartTags" />
+
+              <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
+                <el-tree
+                  ref="dialogTree"
+                  node-key="groupId"
+                  :props="defaultProps"
+                  :load="loadNode"
+                  :expand-on-click-node="false"
+                  lazy
+                  @node-click="handleAddNodeClick"
+                />
+              </el-dropdown-menu>
+            </el-dropdown>
+          </el-form-item>
+          <el-form-item label="允许补充资产字段" :label-width="formLabelWidth" prop="addFiledsFlag">
+            <el-radio-group v-model="addUserInfo.addFiledsFlag">
+              <el-radio :label="1">允许</el-radio>
+              <el-radio :label="0">不允许</el-radio>
+            </el-radio-group>
+          </el-form-item>
+        </el-form>
+
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="closeAddDialog">取 消</el-button>
+          <el-button type="primary" @click="createConfirm">确 定</el-button>
+        </div>
+      </el-dialog>
+
+      <el-dialog :title="editDialogTitle" :visible.sync="showEditDialog" width="600px" :close-on-click-modal="false" @close="editDialogClose">
+        <el-form ref="EditDialog" v-loading="editUserLoading && editDialogTitle === '编辑成员'" :model="DialogData" label-position="right" style="padding-right:20px;" :rules="EditRules">
+          <el-form-item v-if="editDialogStatus !== 'setPrincipal'" prop="name" :label="editDialogLabel" label-width="120px">
+            <el-input v-model="DialogData.name" />
+          </el-form-item>
+          <el-form-item v-else label="部门负责人" label-width="100px" prop="person">
+            <el-autocomplete
+              v-model="reguserName"
+              :fetch-suggestions="querySearchAsync"
+              placeholder="请输入内容"
+              style="width:100%"
+              @select="handleSelect"
+            >
+              <template slot-scope="{ item }">
+                <div class="name">{{ item.chineseName }}</div>
+              </template>
+            </el-autocomplete>
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button :loading="addOrganizeBtnLoading" @click="editDialogClose">取 消</el-button>
+          <el-button type="primary" :loading="addOrganizeBtnLoading" @click="editConfirm">确 定</el-button>
+        </div>
+      </el-dialog>
+
+      <el-dialog title="数据权限" :visible.sync="showDataPowerDialog" width="600px" :close-on-click-modal="false">
+        <el-form :model="userDataPower" label-position="right" style="padding-right:20px;">
+          <el-form-item label="用户账号" :label-width="formLabelWidth">
+            {{ editingData.reguserName }}
+          </el-form-item>
+          <el-form-item label="用户名称" :label-width="formLabelWidth">
+            {{ editingData.chineseName }}
+          </el-form-item>
+          <el-form-item label="公司部门授权" :label-width="formLabelWidth">
+            <el-dropdown trigger="click" placement="bottom-start" style="width:100%" @visible-change="changeDialogDepartment">
+              <el-input v-model="checkedDepartTags" />
+
+              <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
+                <el-tree
+                  ref="dialogTree"
+                  show-checkbox
+                  node-key="groupId"
+                  :props="defaultProps"
+                  :load="loadNode"
+                  :default-checked-keys="defaultCheckedKeys"
+                  lazy
+                />
+              </el-dropdown-menu>
+            </el-dropdown>
+          </el-form-item>
+          <!-- <el-form-item label="资产类别授权" :label-width="formLabelWidth">
+            <el-select v-model="userDataPower.status" placeholder="请选择" style="width:100%;">
+              <el-option
+                v-for="item in options"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="区域授权" :label-width="formLabelWidth">
+            <el-select v-model="userDataPower.status" placeholder="请选择" style="width:100%;">
+              <el-option
+                v-for="item in options"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+          </el-form-item> -->
+        </el-form>
+
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="showAddDialog=false">取 消</el-button>
+          <el-button type="primary" @click="showAddDialog=false">确 定</el-button>
+        </div>
+      </el-dialog>
     </div>
   </div>
 </template>
@@ -262,7 +316,7 @@ export default {
       }
     }
     return {
-
+      userDataPower: { },
       editUserLoading: false,
       addDialogTitle: '添加成员',
       addOrganizeBtnLoading: false,
@@ -358,7 +412,9 @@ export default {
 
       },
       EditCopyInfo: {},
-      checkedDepartTags: ''
+      checkedDepartTags: '',
+      showDataPowerDialog: false,
+      editingData: {}
     }
   },
   created() {
@@ -366,6 +422,11 @@ export default {
     console.log('refs', this.$refs)
   },
   methods: {
+    showDataPower(row) {
+      console.log('row', row)
+      this.editingData = { ...row }
+      this.showDataPowerDialog = true
+    },
     closeAddDialog() {
       this.showAddDialog = false
       this.checkedDepartTags = ''

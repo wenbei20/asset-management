@@ -2,9 +2,8 @@
   <div class="app-container">
     <el-row>
       <el-col :span="17">
-        <el-select v-model="companyValue" placeholder="请选择搜索类别" style="padding:0 6px;width: 160px;" @change="changeSelectdepartment">
-          <!-- <el-option label="使用部门" value="1" /> -->
-          <el-option label="资产类别" value="2" />
+        <el-select v-model="companyValue" placeholder="请选择搜索类别" style="padding:0 6px;width: 160px;">
+          <el-option label="资产编号" value="2" />
           <el-option label="资产名称" value="3" />
         </el-select>
 
@@ -23,27 +22,16 @@
             操作<i class="el-icon-arrow-down el-icon--right" />
           </el-button>
           <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item :command="1">下载导入模板</el-dropdown-item>
+            <el-dropdown-item command="1">下载导入模板</el-dropdown-item>
             <el-dropdown-item>批量导入资产</el-dropdown-item>
             <el-dropdown-item>导出资产</el-dropdown-item>
-            <el-dropdown-item style="border-top:1px solid #dfe6ee;">批量打印标签</el-dropdown-item>
-            <el-dropdown-item>批量发卡</el-dropdown-item>
+            <el-dropdown-item command="pldybq" style="border-top:1px solid #dfe6ee;">批量打印标签</el-dropdown-item>
+            <el-dropdown-item command="plfk">批量发卡</el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
       </el-col>
-      <el-col :span="7">
-
-        <!-- <el-input
-          v-model="input1"
-          :style="{ width: '200px', float: 'right' }"
-          placeholder="搜索..."
-          suffix-icon="el-icon-search"
-        /> -->
-
-      </el-col>
     </el-row>
     <el-row type="flex" justify="space-between" align="middle" :style="{ fontSize: '12px' }">
-      <!-- <el-col :span="8">金额合计：0.00</el-col> -->
       <el-col :span="8" :offset="16" :style="{ textAlign: 'right' }">
         <el-button type="text" @click="gjssVisible = true">高级搜索</el-button>
         <el-popover
@@ -72,7 +60,7 @@
         <!-- <el-button type="text" :style="{ marginLeft: '10px' }"><i class="el-icon-lock" /></el-button> -->
       </el-col>
     </el-row>
-    <div class="maintable">
+    <div id="vxtable" class="maintable">
 
       <vxe-table
         ref="xTree"
@@ -107,7 +95,7 @@
               <div class="item" @click="deteleAsset(scope.row)">删除</div>
               <div v-if="!scope.row.rfidCode" class="item create" @click="expressCard('发卡',scope)">发卡</div>
               <div v-else class="item create" @click="expressCard('换卡',scope)">换卡</div>
-              <div class="item create">标签打印</div>
+              <div class="item create" @click="printSingleTag(scope.row)">标签打印</div>
             </div>
           </template>
         </vxe-table-column>
@@ -116,16 +104,7 @@
             <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
           </template>
         </vxe-table-column>
-        <!-- <vxe-table-column field="status" width="80" title="状态" :filters="[{ data: '' }]" :filter-method="filterStatusMethod" :filter-multiple="true">
-          <template #default="{ row }">
-            <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
-          </template>
-          <template v-slot:filter="{ $panel, column }">
-            <el-checkbox-group v-for="(option, index) in column.filters" :key="index" v-model="option.data" style="padding:10px" @change="$panel.changeOption($event, !!option.data, option)">
-              <el-checkbox v-for="(item,i) in MainSortData.statusList " :key="i" :label="item.status_name" style="display:block;" />
-            </el-checkbox-group>
-          </template>
-        </vxe-table-column> -->
+
         <vxe-table-column field="assetcode" title="资产编码" sortable min-width="100" :visible="tableShowColumn.zcbm" />
         <vxe-table-column field="assetname" title="资产名称" sortable tree-node width="300" :visible="tableShowColumn.zcmc">
           <template #default="{ row }">
@@ -150,21 +129,12 @@
         <vxe-table-column field="adminReguserName" title="管理员" sortable min-width="100" :visible="tableShowColumn.gly" />
         <vxe-table-column field="userName" title="使用人" min-width="100" sortable :visible="tableShowColumn.syr" />
         <vxe-table-column field="useMerchantName" title="使用单位" min-width="100" sortable :visible="tableShowColumn.sydw" />
-        <!-- <vxe-table-column field="useBranchMerchantName" title="使用部门" min-width="100" sortable :visible="tableShowColumn.sybm" /> -->
         <vxe-table-column field="limitdate" title="使用期限" min-width="100" sortable :visible="tableShowColumn.syqx" />
         <vxe-table-column field="areaName" title="区域" min-width="100" sortable :visible="tableShowColumn.qy" />
         <vxe-table-column field="posname" title="存放地点" min-width="100" sortable :visible="tableShowColumn.cfdd" />
         <vxe-table-column field="memo" title="备注信息" min-width="100" :visible="tableShowColumn.bzxx" />
         <vxe-table-column field="statusName" title="物资状态" min-width="100" sortable :visible="tableShowColumn.wzzt" />
-        <vxe-table-column field="rfidCode" title="RFID码" min-width="100" :visible="tableShowColumn.RFID" />
-        <!-- <vxe-table-column title="自定义字段1" min-width="120" sortable :visible="tableShowColumn.zdyzd1">--</vxe-table-column> -->
-        <!-- <vxe-table-column field="rfidCode" title="供应商" min-width="100" sortable :visible="tableShowColumn.gys" /> -->
-        <!-- <vxe-table-column title="联系人" min-width="100" sortable :visible="tableShowColumn.lxr">--</vxe-table-column>
-        <vxe-table-column title="联系方式" min-width="100" sortable :visible="tableShowColumn.lxfs">--</vxe-table-column>
-        <vxe-table-column title="负责人" min-width="100" sortable :visible="tableShowColumn.fzr">--</vxe-table-column>
-
-        <vxe-table-column field="endTime" title="维保时间" sortable min-width="120" :visible="tableShowColumn.wbsj" />
-        <vxe-table-column title="维保说明" min-width="100" sortable :visible="tableShowColumn.wbsm">--</vxe-table-column> -->
+        <vxe-table-column field="rfidCode" title="RFID码" min-width="200" :visible="tableShowColumn.RFID" />
 
       </vxe-table>
     </div>
@@ -172,7 +142,7 @@
       v-show="pageTotal>0"
       background
       :total="pageTotal"
-      layout="prev, pager, next, jumper"
+      layout=" sizes ,prev, pager, next, jumper"
       :page.sync="pageQuery.pageNo"
       :limit.sync="pageQuery.pageSize"
       style="text-align:right;margin-top:20px;"
@@ -185,6 +155,8 @@
       :title="xjzyxxTitle"
       :father-asset-code="fatherAssetCode"
       :main-sort-data="MainSortData"
+      :edit-asset-data="editAssetData"
+      :edit-asset-dialog-loading="EditAssetDialogLoading"
       @confirm="submitData"
     />
 
@@ -192,6 +164,7 @@
       :visible.sync="showCardDialog"
       :title="CardDialogTitle"
       :asset-info="CardDialogInfo"
+      @refreshNode="refreshNode"
     />
 
     <!-- 模态框 高级搜索-->
@@ -262,6 +235,7 @@
                     :props="defaultProps"
                     :data="MainSortData.assetkindList"
                     :default-expand-all="true"
+                    :expand-on-click-node="true"
                     @node-click="assetkindTreeClick"
                   />
                 </el-dropdown-menu>
@@ -354,6 +328,7 @@
                     :props="mechartProps"
                     :data="MainSortData.groupList"
                     :default-expand-all="true"
+                    :expand-on-click-node="true"
                     @node-click="mechartTreeNodeClick"
                   />
                 </el-dropdown-menu>
@@ -365,19 +340,7 @@
               <el-select v-model="gjssForm.userId" v-loading="allMechartUser.loading" size="small" placeholder="选择使用单位后，请选择使用人" :style="{ width: '100%' }" :disabled="!gjssForm.useMerchantId">
                 <el-option v-for="(ele , i ) in allMechartUser.list" :key="i" :value="ele.reguserId" :label="ele.chineseName" />
               </el-select>
-              <!-- <el-autocomplete
-                v-model="highSearchSeleUser"
-                :fetch-suggestions="querySearchAsync"
-                placeholder=""
-                style="width:100%"
-                size="small"
-                :disabled="!gjssForm.useMerchantId"
-                @select="handleSelect "
-              >
-                <template slot-scope="{ item }">
-                  <span> {{ item.chineseName }} </span>
-                </template>
-              </el-autocomplete> -->
+
             </el-form-item>
           </el-col>
 
@@ -438,36 +401,39 @@
       </div>
 
     </el-dialog>
-
+    <!-- <div id="printArea">
+      <span class="red">aaaaaaaa</span>
+    </div> -->
   </div>
 </template>
 
 <script>
-import { getAssetsList, createAssets, deleteAsset, baseCode, copyAsset, getListChild, getAllMechartUser } from '@/api/assetManage'
+import { getAssetsList, createAssets, deleteAsset, baseCode, copyAsset, getListChild, getAllMechartUser, getRfid, getAssetInfo, printTag, sendCard } from '@/api/assetManage'
 import { getListRegUserByChineseName } from '@/api/settings'
 import fromDialog from './components/formDialog'
 import cardDialog from './components/CardDialog'
 import Pagination from '@/components/Pagination'
+import print from 'print-js'
 export default {
   name: 'AssetInfoManage',
   components: { fromDialog, Pagination, cardDialog },
   filters: {
     statusClass(e) {
       switch (e) {
-      case '在库':
-        return 'zaik'
-      case '在运':
-        return 'zaiy'
-      case '闲置':
-        return 'xianz'
-      case '维修':
-        return 'weix'
-      case '报废':
-        return 'baof'
-      case '退运':
-        return 'tuiy'
-      default :
-        return ' '
+        case '在库':
+          return 'zaik'
+        case '在运':
+          return 'zaiy'
+        case '闲置':
+          return 'xianz'
+        case '维修':
+          return 'weix'
+        case '报废':
+          return 'baof'
+        case '退运':
+          return 'tuiy'
+        default :
+          return ' '
       }
     },
     iconName(val) {
@@ -476,17 +442,19 @@ export default {
   },
   data() {
     return {
+      editAssetData: { assetId: '' },
       testFilterList: [],
+      EditAssetDialogLoading: false,
       showCardDialog: false,
-      CardDialogTitle: '',
-      CardDialogInfo: {},
+      assetCopyVisible: false,
       isHighSearchFullscreen: false,
+      PerviewDialogVisible: false,
+      CardDialogTitle: '',
+      CardDialogInfo: { assetcode: '', assetname: '', assetId: '', RFID: '' },
       highSearchSeleUser: '',
       filterStatusList: [],
-      assetCopyVisible: false,
       fatherAssetCode: '',
       PerviewDialogImageUrl: '',
-      PerviewDialogVisible: false,
       copyNum: 1,
       assetCopyOptions: {
         assetsId: '',
@@ -657,6 +625,47 @@ export default {
     })
   },
   methods: {
+    batchGetRFID() {
+      const checkedArr = this.$refs.xTree.getCheckboxRecords()
+      if (!checkedArr.length) {
+        this.$message({ type: 'warning', message: '请勾选需要发卡的资产' })
+        return
+      }
+
+      const query = {
+        assetsIds: checkedArr.map(item => item.assetId).join(',')
+      }
+      sendCard(query).then(res => {
+        if (res.code === 0) {
+          this.$message({ type: 'success', message: '发卡成功' })
+          this.getList()
+        } else {
+          this.$message({ type: 'error', message: '发卡失败，请稍后再试' })
+        }
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'error', message: '发卡失败，请稍后再试' })
+      })
+    },
+    batchPrintTags() {
+      const checkedArr = this.$refs.xTree.getCheckboxRecords()
+      if (!checkedArr.length) {
+        this.$message({ type: 'warning', message: '请勾选需要发卡的资产' })
+        return
+      }
+
+      const query = {
+        assetsIds: checkedArr.map(item => item.assetId).join(',')
+      }
+      printTag(query).then(res => {
+        if (res.code === 0) {
+
+        } else {
+        }
+      }).catch(err => {
+        console.log('err', err)
+      })
+    },
     mechartTreeNodeClick(item) {
       this.gjssForm.useMerchantId = item.groupId
       this.checkedMerchartName = item.groupName
@@ -685,8 +694,31 @@ export default {
     },
     EditThisAsset(row) {
       this.xjzyxxTitle = '编辑资源信息'
+      this.xjzyxxVisible = true
+      this.EditAssetDialogLoading = true
+      getAssetInfo({ assetsId: row.assetId }).then(res => {
+        if (res.code === 0) {
+          this.EditAssetDialogLoading = false
+          this.editAssetData = { ...res.data }
+        } else {
+          this.$message({ type: 'error', message: '获取资产信息失败，请稍后再试' })
+          setTimeout(() => {
+            this.EditAssetDialogLoading = false
+            this.xjzyxxVisible = false
+          }, 500)
+        }
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'error', message: '获取资产信息失败，请稍后再试' })
+        setTimeout(() => {
+          this.EditAssetDialogLoading = false
+          this.xjzyxxVisible = false
+        }, 500)
+      })
     },
-    getList() {
+    getList(page) {
+      if (page && page.limit) this.pageQuery.pageSize = page.limit
+
       this.tableLoading = true
       getAssetsList(this.pageQuery).then(res => {
         console.log('res', res)
@@ -770,13 +802,21 @@ export default {
       this.getList()
     },
     operationSelect(command) {
-      console.log('command', command)
-      const a = document.createElement('a')
-      a.setAttribute('href', '/asset/static/img/wave.29c712eb.png')
-      a.setAttribute('download', '11222')
-      a.setAttribute('target', '_blank')
-      const clickEvent = new MouseEvent('click', { 'bubbles': true, 'cancelable': true })
-      a.dispatchEvent(clickEvent)
+      if (command === 'plfk') {
+        this.batchGetRFID()
+        return
+      } else if (command === 'pldybq') {
+        this.batchPrintTags()
+        return
+      } else if (command === '1') {
+        console.log('command', command)
+        const a = document.createElement('a')
+        a.setAttribute('href', '/asset/static/img/wave.29c712eb.png')
+        a.setAttribute('download', '11222')
+        a.setAttribute('target', '_blank')
+        const clickEvent = new MouseEvent('click', { 'bubbles': true, 'cancelable': true })
+        a.dispatchEvent(clickEvent)
+      }
     },
 
     showCopyPage(row) {
@@ -823,6 +863,7 @@ export default {
     },
     submitData(data) {
       console.log('data', data)
+      return
       createAssets(data).then(res => {
         console.log('createAssets', res)
         if (res.code === 0) {
@@ -855,16 +896,42 @@ export default {
       }
       this.checkedAssetkindId = ''
       this.checkedMerchartName = ''
-
+      this.allMechartUser.list = []
+      this.allMechartUser.loading = false
       // this.pageQuery = {
       //   orderType: '',
       //   orderName: '',
       //   pageNo: 1,
       //   pageSize: 10
       // }
+      this.pageQuery = {
+        orderType: '',
+        orderName: '',
+        pageNo: 1,
+        pageSize: 10
+      }
+      this.getList()
     },
     searchList() {
+      if (!this.searchIpt.trim()) {
+        this.$message({ type: 'warning', message: '请输入搜索内容' })
+        return
+      }
+      if (!this.companyValue) {
+        this.$message({ type: 'warning', message: '请选择搜索类型' })
+        return
+      }
 
+      this.pageQuery = {
+        orderType: '',
+        orderName: '',
+        pageNo: 1,
+        pageSize: 10
+      }
+
+      this.companyValue === '2' ? this.pageQuery.assetcode = this.searchIpt : this.pageQuery.assetname = this.searchIpt
+
+      this.getList()
     },
     clearSearchRes() {
 
@@ -948,7 +1015,31 @@ export default {
       this.CardDialogInfo.assetname = row.assetname
       this.CardDialogInfo.assetId = row.assetId
       this.showCardDialog = true
+      getRfid().then(res => {
+        if (res.code === 0) {
+          this.CardDialogInfo.RFID = res.data
+        }
+      })
+    },
+    refreshNode() {
+      this.getList()
+    },
+    printSingleTag(row) {
+      printTag({ assetsIds: row.assetId }).then(res => {
+        if (res.code === 0) {
+          const style = '@page { size:auto;margin: 0cm 1cm 0cm 1cm; } @media print { .blueText{ color:#f00}  }'
+          print({
+            printable: 'vxtable',
+            type: 'html',
+            style: style,
+            scanStyles: false
+          })
+        }
+      }).catch(err => {
+        console.log('err', err)
+      })
     }
+
   }
 }
 </script>
