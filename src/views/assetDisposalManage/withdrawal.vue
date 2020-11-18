@@ -402,22 +402,22 @@ export default {
         pageSize: this.pageSize
       }
       queryAssetBackList(params).then((res) => {
-        if(res.code === 0) {
+        if (res.code === 0) {
           this.tableData = res.data.items
           this.pageTotal = res.data.total
         }
       })
-      .catch((err) => {
-        console.log('err', err)
-      })
+        .catch((err) => {
+          console.log('err', err)
+        })
     },
     // 编辑项
     editItem(item) {
-      console.log('编辑', item);
+      console.log('编辑', item)
     },
     // 删除项
     deleteItem(item) {
-      console.log('删除', item);
+      console.log('删除', item)
     },
     // 导出
     handleExport() {

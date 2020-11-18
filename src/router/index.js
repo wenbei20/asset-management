@@ -155,7 +155,39 @@ export const constantRoutes = [
       meta: { title: '统计分析', icon: 'dashboard' }
     }]
   },
-
+  {
+    path: '/barChart1',
+    component: Layout,
+    redirect: '/barChart1',
+    children: [{
+      path: 'barChart1',
+      name: 'BarChart1',
+      component: () => import('@/views/barChart1/index'),
+      meta: { title: '柱状图一', icon: 'dashboard' }
+    }]
+  },
+  {
+    path: '/barChart2',
+    component: Layout,
+    redirect: '/barChart2',
+    children: [{
+      path: 'barChart2',
+      name: 'BarChart2',
+      component: () => import('@/views/barChart2/index'),
+      meta: { title: '柱状图二', icon: 'dashboard' }
+    }]
+  },
+  {
+    path: '/infomationExchange',
+    component: Layout,
+    redirect: '/infomationExchange/index',
+    children: [{
+      path: 'infomationExchange',
+      name: 'InfomationExchange',
+      component: () => import('@/views/infomationExchange/index'),
+      meta: { title: '信息上传下发', icon: 'dashboard' }
+    }]
+  },
   {
     path: '/systemSetting',
     component: Layout,
@@ -184,6 +216,18 @@ export const constantRoutes = [
         name: 'DepartmentManage',
         component: () => import('@/views/systemSettings/departmentManage'),
         meta: { title: '部门管理', icon: 'tree' }
+      },
+      {
+        path: 'classificationManage',
+        name: 'ClassificationManage',
+        component: () => import('@/views/systemSettings/classificationManage'),
+        meta: { title: '分类管理', icon: 'tree' }
+      },
+      {
+        path: 'labelTemplateManage',
+        name: 'LabelTemplateManage',
+        component: () => import('@/views/systemSettings/labelTemplateManage'),
+        meta: { title: '标签模版管理', icon: 'tree' }
       },
       {
         path: 'userPower',

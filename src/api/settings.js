@@ -184,3 +184,18 @@ export function saveRoleUser(data) {
     data: data2FormData(data)
   })
 }
+
+/*
+********************
+********* 标签模版管理
+********************
+**/
+
+// 标签模板列表
+export function queryRfidList(params) {
+  return request({
+    url: '/sys/rfid/listRfidForm',
+    method: 'get',
+    params
+  })
+}

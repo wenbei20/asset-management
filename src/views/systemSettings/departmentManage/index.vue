@@ -28,30 +28,30 @@
           <div slot="header" class="clearfix">
             <h4 class="title">01-测试公司</h4>
             <div style="float: right;">
-              <el-dropdown>
+              <el-dropdown @command="handleNewCommand">
                 <el-button type="primary" size="small">
                   <i class="el-icon-plus" /> 新建<i class="el-icon-arrow-down el-icon--right" />
                 </el-button>
                 <el-dropdown-menu slot="dropdown">
-                  <el-dropdown-item>下级部门</el-dropdown-item>
+                  <el-dropdown-item command="subDepartment">下级部门</el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
             </div>
           </div>
           <el-form ref="form" :model="form" label-width="80px" style="width: 500px; margin: 0 auto;">
             <el-form-item label="公司编码">
-              <el-input v-model="form.code" size="small" />
+              <el-input v-model="form.code"/>
             </el-form-item>
             <el-form-item label="公司名称">
-              <el-input v-model="form.name" size="small" />
+              <el-input v-model="form.name" />
             </el-form-item>
             <el-form-item label="上级">
               <el-row>
                 <el-col :span="18">
-                  <el-input v-model="form.parent" size="small" />
+                  <el-input v-model="form.parent" />
                 </el-col>
                 <el-col :span="5" :offset="1">
-                  <el-button type="primary" size="small" style="width: 100%;">修改</el-button>
+                  <el-button type="primary" plain style="width: 100%;">修改</el-button>
                 </el-col>
               </el-row>
             </el-form-item>
@@ -64,6 +64,38 @@
         </el-card>
       </el-col>
     </el-row>
+    <!--新建-->
+    <el-dialog
+      title="新建"
+      :visible.sync="dialogVisible"
+      width="600px"
+      :before-close="handleClose">
+      <el-form ref="dialogForm" :model="dialogForm" label-width="100px">
+        <el-form-item label="部门编码" prop="code">
+          <el-input v-model="dialogForm.code" />
+        </el-form-item>
+        <el-form-item label="部门名称" prop="name">
+          <el-input v-model="dialogForm.name" />
+        </el-form-item>
+        <el-form-item label="上级" prop="parent">
+          <el-input v-model="dialogForm.parent" disabled />
+        </el-form-item>
+        <el-form-item label="部门负责人" prop="chargePerson">
+          <el-row>
+            <el-col :span="18">
+              <el-input v-model="dialogForm.chargePerson" />
+            </el-col>
+            <el-col :span="5" :offset="1">
+              <el-button type="primary" plain style="width: 100%;">修改</el-button>
+            </el-col>
+          </el-row>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -94,7 +126,27 @@ export default {
         code: '',
         name: '',
         parent: ''
+      },
+      dialogVisible: false,
+      dialogForm: {
+        code: '',
+        name: '',
+        parent: '',
+        chargePerson: ''
       }
+    }
+  },
+  methods: {
+    handleNewCommand(command) {
+      switch (command) {
+        case 'subDepartment': // 下级部门
+          console.log('下级部门', command)
+          break
+        default:
+          console.log('点了个寂寞')
+          break
+      }
+      this.dialogVisible = true
     }
   }
 }

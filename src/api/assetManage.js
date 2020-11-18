@@ -246,12 +246,37 @@ export function saveAssetRepair(data) {
   })
 }
 
+// 维修完成
+export function endAssetRepair(data) {
+  return request({
+    url: '/sys/repair/endRepair',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+// 查询资产维修信息
+export function getAssetRepair(id) {
+  return request({
+    url: '/sys/repair/getRepair/' + id,
+    method: 'get'
+  })
+}
+
 // 修改资产维修信息
 export function updateAssetRepair(data, id) {
   return request({
     url: '/sys/repair/updateRepair/' + id,
     method: 'post',
     data: data2FormData(data)
+  })
+}
+
+// 删除资产维修信息
+export function deleteAssetRepair(id) {
+  return request({
+    url: '/sys/repair/deleteRepair/' + id,
+    method: 'get'
   })
 }
 
