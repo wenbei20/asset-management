@@ -585,7 +585,7 @@ export default {
               this.showAddDialog = false
             })
           } else {
-            editSysUserList({ ...this.addUserInfo }).then(res => {
+            editSysUserList({ ...this.addUserInfo }, this.addUserInfo.reguserId).then(res => {
               if (res.code === 0) {
                 this.$message({ type: 'success', message: this.addDialogTitle + '成功' })
                 this.getList()

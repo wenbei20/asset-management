@@ -14,6 +14,10 @@ module.exports = {
   // add your custom rules here
   //it is base on https://github.com/vuejs/eslint-config-vue
   rules: {
+    "indent": ["error", 2, {
+      "ignoredNodes": ["TemplateLiteral"]
+    }],
+    "template-curly-spacing" : "always",
     "vue/max-attributes-per-line": [2, {
       "singleline": 10,
       "multiline": {
@@ -53,9 +57,9 @@ module.exports = {
       'after': true
     }],
     'handle-callback-err': [2, '^(err|error)$'],
-    'indent': [2, 2, {
-      'SwitchCase': 1
-    }],
+    // 'indent': [2, 2, {
+    //   'SwitchCase': 1,
+    // }],
     'jsx-quotes': [2, 'prefer-single'],
     'key-spacing': [2, {
       'beforeColon': false,

@@ -1,15 +1,15 @@
 import request from '@/utils/request'
-import {data2FormData} from '@/utils'
+import { data2FormData } from '@/utils'
 
 export function login(data) {
   return request({
     url: '/user/login',
     method: 'post',
-    data:data2FormData(data)
+    data: data2FormData(data)
   })
 }
 
-export function getInfo (token) {
+export function getInfo(token) {
   return request({
     url: '/user/info',
     method: 'get',
@@ -25,3 +25,11 @@ export function logout() {
     method: 'get'
   })
 }
+
+export function getPermission() {
+  return request({
+    url: '/sys/getPermission',
+    method: 'get'
+  })
+}
+
