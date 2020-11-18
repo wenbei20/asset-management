@@ -180,6 +180,12 @@ export const constantRoutes = [
         meta: { title: '用户管理', icon: 'tree' }
       },
       {
+        path: 'departmentManage',
+        name: 'DepartmentManage',
+        component: () => import('@/views/systemSettings/departmentManage'),
+        meta: { title: '部门管理', icon: 'tree' }
+      },
+      {
         path: 'userPower',
         name: 'userPower',
         component: () => import('@/views/systemSettings/power/user'),
