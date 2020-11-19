@@ -8,17 +8,19 @@ export function getData() {
     })
 }
 
-export function getZcfl() {
+export function getZcfl(data) {
     return request({
       url: '/home/propStatistics',
-      method: 'post'
+      method: 'post',
+      data: data2FormData(data)
     })
 }
 
-export function getGssy() {
+export function getGssy(data) {
   return request({
     url: '/home/compStatistics',
-    method: 'post'
+    method: 'post',
+    data: data2FormData(data)
   })
 }
 

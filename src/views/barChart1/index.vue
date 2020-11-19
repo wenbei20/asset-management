@@ -30,13 +30,13 @@ export default {
       option1: {
         xAxis: {
           type: 'category',
-          data: ['资产1', '资产2', '资产3', '资产4', '资产5', '资产6', '资产7']
+          data: []
         },
         yAxis: {
           type: 'value'
         },
         series: [{
-          data: [120, 200, 150, 80, 70, 110, 130],
+          data: [],
           type: 'bar',
           showBackground: false,
           itemStyle: {
@@ -49,34 +49,13 @@ export default {
           }
         }]
       },
-      option2: {
-        xAxis: {
-          type: 'category',
-          data: ['二级1', '二级2', '二级3', '二级4', '二级5', '二级6', '二级7']
-        },
-        yAxis: {
-          type: 'value'
-        },
-        series: [{
-          data: [130, 110, 70, 80, 150, 200, 120],
-          type: 'bar',
-          showBackground: false,
-          itemStyle: {
-            normal: {
-              color: (params) => {
-                const colors = ['#37a2da', '#32c5e9', '#9fe6b8', '#ffdb5c', '#ff9f7f', '#4a5bdc', '#4cd698']
-                return colors[params.dataIndex]
-              }
-            }
-          }
-        }]
-      },
-      tableData: []
+      tableData: [],
+      arr:[]
     }
   },
   mounted() {
 
-    this.getZcfl()
+    this.getZcfl('')
 
   },
   methods: {
@@ -92,18 +71,19 @@ export default {
         this.myChart.resize()
       })
     },
-    getZcfl(){
+    getZcfl(assetkindId){
       //this.option4.series[0].data=[]
-      getZcfl().then(response => {
+      getZcfl({'groupId':assetkindId}).then(response => {
           let xdata=[]
           let sdata=[]
+          this.arr = response.data.propAssetsCount
           response.data.propAssetsCount.forEach(function (item){
-            
+         
             xdata.push(item.assetkind_name)
            
             sdata.push(item.count_num)
           })
-          console.log(xdata)
+
           this.option1.series[0].data=sdata
           this.option1.xAxis.data=xdata
           this.drawChart()
@@ -112,12 +92,14 @@ export default {
     // 图表点击下钻
     clickChart() {
       this.myChart.on('click', params => {
-        console.log(72, params)
-        if (params.name.includes('资产')) {
-          this.drawChart(this.option2)
-        } else if (params.name.includes('二级')) {
-          this.barChartVisible = false
-        }
+        console.log(72, params.dataIndex)
+        console.log(this.arr[params.dataIndex].assetkind_id)
+        this.getZcfl(this.arr[params.dataIndex].assetkind_id)
+        //if (params.name.includes('资产')) {
+          //this.drawChart(this.option2)
+        //} else if (params.name.includes('二级')) {
+          //this.barChartVisible = false
+       // }
       })
     }
   }

@@ -28,7 +28,7 @@
        
         </div>
       </el-tab-pane>
-      <el-tab-pane label="盘点任务上传" name="taskUpload">
+      <!--<el-tab-pane label="盘点任务上传" name="taskUpload">
         <el-table
           :data="tableTaskUpload"
           border
@@ -41,7 +41,7 @@
           <el-button plain>读取文件目录</el-button>
           <el-button type="primary">上传文件</el-button>
         </div>
-      </el-tab-pane>
+      </el-tab-pane>-->
       <el-tab-pane label="备份文件上传" name="fileUpload">
         <el-table
           :data="tableFilepload"
@@ -49,7 +49,7 @@
           style="width: 100%"
         >
           <el-table-column prop="fileName" label="文件名称" />
-          <el-table-column label="文件下载" width="120">
+          <el-table-column label="文件上传" width="120">
              <template slot-scope="scope">
               <el-button type="primary" @click="taskUpload(scope.row)">文件上传</el-button>
              </template>
