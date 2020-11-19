@@ -1,9 +1,9 @@
 <template>
   <div class="app-container">
     <el-row>
-      <el-button type="primary" icon="el-icon-plus" @click="newAsset">新建</el-button>
-      <el-button disabled icon="el-icon-sort">调入确认</el-button>
-      <el-button disabled icon="el-icon-sort">取消调拨</el-button>
+      <el-button type="primary" icon="el-icon-plus" @click="handleNew">新建</el-button>
+      <el-button :disabled="!tableSelection.length" icon="el-icon-sort" @click="handleTransferConfirm">调入确认</el-button>
+      <el-button :disabled="!tableSelection.length" icon="el-icon-sort" @click="handleTransferCancel">取消调拨</el-button>
       <el-button icon="el-icon-printer">打印</el-button>
     </el-row>
     <el-row style="padding-top:20px;">
@@ -17,6 +17,8 @@
         :v-loading="tableLoading"
         :edit-config="{trigger: 'click', mode: 'cell', showIcon: false}"
         :data="tableData"
+        @checkbox-all="handleSelectionAll"
+        @checkbox-change="handleSelectionChange"
       >
         <vxe-table-column type="checkbox" width="40" :resizable="false" />
         <vxe-table-column field="dataStatus" title="办理状态" />
@@ -29,8 +31,8 @@
         <vxe-table-column field="memo" title="调拨说明" />
         <vxe-table-column title="操作">
           <template slot-scope="scope">
-            <el-button size="small" icon="el-icon-edit" plain @click="editItem(scope.row)"></el-button>
-            <el-button size="small" icon="el-icon-delete" plain @click="deleteItem(scope.row)"></el-button>
+            <el-button size="small" plain @click="handleEdit(scope.row)">修改</el-button>
+            <el-button size="small" plain @click="handleDelete(scope.row)">删除</el-button>
           </template>
         </vxe-table-column>
       </vxe-table>
@@ -42,21 +44,21 @@
         :total="pageTotal"
       />
     </el-row>
-    <!--新增/修改信息-->
-    <addDialog
-      :modalType="modalType"
+    <!--新增/编辑-->
+    <add-dialog
+      v-if="showAddDialog"
       :visible.sync="showAddDialog"
-      :info="currnetDialogData"
+      :modal-type="modalType"
+      :form-option="formOption"
       :group-list="groupList"
-      :destroy-on-close="true"
+      @submit-form="submitForm"
     />
   </div>
 </template>
 
 <script>
-import { assetTransferBaseCode, assetTransferList, queryAssetAllot, deleteAssetAllot } from '@/api/assetManage'
+import { assetTransferList, queryAssetAllot, deleteAssetAllot, saveAssetAllot, updateAssetAllot, confirmAssetAllot, cancelAssetAllot, assetTransferBaseCode } from '@/api/assetManage'
 import addDialog from './components/addNewDialog'
-import { Message } from 'element-ui'
 export default {
   components: { addDialog },
   filters: {
@@ -77,112 +79,129 @@ export default {
   },
   data() {
     return {
-      isAllExpand: false,
       showAddDialog: false,
-      tableLoading: false,
-      initDialogData: { // 初始化弹出框信息
-        allotId: "",
-        allotcode: "",
-        dataStatus: 0,
-        getMerchantId: "",
-        getUserId: "",
-        groupId: null,
-        id: 1,
-        memo: "",
-        merchantId: "",
-        operdatetime: "",
-        reguserId: "",
-        sendMerchantId: "",
-        statusId: 0
-      },
-      currnetDialogData: {}, // 当前弹出框信息
       modalType: 'new',
-      requestParams: {
-        allotcode: '',
-        getMerchantId: '',
-        sendMerchantId: '',
-        statusId: ''
-      },
       pageNo: 1,
       pageSize: 10,
       pageTotal: 0,
       tableData: [],
-      areaList: [],
+      tableSelection: [],
+      tableSelectionKeys: [],
+      formOption: null,
       groupList: []
     }
   },
-  watch: {
-    showAddDialog(val) {
-      if(!val) {
-        this.currnetDialogData = this.initDialogData
-      }
-    }
-  },
   mounted() {
-    this.getBaseCode()
     this.getList()
+    this.getBaseCode()
   },
   methods: {
-    // 新建资产调拨
-    newAsset() {
-      this.modalType = 'new'
-      this.showAddDialog = true
+    // Fn: 初始化请求参数
+    initSetting() {
+      this.pageNo = 1
     },
-    // 资产调拨新增和修改页面中的码表接口
+    // Fn: 获取新增/修改页面的码表
     getBaseCode() {
-      assetTransferBaseCode().then(res => {
-        console.log('res', res)
-        if (res.code === 0 && res.data) {
-          this.areaList = res.data.areaList
+      assetTransferBaseCode().then((res) => {
+        if (res.code === 0) {
+          console.log(104, res)
           this.groupList = res.data.groupList
         }
-      }).catch(err => {
-        console.log('err', err)
-      })
+      }).catch((err) => { console.log('err', err) })
     },
-    // 查询资产调拨列表
+    // Fn: 资产调拨列表
     getList() {
-      this.tableLoading = true
-      const { pageNo, pageSize } = this;
-      const params = { ...this.requestParams, pageNo, pageSize }
+      const params = {
+        pageNo: this.pageNo,
+        pageSize: this.pageSize
+      }
       assetTransferList(params).then(res => {
         if (res.code === 0 && res.data && res.data.items) {
           this.tableData = res.data.items
           this.pageTotal = res.data.total
-          this.pageSize = res.data.limit
-          this.pageNo = res.data.page
         }
-        this.tableLoading = false
       }).catch(err => {
         console.log('err', err)
-        this.tableLoading = false
       })
     },
-    // 编辑当前列
-    editItem(item) {
-      this.modalType = 'edit'
+    // Fn: 多选项转成id数组
+    selection2keys(selection) {
+      return selection.map((item) => item.allotId)
+    },
+    // Fn: 多选
+    handleSelectionChange(val) {
+      this.tableSelection = val.selection
+      this.tableSelectionKeys = this.selection2keys(this.tableSelection)
+    },
+    // Fn: 全选
+    handleSelectionAll(val) {
+      this.tableSelection = val.selection
+      this.tableSelectionKeys = this.selection2keys(this.tableSelection)
+    },
+    // Fn: 新建
+    handleNew() {
+      this.modalType = 'new'
+      this.showAddDialog = true
+    },
+    // Fn: 调入确认
+    handleTransferConfirm() {
+      confirmAssetAllot(this.tableSelectionKeys).then((res) => {
+        console.log('121 完成维修', res)
+      })
+        .catch((err) => { console.log('err', err) })
+    },
+    // Fn: 取消调拨
+    handleTransferCancel() {
+      cancelAssetAllot(this.tableSelectionKeys).then((res) => {
+        console.log('121 完成维修', res)
+      })
+        .catch((err) => { console.log('err', err) })
+    },
+    // Fn: 修改
+    handleEdit(item) {
       queryAssetAllot(item.allotId).then((res) => {
         if (res.code === 0) {
-          this.currnetDialogData = res.data.allot
+          const { allot, allotAssetList = [], allotPicList = [] } = res.data
+          this.modalType = 'edit'
+          this.formOption = {
+            formData: allot,
+            imagesList: allotPicList,
+            assetList: allotAssetList
+          }
           this.showAddDialog = true
-        } else {
-          Message.warining(res.msg)
         }
-      })
-      .catch((err) => {
-        console.log('err', err);
       })
     },
-    // 删除当前列
-    deleteItem(item) {
+    // Fn: 删除
+    handleDelete(item) {
       deleteAssetAllot(item.allotId).then((res) => {
         if (res.code === 0) {
-          this.getList();
+          this.$message({
+            showClose: true,
+            message: '删除成功！',
+            type: 'success'
+          })
+          this.getList()
         }
       })
-      .catch((err) => {
-        console.log('err', err);
+        .catch((err) => {
+          console.log('err', err)
+        })
+    },
+    // Fn: 确认提交（新建/修改）
+    submitForm(params, id) {
+      this.submitMethods(params, id).then((res) => {
+        this.showAddDialog = false
+        if (res.code === 0) {
+          this.initSetting()
+          this.getList()
+        }
       })
+        .catch((err) => { console.log('err', err) })
+    },
+    // Fn: 确认提交方法
+    submitMethods(params, id) {
+      return this.modalType === 'new' ? saveAssetAllot(params) : updateAssetAllot(params, id)
     }
   }
 }

@@ -180,6 +180,24 @@ export function queryNewAssetAllotList(params) {
   })
 }
 
+// 资产调拨取消
+export function cancelAssetAllot(data) {
+  return request({
+    url: '/sys/allot/allotCancel',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+// 资产调拨确认
+export function confirmAssetAllot(data) {
+  return request({
+    url: '/sys/allot/allotConfirm',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
 /*
 ****************************
 ********* 资产处置管理 —— 退运
@@ -347,6 +365,73 @@ export function deleteAssetRepair(id) {
 export function queryNewAssetRepairList(params) {
   return request({
     url: '/sys/repair/findAsset',
+    method: 'get',
+    params
+  })
+}
+
+/*
+********************
+********* 资产借还管理
+********************
+**/
+
+// 资产借还列表
+export function queryAssetLendreList(params) {
+  return request({
+    url: '/sys/lendre/listLendre',
+    method: 'get',
+    params
+  })
+}
+
+// 新建资产借还信息
+export function saveAssetLendre(data) {
+  return request({
+    url: '/sys/lendre/saveLendre',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+// 归还
+export function returnAssetLendre(data) {
+  return request({
+    url: '/sys/lendre/returnLendre',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+// 查询资产借还信息
+export function getAssetLendre(id) {
+  return request({
+    url: '/sys/lendre/getLendre/' + id,
+    method: 'get'
+  })
+}
+
+// 修改资产借还信息
+export function updateAssetLendre(data, id) {
+  return request({
+    url: '/sys/lendre/updateLendre/' + id,
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+// 删除资产借还信息
+export function deleteAssetLendre(id) {
+  return request({
+    url: '/sys/lendre/deleteLendre/' + id,
+    method: 'get'
+  })
+}
+
+// 获取新增页面资产列表信息
+export function queryNewAssetLendreList(params) {
+  return request({
+    url: '/sys/lendre/findAsset',
     method: 'get',
     params
   })

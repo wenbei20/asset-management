@@ -113,6 +113,7 @@ export default {
     },
     // Fn: 新建
     handleNew() {
+      this.modalType = 'new'
       this.showAddDialog = true
     },
     // Fn: 完成维修

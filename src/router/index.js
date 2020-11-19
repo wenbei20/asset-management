@@ -83,9 +83,8 @@ export const constantRoutes = [
   {
     path: '/assetTransferManage',
     component: Layout,
-    redirect: '/assetTransferManage/index',
     children: [{
-      path: 'assetTransferManage',
+      path: '/assetTransferManage',
       name: 'AssetTransferManage',
       component: () => import('@/views/assetTransferManage/index'),
       meta: { title: '资产调拨管理', icon: 'dashboard' }
@@ -94,7 +93,7 @@ export const constantRoutes = [
   {
     path: '/assetDisposalManage',
     component: Layout,
-    // redirect: '/assetDisposalManage/index',
+    redirect: '/assetDisposalManage/withdrawal',
     meta: { title: '资产处置管理', icon: 'nested' },
     children: [
       {
@@ -114,9 +113,8 @@ export const constantRoutes = [
   {
     path: '/assetMaintenanceManage',
     component: Layout,
-    redirect: '/assetMaintenanceManage/index',
     children: [{
-      path: 'assetMaintenanceManage',
+      path: '/assetMaintenanceManage',
       name: 'AssetMaintenanceManage',
       component: () => import('@/views/assetMaintenanceManage/index'),
       meta: { title: '资产维修管理', icon: 'dashboard' }
@@ -125,9 +123,8 @@ export const constantRoutes = [
   {
     path: '/assetLoanManage',
     component: Layout,
-    redirect: '/assetLoanManage/index',
     children: [{
-      path: 'assetLoanManage',
+      path: '/assetLoanManage',
       name: 'AssetLoanManage',
       component: () => import('@/views/assetLoanManage/index'),
       meta: { title: '资产借还管理', icon: 'dashboard' }
@@ -136,9 +133,8 @@ export const constantRoutes = [
   {
     path: '/assetInventoryManage',
     component: Layout,
-    redirect: '/assetInventoryManage/index',
     children: [{
-      path: 'assetInventoryManage',
+      path: '/assetInventoryManage',
       name: 'AssetInventoryManage',
       component: () => import('@/views/assetInventoryManage/index'),
       meta: { title: '资产盘点管理', icon: 'dashboard' }
@@ -147,9 +143,8 @@ export const constantRoutes = [
   {
     path: '/statisticalAnalysis',
     component: Layout,
-    redirect: '/statisticalAnalysis/index',
     children: [{
-      path: 'statisticalAnalysis',
+      path: '/statisticalAnalysis',
       name: 'StatisticalAnalysis',
       component: () => import('@/views/statisticalAnalysis/index'),
       meta: { title: '统计分析', icon: 'dashboard' }
@@ -158,9 +153,8 @@ export const constantRoutes = [
   {
     path: '/barChart1',
     component: Layout,
-    redirect: '/barChart1',
     children: [{
-      path: 'barChart1',
+      path: '/barChart1',
       name: 'BarChart1',
       component: () => import('@/views/barChart1/index'),
       meta: { title: '柱状图一', icon: 'dashboard' }
@@ -169,9 +163,8 @@ export const constantRoutes = [
   {
     path: '/barChart2',
     component: Layout,
-    redirect: '/barChart2',
     children: [{
-      path: 'barChart2',
+      path: '/barChart2',
       name: 'BarChart2',
       component: () => import('@/views/barChart2/index'),
       meta: { title: '柱状图二', icon: 'dashboard' }
@@ -180,9 +173,8 @@ export const constantRoutes = [
   {
     path: '/infomationExchange',
     component: Layout,
-    redirect: '/infomationExchange/index',
     children: [{
-      path: 'infomationExchange',
+      path: '/infomationExchange',
       name: 'InfomationExchange',
       component: () => import('@/views/infomationExchange/index'),
       meta: { title: '信息上传下发', icon: 'dashboard' }
@@ -191,6 +183,7 @@ export const constantRoutes = [
   {
     path: '/systemSetting',
     component: Layout,
+    redirect: '/systemSetting/systemUser',
     meta: { title: '系统设置', icon: 'el-icon-s-help' },
     children: [
       {
