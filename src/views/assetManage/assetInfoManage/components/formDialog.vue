@@ -19,7 +19,7 @@
                   :props="defaultProps"
                   :data="mainSortData.assetkindList"
                   :default-expand-all="true"
-                  :expand-on-click-node="true"
+                  :expand-on-click-node="false"
                   @node-click="assetkindTreeClick"
                 />
               </el-dropdown-menu>
@@ -62,14 +62,12 @@
               placeholder="请选择购入日期"
               :style="{ width: '100%' }"
               size="small"
+              value-format="yyyy-MM-dd"
             />
           </el-form-item>
         </el-col>
         <el-col :span="8">
           <el-form-item label="所属单位" :label-width="formLabelWidth" prop="merchantId">
-            <!-- <el-select v-model="xjzyxxForm.merchantId" size="small" placeholder="请选择所属单位" :style="{ width: '100%' }" disabled>
-              <el-option label="所属单位1" value="1" />
-            </el-select> -->
             <el-input v-model="thisMerchantName" size="small" placeholder="请输入所属单位" disabled />
           </el-form-item>
         </el-col>
@@ -86,9 +84,6 @@
 
         <el-col :span="8">
           <el-form-item label="使用单位" :label-width="formLabelWidth" prop="useMerchantId">
-            <!-- <el-select v-model="xjzyxxForm.useMerchantId" size="small" placeholder="请选择使用单位" :style="{ width: '100%' }">
-              <el-option label="使用单位1" value="1" />
-            </el-select> -->
             <el-dropdown ref="mechartDrop" trigger="click" placement="bottom-start" style="width:100%">
               <el-input v-model="checkedMerchartName" size="small" placeholder="请选择使用单位" />
 
@@ -129,6 +124,7 @@
               placeholder="请选择使用期限"
               :style="{ width: '100%' }"
               size="small"
+              value-format="yyyy-MM-dd"
             />
           </el-form-item>
         </el-col>
@@ -206,6 +202,7 @@
                 placeholder="请选择操作时间"
                 :style="{ width: '100%' }"
                 size="small"
+                value-format="yyyy-MM-dd"
               />
             </el-form-item>
           </el-col>
@@ -271,8 +268,8 @@
       <img width="100%" :src="PerviewDialogImageUrl" alt="">
     </el-dialog>
     <div slot="footer" class="dialog-footer">
-      <el-button @click="closeThis">取 消</el-button>
-      <el-button type="primary" @click="confirm">确 定</el-button>
+      <el-button :loading="commitEditLoading" @click="closeThis">取 消</el-button>
+      <el-button type="primary" :loading="commitEditLoading" @click="confirm">确 定</el-button>
     </div>
   </el-dialog>
 </template>
@@ -317,6 +314,10 @@ export default {
     editAssetData: {
       type: Object,
       default: () => {}
+    },
+    commitEditLoading: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -403,6 +404,11 @@ export default {
     visible: {
       handler(val) {
         this.innerVisible = val
+        if (val) {
+          this.$nextTick(() => {
+            this.$refs.assetForm.clearValidate()
+          })
+        }
       },
       immediate: true
     },
@@ -416,28 +422,38 @@ export default {
   },
   created() {
     if (process.env.NODE_ENV === 'development') {
-      this.postUrl = '/dev-api/assets/uploadpic'
+      this.postUrl = '/dev-api/sys/assets/uploadpic'
     } else {
-      this.postUrl = '/assets/uploadpic'
+      this.postUrl = '/sys/assets/uploadpic'
     }
     console.log('mainSortData', this.mainSortData)
   },
   methods: {
     copyEditData() {
       const obj = this.editAssetData
-      for (const key in obj) {
-        if (key === 'assetkindId') {
-          // this.checkedAssetkindId =
-          this.xjzyxxForm.assetkindId = obj.assetkindId
+      for (const key in this.xjzyxxForm) {
+        if (key === 'images') {
+          this.xjzyxxForm.images = JSON.parse(obj[key])
         } else {
           this.xjzyxxForm[key] = obj[key]
         }
       }
+
+      this.checkedAssetkindId = obj.assetkindName
+      this.checkedMerchartName = obj.useMerchantName
+
+      if (obj.userId && obj.userName) {
+        this.allMechartUser.list.push({ reguserId: obj.userId, chineseName: obj.userName })
+      }
     },
-    // findAssetKindOr
     assetkindTreeClick(item) {
+      console.log('item', item)
+      if (item.children && item.children.length) return
       this.xjzyxxForm.assetkindId = item.assetkindId
       this.checkedAssetkindId = item.assetkindName
+      this.$nextTick(() => {
+        this.$refs.statusInnerDrop.hide()
+      })
     },
     mechartTreeNodeClick(item) {
       this.xjzyxxForm.useMerchantId = item.groupId
@@ -461,6 +477,7 @@ export default {
     closeThis() {
       this.innerVisible = false
       this.$emit('update:visible', false)
+      this.$emit('clearEditAssetData')
       for (const key in this.xjzyxxForm) {
         this.xjzyxxForm[key] = ''
       }

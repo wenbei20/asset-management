@@ -7,6 +7,14 @@ export function getRfid() {
     method: 'post'
   })
 }
+
+export function doAssetUpdate(data) {
+  return request({
+    url: '/sys/assets/doUpdate',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
 export function printTag(data) {
   return request({
     url: '/sys/assets/printTag',
@@ -112,6 +120,22 @@ export function getListChild(data) {
     url: '/sys/assets/listChild',
     method: 'post',
     data: data2FormData(data)
+  })
+}
+
+export function createReceive(data) {
+  return request({
+    url: '/sys/receive/save',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function getInnerAssetList(params) {
+  return request({
+    url: '/sys/receive/assetList',
+    method: 'get',
+    params
   })
 }
 /*
@@ -326,3 +350,29 @@ export function queryNewAssetRepairList(params) {
     params
   })
 }
+
+// 资产盘点
+
+export function getListCheck(data) {
+  return request({
+    url: '/sys/check/listCheck',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function createTaskTxt(id) {
+  return request({
+    url: '/sys/check/createTaskTxt/' + id,
+    method: 'get',
+    params: { checkId: id }
+  })
+}
+
+export function checkBaseCode() {
+  return request({
+    url: '/sys/check/baseCode',
+    method: 'post'
+  })
+}
+
