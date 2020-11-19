@@ -213,10 +213,10 @@ export function queryAssetBackList(params) {
   })
 }
 
-// 删除资产退运信息
-export function deleteAssetBack(id) {
+// 查询资产退运信息
+export function getAssetBack(id) {
   return request({
-    url: '/sys/back/deleteBack/' + id,
+    url: '/sys/back/getBack/' + id,
     method: 'get'
   })
 }
@@ -247,11 +247,28 @@ export function updateAssetBack(data) {
   })
 }
 
+// 获取新增页面资产列表信息
+export function queryNewAssetBackList(params) {
+  return request({
+    url: '/sys/back/findAsset',
+    method: 'get',
+    params
+  })
+}
+
 // 列表导出
-export function assetBackExport() {
+export function exportAssetBack() {
   return request({
     url: '/sys/back/export',
     method: 'post'
+  })
+}
+
+// 删除资产退运信息
+export function deleteAssetBack(id) {
+  return request({
+    url: '/sys/back/deleteBack/' + id,
+    method: 'get'
   })
 }
 

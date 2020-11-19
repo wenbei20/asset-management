@@ -1,9 +1,9 @@
 <template>
   <el-dialog title="新增" :visible.sync="xjzyxxVisible" width="1200px" @close="closeThis">
-    <el-form :model="addOption" ref="ruleForm" label-position="right">
+    <el-form ref="assetForm" :model="addOption" label-position="right">
       <el-row>
         <el-col :span="11">
-          <el-form-item label="退库处理人" :label-width="addOptionWidth">
+          <el-form-item label="退库处理人" :label-width="addOptionWidth" prop="backUserId">
             <el-select v-model="addOption.backUserId" placeholder="请选择退库处理人" :style="{ width: '100%' }">
               <el-option label="退库处理人一" value="1" />
             </el-select>
@@ -65,48 +65,27 @@
 
       </el-row>
 
-      <div :style="{ margin: '10px 0' }">
-        <el-button plain>选择资产</el-button>
-        <el-button disabled>删除所选</el-button>
-      </div>
-
-      <vxe-table
-        ref="xTree"
-        resizable
-        highlight-hover-row
-        :auto-resize="true"
-        class="vxetable"
-        :v-loading="tableLoading"
-        :edit-config="{trigger: 'click', mode: 'cell', showIcon: false}"
-        :data="tableData"
-      >
-        <vxe-table-column type="checkbox" width="40" :resizable="false" />
-        <vxe-table-column field="picture" title="照片" />
-        <vxe-table-column field="assetCode" title="资产编码" />
-        <vxe-table-column field="assetName" title="资产名称" />
-        <vxe-table-column field="guizeNo" title="规格型号" />
-        <vxe-table-column field="snNo" title="SN号" />
-        <vxe-table-column field="company" title="所属公司" />
-        <vxe-table-column field="storeArea" title="存放地点" />
-      </vxe-table>
-
-      <el-pagination
-        background
-        layout="prev, pager, next, jumper"
-        style="text-align:right;margin-top:20px;"
-        :total="pageTotal"
+      <!--选择资产-->
+      <DialogSelectAsset
+        :asset-selected="assetSelected"
+        :query-asset-list="queryAssetList"
+        @changeAssetSelected="changeAssetSelected"
       />
 
     </el-form>
     <div slot="footer" class="dialog-footer">
-      <el-button @click="closeThis">取 消</el-button>
-      <el-button type="primary" @click="submitForm('ruleForm')">确 定</el-button>
+      <el-button @click="handleCancel">取 消</el-button>
+      <el-button type="primary" @click="handleConfirm">确 定</el-button>
     </div>
   </el-dialog>
 </template>
 <script>
-import { saveAssetBack, updateAssetBack } from '@/api/assetManage'
+import DialogSelectAsset from '@/components/Dialog/selectAsset'
+import { saveAssetBack, updateAssetBack, queryNewAssetBackList } from '@/api/assetManage'
 export default {
+  components: {
+    DialogSelectAsset
+  },
   props: {
     visible: {
       type: Boolean,
@@ -114,11 +93,15 @@ export default {
     },
     groupList: {
       type: Array,
-      default: []
+      default: () => []
     },
     modalType: {
       type: String,
       default: ''
+    },
+    formOption: {
+      type: Object,
+      default: null
     }
   },
   data() {
@@ -135,11 +118,15 @@ export default {
         memo: '',
         assetUuids: []
       },
-      tableLoading: false,
-      tableData: [],
-      pageNo: 1,
-      pageSize: 10,
-      pageTotal: 0
+      assetSelected: [] // 当前选中资产
+    }
+  },
+  computed: {
+    queryAssetList() { // 把'调用资产列表'的方法当成参数传给子组件
+      return queryNewAssetBackList
+    },
+    modalTitle() {
+      return this.modalType === 'new' ? '新增' : '编辑'
     }
   },
   watch: {
@@ -159,19 +146,17 @@ export default {
     submitForm(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
-          this.confirmSave(this.addOption)
-          .then((res) => {
+          this.confirmSave(this.addOption).then((res) => {
             // if (res.code === 0) {
-              this.$emit('update:visible', false)
-              this.$parent.getList()
+            this.$emit('update:visible', false)
+            this.$parent.getList()
             // }
-          })
-          .catch((err) => { console.log('err', err) })
+          }).catch((err) => { console.log('err', err) })
         } else {
-          console.log('error submit!!');
-          return false;
+          console.log('error submit!!')
+          return false
         }
-      });
+      })
     },
     // 确认保存接口
     confirmSave(params) {

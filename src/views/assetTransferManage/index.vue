@@ -14,7 +14,6 @@
         :auto-resize="true"
         stripe
         class="vxetable"
-        :v-loading="tableLoading"
         :edit-config="{trigger: 'click', mode: 'cell', showIcon: false}"
         :data="tableData"
         @checkbox-all="handleSelectionAll"

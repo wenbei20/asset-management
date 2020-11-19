@@ -1,6 +1,6 @@
 <template>
   <el-dialog :title="modalTitle" :visible.sync="xjzyxxVisible" width="1200px" @close="handleCancel">
-    <el-form ref="ruleForm" :model="addOption" :rules="rules" label-position="right">
+    <el-form ref="assetForm" :model="addOption" :rules="rules" label-position="right">
       <el-row :gutter="20">
         <el-col :span="12">
           <el-form-item label="调出公司" prop="sendMerchantId" :label-width="formLabelWidth" required>
@@ -35,7 +35,7 @@
         <el-col :span="12">
           <el-form-item label="调入管理员" :label-width="formLabelWidth">
             <el-col :span="24">
-              <el-select v-model="addOption.assetCoding" placeholder="请选择调入管理员" :style="{ width: '100%' }">
+              <el-select v-model="addOption.getUserId" placeholder="请选择调入管理员" :style="{ width: '100%' }">
                 <el-option label="公司1" value="1" />
                 <el-option label="公司2" value="2" />
               </el-select>
@@ -46,7 +46,7 @@
           <el-form-item label="备注" :label-width="formLabelWidth">
             <el-col :span="24">
               <el-input
-                v-model="addOption.remark"
+                v-model="addOption.memo"
                 type="textarea"
                 :rows="2"
                 placeholder="请输入内容"
@@ -120,6 +120,7 @@ export default {
         statusId: 0,
         assetUuids: []
       },
+      assetSelected: [], // 当前选中资产
       rules: {
         sendMerchantId: [
           { required: true, message: '请选择调出公司', trigger: 'change' }
@@ -128,7 +129,6 @@ export default {
           { required: true, message: '请选择调入公司', trigger: 'change' }
         ]
       },
-      tableLoading: false,
       tableData: [],
       normalizer(node) {
         return {
@@ -197,6 +197,14 @@ export default {
     // Fn: 改变资产选中
     changeAssetSelected(val) {
       this.assetSelected = val
+    },
+    // Fn: 调出公司变更
+    sendMerchantIdChange(val) {
+      console.log('203 调出公司变更', val)
+    },
+    // Fn: 调入公司变更
+    getMerchantIdChange(val) {
+      console.log('203 调出公司变更', val)
     }
   }
 }
