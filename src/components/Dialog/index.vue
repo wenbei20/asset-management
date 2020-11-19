@@ -1,5 +1,5 @@
 <template>
-  <el-dialog :visible.sync="innerVisible" width="70%" :fullscreen="isfullscreen" :class="{'fullscreen':isfullscreen}" @close="closeThis">
+  <el-dialog :visible.sync="innerVisible" width="70%" :fullscreen="isfullscreen" :class="{'fullscreen':isfullscreen}" :close-on-click-modal="false" @close="closeThis">
     <div slot="title">
       {{ title }}
       <svg-icon :icon-class="isfullscreen | iconName" class-name="dialogIcon" @click="fullscreen" />

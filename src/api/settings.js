@@ -50,6 +50,21 @@ export function getRegUser(id) {
 
 // 用户管理
 
+export function checkReguserNameExist(name) {
+  return request({
+    url: '/sys/regUser/checkReguserNameExist',
+    method: 'get',
+    params: { reguserName: name }
+  })
+}
+
+export function checkMobileExist(mobile) {
+  return request({
+    url: '/sys/regUser/checkMobileExist',
+    method: 'get',
+    params: { mobile }
+  })
+}
 export function getOrganizationGroup(params) {
   return request({
     url: '/sys/group/listGroupByParentId',
@@ -73,6 +88,23 @@ export function getListRegUserByGroupId(params) {
     params
   })
 }
+
+export function updateGroup(data) {
+  return request({
+    url: '/sys/group/updateGroup/' + data.groupId,
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function deleteGroup(groupId) {
+  return request({
+    url: '/sys/group/deleteGroup/' + groupId,
+    method: 'get',
+    params: { groupId }
+  })
+}
+
 //  商户管理
 export function getlistMerchant(params) {
   return request({
@@ -182,5 +214,20 @@ export function saveRoleUser(data) {
     url: '/sys/role/saveRoleUser',
     method: 'post',
     data: data2FormData(data)
+  })
+}
+
+/*
+********************
+********* 标签模版管理
+********************
+**/
+
+// 标签模板列表
+export function queryRfidList(params) {
+  return request({
+    url: '/sys/rfid/listRfidForm',
+    method: 'get',
+    params
   })
 }

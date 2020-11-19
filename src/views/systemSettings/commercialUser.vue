@@ -24,8 +24,8 @@
         <vxe-table-column title="操作">
           <template slot-scope="scope">
             <el-link type="primary" :underline="false" @click="EditMerchant(scope.row)">编辑</el-link>
-            |
-            <el-link type="primary" :underline="false" @click="showDataPower(scope.row)">数据权限</el-link>
+            <!-- | -->
+            <!-- <el-link type="primary" :underline="false" @click="showDataPower(scope.row)">数据权限</el-link> -->
           </template>
         </vxe-table-column>
 
@@ -80,7 +80,7 @@
           <el-button type="primary" @click="editChangeMerchant">确 定</el-button>
         </div>
       </el-dialog>
-      <el-dialog title="数据权限" :visible.sync="showDataPowerDialog" width="600px">
+      <!-- <el-dialog title="数据权限" :visible.sync="showDataPowerDialog" width="600px" :close-on-click-modal="false">
         <el-form :model="addUserInfo" label-position="right" style="padding-right:20px;">
           <el-form-item label="用户账号" :label-width="formLabelWidth">
             {{ editingData.email }}
@@ -117,7 +117,6 @@
           </el-form-item>
           <el-form-item label="区域授权" :label-width="formLabelWidth">
             <el-select v-model="addUserInfo.status" placeholder="请选择" style="width:100%;">
-              <!-- <el-input size="mini" prefix-icon="el-icon-search" class="dialogSelectIpt" /> -->
               <el-option
                 v-for="item in options"
                 :key="item.value"
@@ -125,13 +124,14 @@
                 :value="item.value"
               />
             </el-select>
-          </el-form-item></el-form>
+          </el-form-item>
+        </el-form>
 
         <div slot="footer" class="dialog-footer">
           <el-button @click="showAddDialog=false">取 消</el-button>
           <el-button type="primary" @click="showAddDialog=false">确 定</el-button>
         </div>
-      </el-dialog>
+      </el-dialog> -->
     </el-row>
   </div>
 </template>

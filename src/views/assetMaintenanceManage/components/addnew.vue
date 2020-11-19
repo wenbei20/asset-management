@@ -1,5 +1,5 @@
 <template>
-  <el-dialog title="新增" :visible.sync="xjzyxxVisible" width="1200px" @close="handleCancel">
+  <el-dialog :title="modalTitle" :visible.sync="xjzyxxVisible" width="1200px" @close="handleCancel">
     <el-form ref="assetForm" :model="addOption" label-position="right">
       <el-row>
         <el-col :span="8">
@@ -112,6 +112,14 @@ export default {
     visible: {
       type: Boolean,
       default: false
+    },
+    modalType: {
+      type: String,
+      default: 'new'
+    },
+    formOption: {
+      type: Object,
+      default: null
     }
   },
   data() {
@@ -147,6 +155,9 @@ export default {
     ]),
     queryAssetList() { // 把'调用资产列表'的方法当成参数传给子组件
       return queryNewAssetRepairList
+    },
+    modalTitle() {
+      return this.modalType === 'new' ? '新增' : '编辑'
     }
   },
   watch: {
@@ -177,6 +188,11 @@ export default {
       this.postUrl = '/dev-api/sys/repair/uploadpic'
     } else {
       this.postUrl = '/sys/repair/uploadpic'
+    }
+    if (this.formOption) { // 当编辑，传入有数据时
+      this.addOption = { ...this.formOption.formData }
+      this.assetSelected = [...this.formOption.assetList]
+      this.fileList = [...this.formOption.imagesList]
     }
   },
   methods: {

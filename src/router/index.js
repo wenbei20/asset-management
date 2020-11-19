@@ -155,7 +155,39 @@ export const constantRoutes = [
       meta: { title: '统计分析', icon: 'dashboard' }
     }]
   },
-
+  {
+    path: '/barChart1',
+    component: Layout,
+    redirect: '/barChart1',
+    children: [{
+      path: 'barChart1',
+      name: 'BarChart1',
+      component: () => import('@/views/barChart1/index'),
+      meta: { title: '柱状图一', icon: 'dashboard' }
+    }]
+  },
+  {
+    path: '/barChart2',
+    component: Layout,
+    redirect: '/barChart2',
+    children: [{
+      path: 'barChart2',
+      name: 'BarChart2',
+      component: () => import('@/views/barChart2/index'),
+      meta: { title: '柱状图二', icon: 'dashboard' }
+    }]
+  },
+  {
+    path: '/infomationExchange',
+    component: Layout,
+    redirect: '/infomationExchange/index',
+    children: [{
+      path: 'infomationExchange',
+      name: 'InfomationExchange',
+      component: () => import('@/views/infomationExchange/index'),
+      meta: { title: '信息上传下发', icon: 'dashboard' }
+    }]
+  },
   {
     path: '/systemSetting',
     component: Layout,
@@ -184,6 +216,18 @@ export const constantRoutes = [
         name: 'DepartmentManage',
         component: () => import('@/views/systemSettings/departmentManage'),
         meta: { title: '部门管理', icon: 'tree' }
+      },
+      {
+        path: 'classificationManage',
+        name: 'ClassificationManage',
+        component: () => import('@/views/systemSettings/classificationManage'),
+        meta: { title: '分类管理', icon: 'tree' }
+      },
+      {
+        path: 'labelTemplateManage',
+        name: 'LabelTemplateManage',
+        component: () => import('@/views/systemSettings/labelTemplateManage'),
+        meta: { title: '标签模版管理', icon: 'tree' }
       },
       {
         path: 'userPower',
@@ -297,21 +341,54 @@ export const constantRoutes = [
         meta: { title: 'menu2' }
       }
     ]
-  },
+  }
 
-  {
-    path: 'external-link',
-    component: Layout,
-    children: [
-      {
-        path: 'https://panjiachen.github.io/vue-element-admin-site/#/',
-        meta: { title: 'External Link', icon: 'link' }
-      }
-    ]
-  },
+  // {
+  //   path: '/systemSetting',
+  //   component: Layout,
+  //   meta: { title: '系统设置', icon: 'el-icon-s-help' },
+  //   children: [
+  //     {
+  //       path: 'systemUser',
+  //       name: 'systemUser',
+  //       component: () => import('@/views/systemSettings/systemUser'),
+  //       meta: { title: '系统用户管理', icon: 'table' }
+  //     },
+  //     {
+  //       path: 'commercialUser',
+  //       name: 'commercialUser',
+  //       component: () => import('@/views/systemSettings/commercialUser'),
+  //       meta: { title: '商户管理', icon: 'tree' }
+  //     },
+  //     {
+  //       path: 'userManage',
+  //       name: 'userManage',
+  //       component: () => import('@/views/systemSettings/userManage'),
+  //       meta: { title: '用户管理', icon: 'tree' }
+  //     },
+  //     {
+  //       path: 'userPower',
+  //       name: 'userPower',
+  //       component: () => import('@/views/systemSettings/power/user'),
+  //       meta: { title: '注册用户权限配置', icon: 'tree' }
+  //     },
+  //     {
+  //       path: 'sysUserPower',
+  //       name: 'sysUserPower',
+  //       component: () => import('@/views/systemSettings/power/systemUser'),
+  //       meta: { title: '系统用户权限配置', icon: 'tree' }
+  //     },
+  //     {
+  //       path: 'comUserPower',
+  //       name: 'comUserPower',
+  //       component: () => import('@/views/systemSettings/power/commercial'),
+  //       meta: { title: '商户权限配置', icon: 'tree' }
+  //     }
+  //   ]
+  // },
 
   // 404 page must be placed at the end !!!
-  { path: '*', redirect: '/404', hidden: true }
+
 ]
 
 const createRouter = () => new Router({
