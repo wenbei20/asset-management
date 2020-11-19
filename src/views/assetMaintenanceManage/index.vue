@@ -1,19 +1,9 @@
 <template>
   <div class="app-container">
     <el-row>
-      <el-button type="primary" icon="el-icon-plus" @click="showAddDialog=true">新建</el-button>
-      <el-dropdown :style="{ marginLeft: '5px' }">
-        <el-button type="default" icon="el-icon-edit" plain>
-          编辑<i class="el-icon-arrow-down el-icon--right" />
-        </el-button>
-        <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item>修改</el-dropdown-item>
-          <el-dropdown-item>复制</el-dropdown-item>
-          <el-dropdown-item>删除</el-dropdown-item>
-        </el-dropdown-menu>
-      </el-dropdown>
+      <el-button type="primary" icon="el-icon-plus" @click="handleNew">新建</el-button>
       <el-button disabled icon="el-icon-setting" :style="{ marginLeft: '10px' }">开始维修</el-button>
-      <el-button disabled icon="el-icon-setting">完成维修</el-button>
+      <el-button :disabled="!tableSelection.length" icon="el-icon-setting" @click="handleFinish">完成维修</el-button>
       <el-button icon="el-icon-printer">打印</el-button>
 
     </el-row>
@@ -27,24 +17,24 @@
         class="vxetable"
         :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
         :data="tableData"
+        @checkbox-all="handleSelectionAll"
+        @checkbox-change="handleSelectionChange"
       >
         <vxe-table-column type="checkbox" width="40" :resizable="false" />
-        <vxe-table-column field="eventID" title="维修单号" />
-        <vxe-table-column field="diedai" title="维修花费" />
-        <vxe-table-column field="status" title="状态" />
-        <vxe-table-column field="date" title="修理日期" />
-        <vxe-table-column field="person" title="处理人" />
+        <vxe-table-column field="repaircode" title="维修单号" width="240" />
+        <vxe-table-column field="fee" title="维修花费" />
+        <vxe-table-column field="dataStatus" title="状态" />
+        <vxe-table-column field="repairdate" title="修理日期" />
+        <vxe-table-column field="userId" title="处理人" />
         <vxe-table-column field="name" title="报修人" />
-        <vxe-table-column field="title" title="维修内容" />
-        <vxe-table-column title="备注">
-          <template #default>
-            --
-          </template>
-        </vxe-table-column>
+        <vxe-table-column field="content" title="维修内容" />
+        <vxe-table-column field="memo" title="备注" />
         <vxe-table-column field="assetCash" title="资产费用" />
-        <vxe-table-column field="options" title="操作">
-          <el-button size="small" plain>修改</el-button>
-          <el-button size="small" plain>删除</el-button>
+        <vxe-table-column field="options" title="操作" width="200">
+          <template slot-scope="scope">
+            <el-button size="small" plain @click="handleEdit(scope.row)">修改</el-button>
+            <el-button size="small" plain @click="handleDelete(scope.row)">删除</el-button>
+          </template>
         </vxe-table-column>
       </vxe-table>
 
@@ -59,13 +49,15 @@
     <add-dialog
       v-if="showAddDialog"
       :visible.sync="showAddDialog"
+      :modal-type="modalType"
+      :form-option="formOption"
       @submit-form="submitForm"
     />
   </div>
 </template>
 
 <script>
-import { queryAssetRepairList, saveAssetRepair, updateAssetRepair } from '@/api/assetManage'
+import { queryAssetRepairList, saveAssetRepair, endAssetRepair, getAssetRepair, updateAssetRepair, deleteAssetRepair } from '@/api/assetManage'
 import addDialog from './components/addnew'
 export default {
   name: 'AssetMaintenanceManage',
@@ -77,14 +69,21 @@ export default {
       pageNo: 1,
       pageSize: 10,
       pageTotal: 0,
-      tableData: []
+      tableData: [],
+      tableSelection: [],
+      tableSelectionKeys: [],
+      formOption: null
     }
   },
   mounted() {
     this.getList()
   },
   methods: {
-    // 资源维修列表
+    // Fn: 初始化请求参数
+    initSetting() {
+      this.pageNo = 1
+    },
+    // Fn: 资源维修列表
     getList() {
       const params = {
         pageNo: this.pageNo,
@@ -98,15 +97,72 @@ export default {
       })
         .catch((err) => { console.log('err', err) })
     },
-    // 确认提交（新建/修改）
-    submitForm(params, id) {
-      console.log('外层 submitForm', params, id)
-      this.submitMethods(params, id).then((res) => {
-        console.log('348 res', res)
+    // Fn: 多选项转成id数组
+    selection2keys(selection) {
+      return selection.map((item) => item.repairId)
+    },
+    // Fn: 多选
+    handleSelectionChange(val) {
+      this.tableSelection = val.selection
+      this.tableSelectionKeys = this.selection2keys(this.tableSelection)
+    },
+    // Fn: 全选
+    handleSelectionAll(val) {
+      this.tableSelection = val.selection
+      this.tableSelectionKeys = this.selection2keys(this.tableSelection)
+    },
+    // Fn: 新建
+    handleNew() {
+      this.showAddDialog = true
+    },
+    // Fn: 完成维修
+    handleFinish() {
+      endAssetRepair(this.tableSelectionKeys).then((res) => {
+        console.log('121 完成维修', res)
       })
         .catch((err) => { console.log('err', err) })
     },
-    // 确认提交方法
+    // Fn: 修改
+    handleEdit(item) {
+      getAssetRepair(item.repairId).then((res) => {
+        console.log('112 getAssetRepair', res)
+        if (res.code === 0) {
+          const { repair, repairAssetList, repairPicList } = res.data
+          this.modalType = 'edit'
+          this.formOption = {
+            formData: repair,
+            imagesList: repairPicList,
+            assetList: repairAssetList
+          }
+          this.showAddDialog = true
+        }
+      })
+    },
+    // Fn: 删除
+    handleDelete(item) {
+      deleteAssetRepair(item.repairId).then((res) => {
+        if (res.code === 0) {
+          this.$message({
+            showClose: true,
+            message: '删除成功！',
+            type: 'success'
+          })
+          this.getList()
+        }
+      })
+    },
+    // Fn: 确认提交（新建/修改）
+    submitForm(params, id) {
+      this.submitMethods(params, id).then((res) => {
+        this.showAddDialog = false
+        if (res.code === 0) {
+          this.initSetting()
+          this.getList()
+        }
+      })
+        .catch((err) => { console.log('err', err) })
+    },
+    // Fn: 确认提交方法
     submitMethods(params, id) {
       return this.modalType === 'new' ? saveAssetRepair(params) : updateAssetRepair(params, id)
     }

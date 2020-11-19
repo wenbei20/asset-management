@@ -13,14 +13,9 @@
           <el-dropdown-item>删除</el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
-      <el-dropdown :style="{ marginLeft: '5px' }">
-        <el-button type="default" icon="el-icon-printer" plain>
-          打印/导出<i class="el-icon-arrow-down el-icon--right" />
-        </el-button>
-        <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item>打印资产标签</el-dropdown-item>
-        </el-dropdown-menu>
-      </el-dropdown>
+      <el-button type="default" icon="el-icon-receiving" plain :style="{ marginLeft: '5px' }">
+        打印/导出<i class="el-icon-arrow-down el-icon--right" />
+      </el-button>
     </el-row>
     <el-row style="padding-top:20px;">
       <vxe-table
