@@ -45,7 +45,7 @@
                 <el-form-item label="上级分类">
                   <el-select v-model="form.parent" placeholder="请选择" style="width: 100%;">
                     <el-option
-                      v-for="item in options"
+                      v-for="item in parentOptions"
                       :key="item.value"
                       :label="item.label"
                       :value="item.value">
@@ -163,6 +163,7 @@ export default {
         parent: '',
         num: 48
       },
+      parentOptions: [], // 上级分类
       tableData: [],
       dialogVisible: false,
       dialogForm: {
@@ -174,6 +175,7 @@ export default {
     }
   },
   methods: {
+    // Fn: 新建分类
     handleNewCommand(command) {
       switch (command) {
         case 'a': // 分类a
@@ -185,9 +187,19 @@ export default {
       }
       this.dialogVisible = true
     },
+    // Fn: 关闭
+    handleClose() {
+      this.dialogVisible = false
+    },
+    // Fn: TreeNode点击
+    handleNodeClick(data) {
+      console.log(data)
+    },
+    // Fn: Tabs切换
     handleTabClick(tab, event) {
       console.log(tab, event)
     },
+    // Fn: 详情
     handleDetails(item) {
       console.log(item)
     }

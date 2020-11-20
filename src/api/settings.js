@@ -231,3 +231,21 @@ export function queryRfidList(params) {
     params
   })
 }
+
+// 保存标签模板
+export function saveRfid(data) {
+  return request({
+    url: '/sys/rfid/saveRfidForm',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+// 设为默认标签
+export function setRfidDefault(params) {
+  return request({
+    url: '/sys/rfid/setDefault/' + params.uuid,
+    method: 'get',
+    params
+  })
+}
