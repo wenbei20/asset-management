@@ -101,7 +101,7 @@
         </vxe-table-column>
         <vxe-table-column width="80" title="状态" sortable>
           <template #default="{ row }">
-            <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
+            <span class="statuspan" :class="row.statusName | statusClass">{{ row.statusName }}</span>
           </template>
         </vxe-table-column>
 
@@ -112,7 +112,7 @@
           </template>
         </vxe-table-column>
 
-        <vxe-table-column field="assetkindName" title="资产类别" sortable min-width="100" :visible="tableShowColumn.zclb" />
+        <vxe-table-column field="assetkindName" title="资产类别" sortable min-width="140" :visible="tableShowColumn.zclb" />
 
         <vxe-table-column field="standardtypeName" title="标准型号" sortable min-width="100" :visible="tableShowColumn.bzxh" />
 
@@ -133,7 +133,7 @@
         <vxe-table-column field="areaName" title="区域" min-width="100" sortable :visible="tableShowColumn.qy" />
         <vxe-table-column field="posname" title="存放地点" min-width="100" sortable :visible="tableShowColumn.cfdd" />
         <vxe-table-column field="memo" title="备注信息" min-width="100" :visible="tableShowColumn.bzxx" />
-        <vxe-table-column field="statusName" title="物资状态" min-width="100" sortable :visible="tableShowColumn.wzzt" />
+        <!-- <vxe-table-column field="statusName" title="物资状态" min-width="100" sortable :visible="tableShowColumn.wzzt" /> -->
         <vxe-table-column field="rfidCode" title="RFID码" min-width="200" :visible="tableShowColumn.RFID" />
 
       </vxe-table>
@@ -157,7 +157,9 @@
       :main-sort-data="MainSortData"
       :edit-asset-data="editAssetData"
       :edit-asset-dialog-loading="EditAssetDialogLoading"
+      :commit-edit-loading="commitEditDialogLoading"
       @confirm="submitData"
+      @clearEditAssetData="clearEditAssetData"
     />
 
     <cardDialog
@@ -235,7 +237,7 @@
                     :props="defaultProps"
                     :data="MainSortData.assetkindList"
                     :default-expand-all="true"
-                    :expand-on-click-node="true"
+                    :expand-on-click-node="false"
                     @node-click="assetkindTreeClick"
                   />
                 </el-dropdown-menu>
@@ -408,7 +410,7 @@
 </template>
 
 <script>
-import { getAssetsList, createAssets, deleteAsset, baseCode, copyAsset, getListChild, getAllMechartUser, getRfid, getAssetInfo, printTag, sendCard } from '@/api/assetManage'
+import { getAssetsList, createAssets, deleteAsset, baseCode, copyAsset, getListChild, getAllMechartUser, getRfid, getAssetInfo, printTag, sendCard, doAssetUpdate } from '@/api/assetManage'
 import { getListRegUserByChineseName } from '@/api/settings'
 import fromDialog from './components/formDialog'
 import cardDialog from './components/CardDialog'
@@ -442,6 +444,8 @@ export default {
   },
   data() {
     return {
+
+      commitEditDialogLoading: false,
       editAssetData: { assetId: '' },
       testFilterList: [],
       EditAssetDialogLoading: false,
@@ -523,15 +527,9 @@ export default {
         { name: '区域', model: 'qy', disabled: false },
         { name: '存放地点', model: 'cfdd', disabled: false },
         { name: '备注信息', model: 'bzxx', disabled: false },
-        { name: '物资状态', model: 'wzzt', disabled: false },
+        // { name: '物资状态', model: 'wzzt', dissabled: false },
         { name: 'RFID码', model: 'RFID', disabled: false }
-        // { name: '自定义字段1', model: 'zdyzd1', disabled: false },
-        // { name: '供应商', model: 'gys', disabled: false },
-        // { name: '联系人', model: 'lxr', disabled: false },
-        // { name: '联系方式', model: 'lxfs', disabled: false },
-        // { name: '负责人', model: 'fzr', disabled: false },
-        // { name: '维保时间', model: 'wbsj', disabled: false },
-        // { name: '维保说明', model: 'wbsm', disabled: false }
+
       ],
 
       gjssForm: {
@@ -592,7 +590,8 @@ export default {
         list: [],
         loading: false
       },
-      checkedAssetkindId: ''
+      checkedAssetkindId: '',
+      EditingAssetData: {}
     }
   },
   computed: {
@@ -611,20 +610,13 @@ export default {
         for (const key in res.data) {
           this.$set(this.MainSortData, key, res.data[key])
         }
-        // const xTable = this.$refs.xTable
-        // const column = xTable.getColumnByField('status')
-
-        // xTable.setFilter(column, [
-        //   { label: '包含 a', value: 'a' },
-        //   { label: '包含 b', value: 'b' },
-        //   { label: '包含 c', value: 'c', checked: true },
-        //   { label: '包含 h', value: 'h' },
-        //   { label: '包含 j', value: 'j' }
-        // ])
       }
     })
   },
   methods: {
+    clearEditAssetData() {
+      this.editAssetData = { assetId: '' }
+    },
     batchGetRFID() {
       const checkedArr = this.$refs.xTree.getCheckboxRecords()
       if (!checkedArr.length) {
@@ -659,8 +651,7 @@ export default {
       }
       printTag(query).then(res => {
         if (res.code === 0) {
-
-        } else {
+          console.log('res', res)
         }
       }).catch(err => {
         console.log('err', err)
@@ -683,11 +674,9 @@ export default {
       })
     },
     assetkindTreeClick(item) {
+      if (item.children && item.children.length) return
       this.gjssForm.assetkindId = item.assetkindId
       this.checkedAssetkindId = item.assetkindName
-      // this.$nextTick(() => {
-      //   this.$refs.statusTree.hide()
-      // })
     },
     statusSeleChange(val) {
       console.log('val', val)
@@ -696,10 +685,18 @@ export default {
       this.xjzyxxTitle = '编辑资源信息'
       this.xjzyxxVisible = true
       this.EditAssetDialogLoading = true
+      this.EditingAssetData = { ...row }
       getAssetInfo({ assetsId: row.assetId }).then(res => {
         if (res.code === 0) {
           this.EditAssetDialogLoading = false
           this.editAssetData = { ...res.data }
+          if (res.data.images) {
+            try {
+              this.editAssetData.images = JSON.parse(res.data.images)
+            } catch {
+              this.editAssetData.images = []
+            }
+          }
         } else {
           this.$message({ type: 'error', message: '获取资产信息失败，请稍后再试' })
           setTimeout(() => {
@@ -862,12 +859,17 @@ export default {
       this.PerviewDialogVisible = true
     },
     submitData(data) {
+      if (this.xjzyxxTitle === '编辑资源信息') {
+        this.commitEditThisAssetData(data)
+        return
+      }
+
       console.log('data', data)
-      return
       createAssets(data).then(res => {
         console.log('createAssets', res)
         if (res.code === 0) {
           this.$message({ type: 'success', message: '添加资产成功！' })
+          this.getList()
         } else {
           this.$message({ type: 'error', message: '添加资产失败，请稍后再试' })
         }
@@ -876,6 +878,25 @@ export default {
         console.log('err', err)
         this.$message({ type: 'error', message: '添加资产失败，请稍后再试' })
         this.xjzyxxVisible = false
+      })
+    },
+    commitEditThisAssetData(data) {
+      const query = { ...data, assetId: this.EditingAssetData.assetId }
+      this.commitEditDialogLoading = true
+      doAssetUpdate(query).then(res => {
+        if (res.code === 0) {
+          this.$message({ type: 'success', message: '编辑资产成功！' })
+          this.getList()
+        } else {
+          this.$message({ type: 'error', message: '编辑资产失败，请稍后再试' })
+        }
+        this.commitEditDialogLoading = false
+        this.xjzyxxVisible = false
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'error', message: '编辑资产失败，请稍后再试' })
+        this.xjzyxxVisible = false
+        this.commitEditDialogLoading = false
       })
     },
     confirmHighSearch() {
@@ -896,6 +917,8 @@ export default {
       }
       this.checkedAssetkindId = ''
       this.checkedMerchartName = ''
+      this.companyValue = ''
+      this.searchIpt = ''
       this.allMechartUser.list = []
       this.allMechartUser.loading = false
       // this.pageQuery = {
@@ -929,12 +952,24 @@ export default {
         pageSize: 10
       }
 
-      this.companyValue === '2' ? this.pageQuery.assetcode = this.searchIpt : this.pageQuery.assetname = this.searchIpt
+      if (this.companyValue === '2') {
+        this.pageQuery.assetcode = this.searchIpt
+        this.gjssForm.assetcode = this.searchIpt
+      } else {
+        this.pageQuery.assetname = this.searchIpt
+        this.gjssForm.assetname = this.searchIpt
+      }
 
       this.getList()
     },
     clearSearchRes() {
+      this.pageQuery.assetcode = ''
+      this.gjssForm.assetcode = ''
+      this.pageQuery.assetname = ''
+      this.gjssForm.assetname = ''
+      this.pageQuery.pageNo = 1
 
+      this.getList()
     },
     changeSelectdepartment(val) {
       console.log('changeSelectdepartment', val)

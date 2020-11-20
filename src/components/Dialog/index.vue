@@ -1,13 +1,13 @@
 <template>
-  <el-dialog :visible.sync="innerVisible" width="70%" :fullscreen="isfullscreen" :class="{'fullscreen':isfullscreen}" :close-on-click-modal="false" @close="closeThis">
+  <el-dialog :visible.sync="innerVisible" :width="noFooter ? '50%' : '70%'" :fullscreen="isfullscreen" :class="{'fullscreen':isfullscreen}" :close-on-click-modal="false" @close="closeThis">
     <div slot="title">
       {{ title }}
       <svg-icon :icon-class="isfullscreen | iconName" class-name="dialogIcon" @click="fullscreen" />
     </div>
     <slot />
-    <div slot="footer" class="dialog-footer">
-      <el-button @click="closeThis(false)">取 消</el-button>
-      <el-button type="primary" @click="closeThis(true)">确 定</el-button>
+    <div v-if="!noFooter" slot="footer" class="dialog-footer">
+      <el-button :loading="commitLoading" @click="closeThis(false)">取 消</el-button>
+      <el-button :loading="commitLoading" type="primary" @click="closeThis(true)">确 定</el-button>
     </div>
   </el-dialog>
 
@@ -25,6 +25,14 @@ export default {
       default: '新建'
     },
     visible: {
+      type: Boolean,
+      default: false
+    },
+    commitLoading: {
+      type: Boolean,
+      default: false
+    },
+    noFooter: {
       type: Boolean,
       default: false
     }
@@ -47,7 +55,8 @@ export default {
   methods: {
     closeThis(bool) {
       // if (bool) this.$emit('confirm')
-      this.innerVisible = false
+      // bool ? null : this.innerVisible = false
+      this.$emit('confirm', bool)
       this.$emit('update:visible', false)
     },
     fullscreen() {

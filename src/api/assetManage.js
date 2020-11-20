@@ -7,6 +7,14 @@ export function getRfid() {
     method: 'post'
   })
 }
+
+export function doAssetUpdate(data) {
+  return request({
+    url: '/sys/assets/doUpdate',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
 export function printTag(data) {
   return request({
     url: '/sys/assets/printTag',
@@ -114,6 +122,85 @@ export function getListChild(data) {
     data: data2FormData(data)
   })
 }
+
+export function createReceive(data) {
+  return request({
+    url: '/sys/receive/save',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function getInnerAssetList(params) {
+  return request({
+    url: '/sys/receive/assetList',
+    method: 'get',
+    params
+  })
+}
+
+export function deleteReceive(data) {
+  return request({
+    url: '/sys/receive/delete',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function assetDetailList(data) {
+  return request({
+    url: '/sys/receive/assetDetailList',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+export function getUpdateData(data) {
+  return request({
+    url: '/sys/receive/update',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function deleteCheck(id) {
+  return request({
+    url: '/sys/check/deleteCheck/' + id,
+    method: 'get',
+    params: { checkId: id }
+  })
+}
+
+export function saveCheck(data) {
+  return request({
+    url: '/sys/check/saveCheck',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function updateCheckStatus(params) {
+  return request({
+    url: '/sys/check/updateStatus/' + params.checkId,
+    method: 'get',
+    params
+  })
+}
+
+export function updateCheck(data) {
+  return request({
+    url: '/sys/check/updateCheck/' + data.checkId,
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function getCheckInfo(checkId) {
+  return request({
+    url: '/sys/check/getCheck/' + checkId,
+    method: 'get'
+  })
+}
+
 /*
 *********************
 ********* 资产调拨管理
@@ -387,6 +474,15 @@ export function queryNewAssetRepairList(params) {
   })
 }
 
+// 资产盘点
+
+export function getListCheck(data) {
+  return request({
+    url: '/sys/check/listCheck',
+    method: 'post',
+    data
+  })
+}
 /*
 ********************
 ********* 资产借还管理
@@ -408,6 +504,21 @@ export function saveAssetLendre(data) {
     url: '/sys/lendre/saveLendre',
     method: 'post',
     data: data2FormData(data)
+  })
+}
+
+export function createTaskTxt(id) {
+  return request({
+    url: '/sys/check/createTaskTxt/' + id,
+    method: 'get',
+    params: { checkId: id }
+  })
+}
+
+export function checkBaseCode() {
+  return request({
+    url: '/sys/check/baseCode',
+    method: 'post'
   })
 }
 

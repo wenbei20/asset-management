@@ -33,11 +33,10 @@ router.beforeEach(async(to, from, next) => {
         try {
           // get user info
           await store.dispatch('user/getInfo')
-
           const addrouter = await store.dispatch('permission/getSettingRoutes')
-          // console.log('addrouter', addrouter)
           router.options.routes = router.options.routes.concat(addrouter)
           router.addRoutes(addrouter)
+
           console.log('router', router)
 
           next()

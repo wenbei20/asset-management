@@ -41,7 +41,7 @@
         style="text-align:right;margin-top:20px;"
         @pagination="getList"
       />
-      <el-dialog :title=" isEditMerchant ? '编辑商户' : '添加成员'" :visible.sync="showAddDialog" width="600px">
+      <el-dialog :title=" isEditMerchant ? '编辑商户' : '添加成员'" :visible.sync="showAddDialog" width="600px" :close-on-click-modal="false">
         <el-form v-loading="addDialogLoading" :model="addUserInfo" label-position="right" :rules="EditRules">
           <el-form-item label="公司/机构名称" prop="merchantName" :label-width="formLabelWidth">
             <el-input v-model="addUserInfo.merchantName" />

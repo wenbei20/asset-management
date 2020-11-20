@@ -61,8 +61,10 @@
       :tree-config="{children: 'children',iconOpen: 'el-icon-remove-outline', iconClose: 'el-icon-circle-plus-outline',expandAll:true}"
       :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
       :data="tableData"
+      :sort-config="{remote:true}"
+      @sort-change="sortChangeEvent"
     >
-      <vxe-table-column type="checkbox" width="40" :resizable="false" />
+      <!-- <vxe-table-column type="checkbox" width="40" :resizable="false" /> -->
       <!-- <vxe-table-column width="32" class="meuntd" :resizable="false" :edit-render="{}">
         <template>
           <div class="moreOuter">
@@ -97,7 +99,7 @@
         </template>
       </vxe-table-column>
 
-      <vxe-table-column field="assetkindName" title="资产类别" sortable min-width="100" :visible="tableShowColumn.zclb" />
+      <vxe-table-column field="assetkindName" title="资产类别" sortable min-width="140" :visible="tableShowColumn.zclb" />
 
       <vxe-table-column field="standardtypeName" title="标准型号" sortable min-width="100" :visible="tableShowColumn.bzxh" />
 
@@ -131,7 +133,7 @@
     />
 
     <!-- 模态框 -->
-    <el-dialog title="高级搜索" :visible.sync="gjssVisible" width="600px">
+    <!-- <el-dialog title="高级搜索" :visible.sync="gjssVisible" width="600px">
       <el-form :model="form" label-position="left">
         <el-form-item label="状态" :label-width="formLabelWidth">
           <el-col :span="24">
@@ -209,7 +211,7 @@
         <el-button @click="gjssVisible = false">取 消</el-button>
         <el-button type="primary" @click="gjssVisible = false">确 定</el-button>
       </div>
-    </el-dialog>
+    </el-dialog> -->
 
     <!-- 高级搜索 -->
 
@@ -591,6 +593,19 @@ export default {
     this.getList()
   },
   methods: {
+    sortChangeEvent(column, property, order) {
+      if (!column.order) {
+        this.pageQuery.orderName = ''
+        this.pageQuery.orderType = ''
+        this.getList()
+        return
+      }
+      this.pageQuery.pageNo = 1
+      this.pageQuery.pageSize = 10
+      this.pageQuery.orderName = column.property
+      this.pageQuery.orderType = column.order.toUpperCase()
+      this.getList()
+    },
     getList(page) {
       if (page && page.limit) this.pageQuery.pageSize = page.limit
       this.tableLoading = true
@@ -630,6 +645,14 @@ export default {
       this.checkedMerchartName = ''
       this.allMechartUser.list = []
       this.allMechartUser.loading = false
+
+      this.pageQuery = {
+        orderType: '',
+        orderName: '',
+        pageNo: 1,
+        pageSize: 10
+      }
+      this.getList()
     },
     mechartTreeNodeClick(item) {
       this.gjssForm.useMerchantId = item.groupId
@@ -665,7 +688,13 @@ export default {
       this.hidetree = e
     },
     clearSearchRes() {
-
+      this.pageQuery = {
+        orderType: '',
+        orderName: '',
+        pageNo: 1,
+        pageSize: 10
+      }
+      this.getList()
     },
     changeFullscreen() {
       this.isHighSearchFullscreen = !this.isHighSearchFullscreen
@@ -879,5 +908,18 @@ export default {
       }
     }
   }
+}
+</style>
+<style scoped>
+.gjssFormDom >>>  .el-form-item {
+  margin-bottom: 10px;
+}
+.highSearchCheckbox >>> .el-checkbox {
+  display: block;
+  padding: 4px 10px;
+}
+.dialogIcon {
+    float: right;
+    margin-right: 30px;
 }
 </style>
