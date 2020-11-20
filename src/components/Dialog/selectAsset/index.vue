@@ -18,13 +18,15 @@
       <vxe-table-column type="checkbox" width="40" :resizable="false" />
       <vxe-table-column field="imageList" title="照片">
         <template slot-scope="scope">
-          <el-image
-            v-for="image in scope.row.imageList"
-            :key="image.url"
-            style="width: 50px; height: 50px"
-            :src="url"
-            :fit="fit"
-          />
+          <tempalte v-if="(scope.row.imageList || []).length">
+            <el-image
+              v-for="image in scope.row.imageList"
+              :key="image.url"
+              style="width: 50px; height: 50px"
+              :src="url"
+              :fit="fit"
+            />
+          </tempalte>
         </template>
       </vxe-table-column>
       <vxe-table-column field="assetcode" title="资产编码" />
@@ -131,6 +133,7 @@ export default {
   },
   created() {
     this.assetTableData = this.assetSelected
+    // console.log(134, this.assetTableData)
   },
   mounted() {
     this.queryAssetListFunction()

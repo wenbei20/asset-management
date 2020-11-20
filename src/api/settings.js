@@ -217,6 +217,22 @@ export function saveRoleUser(data) {
   })
 }
 
+export function findUserDataRange(userId) {
+  return request({
+    url: '/sys/regUser/findUserDataRange/' + userId,
+    method: 'post',
+    data: { userId }
+  })
+}
+
+export function changeDataRange(data) {
+  return request({
+    url: '/sys/regUser/changeDataRange',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
 /*
 ********************
 ********* 标签模版管理

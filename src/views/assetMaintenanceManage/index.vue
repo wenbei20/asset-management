@@ -113,19 +113,21 @@ export default {
     },
     // Fn: 新建
     handleNew() {
+      this.modalType = 'new'
       this.showAddDialog = true
     },
     // Fn: 完成维修
     handleFinish() {
       endAssetRepair(this.tableSelectionKeys).then((res) => {
-        console.log('121 完成维修', res)
+        if (res.code === 0) {
+          this.getList()
+        }
       })
         .catch((err) => { console.log('err', err) })
     },
     // Fn: 修改
     handleEdit(item) {
       getAssetRepair(item.repairId).then((res) => {
-        console.log('112 getAssetRepair', res)
         if (res.code === 0) {
           const { repair, repairAssetList, repairPicList } = res.data
           this.modalType = 'edit'

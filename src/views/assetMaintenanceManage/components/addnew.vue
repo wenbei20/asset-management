@@ -205,7 +205,7 @@ export default {
       this.dialogImageUrl = file.url
       this.dialogImageVisible = true
     },
-    // Fn: 上创图片成功
+    // Fn: 上传图片成功
     handlePictureCardSuccess(response, file, fileList) {
       this.fileList = fileList
     },

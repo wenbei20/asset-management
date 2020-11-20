@@ -40,7 +40,7 @@
           </div>
           <el-form ref="form" :model="form" label-width="80px" style="width: 500px; margin: 0 auto;">
             <el-form-item label="公司编码">
-              <el-input v-model="form.code"/>
+              <el-input v-model="form.code" />
             </el-form-item>
             <el-form-item label="公司名称">
               <el-input v-model="form.name" />
@@ -69,7 +69,8 @@
       title="新建"
       :visible.sync="dialogVisible"
       width="600px"
-      :before-close="handleClose">
+      :before-close="handleClose"
+    >
       <el-form ref="dialogForm" :model="dialogForm" label-width="100px">
         <el-form-item label="部门编码" prop="code">
           <el-input v-model="dialogForm.code" />

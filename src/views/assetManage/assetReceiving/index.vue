@@ -673,9 +673,25 @@ export default {
       this.showAddOrEdit = true
       getUpdateData({ receiveId: row.receiveId }).then(res => {
         if (res.code === 0) {
+          const data = res.data
           for (const key in this.addOption) {
-            this.addOption[key] = res.data[key]
+            this.addOption[key] = data[key]
           }
+
+          this.addOption.checkedMerchartName = data.receiveMerchantName
+          this.allMechartUser.list = [{ reguserId: data.userId, chineseName: data.userName }]
+
+          this.selectedTableDataArr = data.assetsList
+
+          const arr = []
+          data.assetsList.forEach(item => {
+            if (item.assetId && !this.selectedTableData[item.assetId]) {
+              this.selectedTableData[item.assetId] = { ...item }
+            }
+            item.assetId && arr.push(item.assetId)
+          })
+
+          this.defaultSelecteRows = arr
         } else {
           this.$message({ type: 'error', message: '获取领用详情失败，请稍后再试' })
           setTimeout(() => {

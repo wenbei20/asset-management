@@ -1,11 +1,11 @@
 <template>
-  <el-dialog :visible.sync="innerVisible" width="70%" :fullscreen="isfullscreen" :class="{'fullscreen':isfullscreen}" :close-on-click-modal="false" @close="closeThis">
+  <el-dialog :visible.sync="innerVisible" :width="noFooter ? '50%' : '70%'" :fullscreen="isfullscreen" :class="{'fullscreen':isfullscreen}" :close-on-click-modal="false" @close="closeThis">
     <div slot="title">
       {{ title }}
       <svg-icon :icon-class="isfullscreen | iconName" class-name="dialogIcon" @click="fullscreen" />
     </div>
     <slot />
-    <div slot="footer" class="dialog-footer">
+    <div v-if="!noFooter" slot="footer" class="dialog-footer">
       <el-button :loading="commitLoading" @click="closeThis(false)">取 消</el-button>
       <el-button :loading="commitLoading" type="primary" @click="closeThis(true)">确 定</el-button>
     </div>
@@ -31,6 +31,10 @@ export default {
     commitLoading: {
       type: Boolean,
       default: false
+    },
+    noFooter: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -52,10 +56,7 @@ export default {
     closeThis(bool) {
       // if (bool) this.$emit('confirm')
       // bool ? null : this.innerVisible = false
-      if (bool) {
-        this.$emit('confirm', bool)
-        return
-      }
+      this.$emit('confirm', bool)
       this.$emit('update:visible', false)
     },
     fullscreen() {

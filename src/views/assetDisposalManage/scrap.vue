@@ -327,10 +327,10 @@ export default {
   },
   mounted() {
     this.getBaseCode()
-    this.getList();
+    this.getList()
   },
   methods: {
-    // 资产调拨新增和修改页面中的码表接口
+    // Fn: 资产调拨新增和修改页面中的码表接口
     getBaseCode() {
       assetDiscardBaseCode().then(res => {
         if (res.code === 0 && res.data) {
@@ -341,31 +341,29 @@ export default {
         console.log('err', err)
       })
     },
-    // 资源报废列表
+    // Fn: 资源报废列表
     getList() {
       const params = {
         pageNo: this.pageNo,
         pageSize: this.pageSize
       }
-      queryAssetDiscardList(params)
-      .then((res) => {
+      queryAssetDiscardList(params).then((res) => {
         if (res.code === 0 && res.data) {
           this.areaList = res.data.areaList
           this.groupList = res.data.groupList
         }
-      })
-      .catch((err) => { console.log('err', err) })
+      }).catch((err) => { console.log('err', err) })
     },
     // 还原
     revert() {
       assetDiscardReturn({ discardIds: this.selection })
-      .then((res) => {
-        if(res.code === 0) {
-          this.tableData = res.data.items
-          this.pageTotal = res.data.total
-        }
-      })
-      .catch((err) => { console.log('err', err) })
+        .then((res) => {
+          if (res.code === 0) {
+            this.tableData = res.data.items
+            this.pageTotal = res.data.total
+          }
+        })
+        .catch((err) => { console.log('err', err) })
     }
   }
 }

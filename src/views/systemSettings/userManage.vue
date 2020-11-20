@@ -151,7 +151,7 @@
       </el-dialog>
 
       <el-dialog title="数据权限" :visible.sync="showDataPowerDialog" width="600px" :close-on-click-modal="false">
-        <el-form :model="userDataPower" label-position="right" style="padding-right:20px;">
+        <el-form v-loading="userDataPowerStatus === 'loading'" :model="userDataPower" label-position="right" style="padding-right:20px;">
           <el-form-item label="用户账号" :label-width="formLabelWidth">
             {{ editingData.reguserName }}
           </el-form-item>
@@ -159,54 +159,74 @@
             {{ editingData.chineseName }}
           </el-form-item>
           <el-form-item label="公司部门授权" :label-width="formLabelWidth">
-            <el-dropdown trigger="click" placement="bottom-start" style="width:100%" @visible-change="changeDialogDepartment">
-              <el-input v-model="checkedDepartTags" />
+            <el-dropdown trigger="click" placement="bottom-start" style="width:100%" @visible-change="changeDialogDepartment($event , 'groupIds')">
+              <el-input v-model="groupIdsNAME" />
 
               <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
                 <el-tree
-                  ref="dialogTree"
+                  ref="groupIdsREF"
                   show-checkbox
                   node-key="groupId"
                   :props="defaultProps"
-                  :load="loadNode"
-                  :default-checked-keys="defaultCheckedKeys"
-                  lazy
+                  :default-expand-all="true"
+                  :expand-on-click-node="false"
+                  :default-checked-keys="userDataPower.groupIds"
+                  :data="MainSortData.groupList"
                 />
               </el-dropdown-menu>
             </el-dropdown>
           </el-form-item>
-          <!-- <el-form-item label="资产类别授权" :label-width="formLabelWidth">
-            <el-select v-model="userDataPower.status" placeholder="请选择" style="width:100%;">
-              <el-option
-                v-for="item in options"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              />
-            </el-select>
+          <el-form-item label="资产类别授权" :label-width="formLabelWidth">
+
+            <el-dropdown trigger="click" placement="bottom-start" style="width:100%" @visible-change="changeDialogDepartment($event , 'assetkindIds')">
+              <el-input v-model="assetkindIdsNAME" />
+
+              <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
+                <el-tree
+                  ref="assetkindIdsREF"
+                  show-checkbox
+                  node-key="assetkindId"
+                  :props="AssetKindProps"
+                  :default-expand-all="true"
+                  :expand-on-click-node="false"
+                  :data="MainSortData.assetkindList"
+                  :default-checked-keys="userDataPower.assetkindIds"
+                />
+              </el-dropdown-menu>
+            </el-dropdown>
           </el-form-item>
           <el-form-item label="区域授权" :label-width="formLabelWidth">
-            <el-select v-model="userDataPower.status" placeholder="请选择" style="width:100%;">
-              <el-option
-                v-for="item in options"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              />
-            </el-select>
-          </el-form-item> -->
+            <el-dropdown trigger="click" placement="bottom-start" style="width:100%" @visible-change="changeDialogDepartment($event , 'areaIds')">
+              <el-input v-model="areaIdsNAME" />
+
+              <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
+                <el-tree
+                  ref="areaIdsREF"
+                  show-checkbox
+                  node-key="area_id"
+                  :props="areaIdsProps"
+                  :default-expand-all="true"
+                  :expand-on-click-node="false"
+                  :data="MainSortData.areaList"
+                  :default-checked-keys="userDataPower.areaIds"
+                />
+              </el-dropdown-menu>
+            </el-dropdown>
+          </el-form-item>
         </el-form>
 
         <div slot="footer" class="dialog-footer">
-          <el-button @click="showAddDialog=false">取 消</el-button>
-          <el-button type="primary" @click="showAddDialog=false">确 定</el-button>
+          <el-button :loading="userDataPowerStatus === 'commit'" @click="showAddDialog=false">取 消</el-button>
+          <el-button :loading="userDataPowerStatus === 'commit'" type="primary" @click="confirmDataPower">确 定</el-button>
         </div>
       </el-dialog>
     </div>
   </div>
 </template>
 <script>
-import { saveOrganizationGroup, getOrganizationGroup, getSysUserList, deleteSysUserList, getListRegUserByChineseName, addSysUserList, updateGroup, deleteGroup, getRegUser, checkMobileExist, checkReguserNameExist, editSysUserList } from '@/api/settings'
+import { saveOrganizationGroup, getOrganizationGroup, getSysUserList, deleteSysUserList, getListRegUserByChineseName, addSysUserList, updateGroup, deleteGroup, getRegUser, checkMobileExist, checkReguserNameExist, editSysUserList, findUserDataRange, changeDataRange } from '@/api/settings'
+
+import { baseCode } from '@/api/assetManage'
 import Pagination from '@/components/Pagination'
 import navTree from '@/components/leftTreeNav'
 import { isMobileNumber } from '@/utils/validate'
@@ -316,7 +336,13 @@ export default {
       }
     }
     return {
-      userDataPower: { },
+      userDataPower: {
+        groupIds: [],
+        assetkindIds: [],
+        areaIds: [],
+        userId: ''
+      },
+      userDataPowerStatus: 'loading',
       editUserLoading: false,
       addDialogTitle: '添加成员',
       addOrganizeBtnLoading: false,
@@ -384,8 +410,15 @@ export default {
       tableData: [],
       defaultProps: {
         children: 'children',
-        label: 'groupName',
-        isLeaf: 'leaf'
+        label: 'groupName'
+      },
+      AssetKindProps: {
+        children: 'children',
+        label: 'assetkindName'
+      },
+      areaIdsProps: {
+        children: 'children',
+        label: 'area_name'
       },
       thisOperationNode: {},
       searchIpt: '',
@@ -412,20 +445,117 @@ export default {
 
       },
       EditCopyInfo: {},
-      checkedDepartTags: '',
+      groupIdsNAME: '',
+      assetkindIdsNAME: '',
+      areaIdsNAME: '',
       showDataPowerDialog: false,
-      editingData: {}
+      editingData: {},
+      MainSortData: {},
+      checkedDepartTags: ''
     }
   },
   created() {
     this.getList()
-    console.log('refs', this.$refs)
+    baseCode().then(res => {
+      if (res.code === 0 && res.data) {
+        for (const key in res.data) {
+          this.$set(this.MainSortData, key, res.data[key])
+        }
+      }
+    })
   },
   methods: {
     showDataPower(row) {
       console.log('row', row)
       this.editingData = { ...row }
+      this.userDataPower.userId = row.reguserId
       this.showDataPowerDialog = true
+      this.userDataPowerStatus = 'loading'
+      findUserDataRange(row.reguserId).then(res => {
+        if (res.code === 0) {
+          const data = res.data
+          if (data && data.areas && data.areas.length) {
+            const arr = []
+            let str = ''
+            data.areas.forEach(item => {
+              arr.push(item.areaId)
+              str += item.areaName
+              str += ' ; '
+            })
+            this.userDataPower.areaIds = arr
+            this.areaIdsNAME = str
+          }
+          if (data && data.assetkinds && data.assetkinds.length) {
+            const arr = []
+            let str = ''
+            data.assetkinds.forEach(item => {
+              arr.push(item.assetkindId)
+              str += item.assetkindName
+              str += ' ; '
+            })
+            this.userDataPower.assetkindIds = arr
+            this.assetkindIdsNAME = str
+          }
+
+          if (data && data.groups && data.groups.length) {
+            const arr = []
+            let str = ''
+            data.groups.forEach(item => {
+              arr.push(item.groupId)
+              str += item.groupName
+              str += ' ; '
+            })
+            this.userDataPower.groupIds = arr
+            this.groupIdsNAME = str
+          }
+        } else {
+          this.$message({ type: 'error', message: '获取权限信息失败，请稍后再试' })
+          this.showDataPowerDialog = false
+        }
+        this.userDataPowerStatus = ''
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'error', message: '获取权限信息失败，请稍后再试' })
+        this.userDataPowerStatus = ''
+        this.showDataPowerDialog = false
+      })
+    },
+    clearDataPowerStatus() {
+      this.userDataPower = {
+        groupIds: [],
+        assetkindIds: [],
+        areaIds: [],
+        userId: ''
+      }
+      this.groupIdsNAME = ''
+      this.assetkindIdsNAME = ''
+      this.areaIdsNAME = ''
+    },
+    confirmDataPower() {
+      this.userDataPowerStatus = 'commit'
+
+      const query = { ...this.userDataPower }
+
+      for (const key in query) {
+        if (Array.isArray(query[key])) {
+          query[key] = query[key].join(',')
+        }
+      }
+
+      changeDataRange(query).then(res => {
+        if (res.code === 0) {
+          this.$message({ type: 'success', message: '修改用户权限成功' })
+          this.clearDataPowerStatus()
+          this.showDataPowerDialog = false
+        } else {
+          this.$message({ type: 'error', message: '修改用户权限失败，请稍后再试' })
+        }
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'error', message: '修改用户权限失败，请稍后再试' })
+      }).finally(() => {
+        this.userDataPowerStatus = ''
+      })
     },
     closeAddDialog() {
       this.showAddDialog = false
@@ -723,11 +853,32 @@ export default {
         resolve(arr)
       })
     },
-    changeDialogDepartment(visible) {
-      if (!visible) {
-        const checkedArr = this.$refs.dialogTree.getCheckedNodes()
+    changeDialogDepartment(visible, name) {
+      if (!visible && name) {
+        let listID = ''
+        let listname = ''
+
+        switch (name) {
+          case 'groupIds' :
+            listID = 'groupId'
+            listname = 'groupName'
+            break
+          case 'assetkindIds' :
+            listID = 'assetkindId'
+            listname = 'assetkindName'
+            break
+          case 'areaIds' :
+            listID = 'area_id'
+            listname = 'area_name'
+            break
+        }
+
+        const namestr = name + 'NAME'
+        const refstr = name + 'REF'
+        const checkedArr = this.$refs[refstr].getCheckedNodes()
         console.log('checkedArr', checkedArr)
-        this.checkedDepartment = [...checkedArr.map(item => { return { ...item } })]
+        this[namestr] = checkedArr.map(item => item[listname]).join(' ; ')
+        this.userDataPower[name] = checkedArr.map(item => item[listID])
       }
     },
     handleNodeClick(data) {

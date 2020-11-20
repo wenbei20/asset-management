@@ -38,13 +38,13 @@
             <i class="el-icon-more" style="position:relative;top:1px;left: -1px;" />
 
             <div class="editmenu">
-              <div class="item">编辑</div>
-              <div class="item create">删除</div>
+              <div class="item" @click="editInventory(scope.row)">编辑</div>
+              <div class="item create" @click="deteleInventory(scope.row)">删除</div>
             </div>
           </template>
         </vxe-table-column>
-        <vxe-table-column field="checkcode" title="盘点单号" sortable />
-        <vxe-table-column field="checkname" title="盘点单名称" sortable />
+        <vxe-table-column field="checkcode" title="盘点单号" />
+        <vxe-table-column field="checkname" title="盘点单名称" />
         <!-- <vxe-table-column field="date" title="分配用户" sortable /> -->
         <vxe-table-column field="taskQty" title="资产数量" sortable />
         <vxe-table-column field="operdatetime" title="创建时间" sortable />
@@ -58,19 +58,19 @@
         <vxe-table-column title="状态修改">
           <template #default="{row}">
             <el-switch
-              v-model="row.checkStatus"
+              :value="row.checkStatus"
               active-color="#13ce66"
               inactive-color="#ff4949"
               :active-value="1"
               :inactive-value="0"
+              @change="changeCheckStatus($event,row)"
             />
+            <i v-if="row.statusLoading" class="el-icon-loading" style="margin-left:10px;position:relative;top:2px;" />
           </template>
         </vxe-table-column>
         <vxe-table-column title="操作">
           <template #default="{row}">
-            <el-link type="primary" :underline="false">详情</el-link>
-            |
-            <el-link type="primary" :underline="false">删除</el-link>
+            <el-link type="primary" :underline="false" @click="lookDetailCheck(row)">详情</el-link>
           </template>
         </vxe-table-column>
 
@@ -91,24 +91,28 @@
     <Dialog
       :visible.sync="showAddOrEdit"
       :title="showAddOrEditTitle"
+      :no-footer="lookDetailInfo"
+      @confirm="createConfirm"
     >
-      <el-form :model="addOption" label-position="right" style="padding-right:40px;">
+      <el-form ref="addOption" v-loading="editCheckInfoLoading" :model="addOption" label-position="right" style="padding-right:40px;" :rules="addOptionsRules">
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="盘点单名称" :label-width="addOptionWidth">
-              <el-input v-model="addOption.checkname" placeholder="请输入盘点单名称" />
+            <el-form-item label="盘点单名称" :label-width="addOptionWidth" prop="checkname">
+              <el-input v-if="!lookDetailInfo" v-model="addOption.checkname" placeholder="请输入盘点单名称" />
+              <span v-else class="lookDetailInfo">{{ addOption.checkname }}</span>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="分配用户" :label-width="addOptionWidth">
-              <el-dropdown trigger="click" placement="bottom-start" style="width:100%">
+            <el-form-item label="分配用户" :label-width="addOptionWidth" prop="distributeUserId">
+              <el-dropdown v-if="!lookDetailInfo" trigger="click" placement="bottom-start" style="width:100%">
                 <el-input v-model="checkedUserTags" placeholder="请选择分配用户" />
                 <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
                   <el-checkbox-group v-model="addOption.distributeUserId" class="UserCheckbox" @change="userSelectChange">
-                    <el-checkbox v-for="(ele , i ) in MainSortData.userList" :key="i" :label="ele">{{ ele.chineseName }}</el-checkbox>
+                    <el-checkbox v-for="(ele , i ) in MainSortData.userList" :key="i" :label="ele.reguserId">{{ ele.chineseName }}</el-checkbox>
                   </el-checkbox-group>
                 </el-dropdown-menu>
               </el-dropdown>
+              <span v-else class="lookDetailInfo">{{ checkedUserTags }}</span>
             </el-form-item>
           </el-col>
         </el-row>
@@ -117,21 +121,29 @@
           <el-col :span="12">
             <el-form-item label="购入开始时间" :label-width="addOptionWidth">
               <el-date-picker
+                v-if="!lookDetailInfo"
                 v-model="addOption.buyStartdate"
                 type="date"
                 placeholder="请选择开始时间"
                 style="width:100%;"
+                format="yyyy 年 MM 月 dd 日"
+                value-format="yyyy-MM-dd"
               />
+              <span v-else class="lookDetailInfo">{{ addOption.buyStartdate }}</span>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="购入结束时间" :label-width="addOptionWidth">
               <el-date-picker
+                v-if="!lookDetailInfo"
                 v-model="addOption.buyEnddate"
                 type="date"
                 placeholder="请选择结束时间"
                 style="width:100%;"
+                format="yyyy 年 MM 月 dd 日"
+                value-format="yyyy-MM-dd"
               />
+              <span v-else class="lookDetailInfo">{{ addOption.buyEnddate }}</span>
             </el-form-item>
           </el-col>
         </el-row>
@@ -139,7 +151,8 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="单位" :label-width="addOptionWidth">
-              <el-dropdown trigger="click" placement="bottom-start" style="width:100%">
+
+              <el-dropdown v-if="!lookDetailInfo" trigger="click" placement="bottom-start" style="width:100%">
                 <el-input v-model="checkedMerchantName" placeholder="请选择单位" />
 
                 <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
@@ -156,7 +169,9 @@
                   />
                 </el-dropdown-menu>
 
-              </el-dropdown></el-form-item>
+              </el-dropdown>
+              <span v-else class="lookDetailInfo">{{ checkedMerchantName }}</span>
+            </el-form-item>
           </el-col>
           <!-- <el-col :span="12">
             <el-form-item label="部门" :label-width="addOptionWidth">
@@ -166,7 +181,7 @@
           <el-col :span="12">
             <el-form-item label="资产分类" :label-width="addOptionWidth">
 
-              <el-dropdown trigger="click" placement="bottom-start" style="width:100%">
+              <el-dropdown v-if="!lookDetailInfo" trigger="click" placement="bottom-start" style="width:100%">
                 <el-input v-model="checkedAssetkindName" placeholder="请选择资产分类" />
 
                 <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
@@ -182,7 +197,9 @@
                     @check="AssetkindTreeClick"
                   />
                 </el-dropdown-menu>
-              </el-dropdown></el-form-item>
+              </el-dropdown>
+              <span v-else class="lookDetailInfo">{{ checkedAssetkindName }}</span>
+            </el-form-item>
           </el-col>
         </el-row>
 
@@ -190,19 +207,21 @@
 
           <el-col :span="12">
             <el-form-item label="区域" :label-width="addOptionWidth">
-              <el-dropdown trigger="click" placement="bottom-start" style="width:100%">
+              <el-dropdown v-if="!lookDetailInfo" trigger="click" placement="bottom-start" style="width:100%">
                 <el-input v-model="checkedAreaTags" placeholder="请选择区域" />
                 <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
                   <el-checkbox-group v-model="addOption.areaId" class="UserCheckbox" @change="userAreaChange">
-                    <el-checkbox v-for="(ele , i ) in MainSortData.areaList" :key="i" :label="ele">{{ ele.area_name }}</el-checkbox>
+                    <el-checkbox v-for="(ele , i ) in MainSortData.areaList" :key="i" :label="ele.area_id">{{ ele.area_name }}</el-checkbox>
                   </el-checkbox-group>
                 </el-dropdown-menu>
               </el-dropdown>
+              <span v-else class="lookDetailInfo">{{ checkedAreaTags }}</span>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="备注" :label-width="addOptionWidth">
-              <el-input v-model="addOption.memo" placeholder="说明" />
+              <el-input v-if="!lookDetailInfo" v-model="addOption.memo" placeholder="说明" />
+              <span v-else class="lookDetailInfo">{{ checkedAreaTags }}</span>
             </el-form-item>
           </el-col>
         </el-row>
@@ -229,7 +248,7 @@
 </template>
 
 <script>
-import { getListCheck, createTaskTxt, checkBaseCode } from '@/api/assetManage'
+import { getListCheck, createTaskTxt, checkBaseCode, deleteCheck, saveCheck, updateCheckStatus, getCheckInfo, updateCheck } from '@/api/assetManage'
 import Dialog from '@/components/Dialog/index'
 import Pagination from '@/components/Pagination'
 export default {
@@ -237,15 +256,23 @@ export default {
   components: { Dialog, Pagination },
   data() {
     return {
+      lookDetailInfo: false,
+      editCheckInfoLoading: false,
+      addOptionsRules: {
+        checkname: [
+          { required: true, message: '请输入盘点单名称', trigger: 'blur' }
+        ],
+        distributeUserId: [
+          { required: true, message: '请选择分配用户', trigger: 'change' }
+        ]
+      },
       checkedAreaTags: '',
       checkedAssetkindName: '',
       defaultAssetkindCheckedKeys: [],
       defaultCheckedKeys: [],
       checkedMerchantName: '',
       showEditUserDialog: false,
-      DialogData: {
-        userList: []
-      },
+      DialogData: {},
       checkedUserTags: '',
       defaultProps: {
         children: 'children',
@@ -297,13 +324,130 @@ export default {
     })
   },
   methods: {
+    lookDetailCheck(row) {
+      this.lookDetailInfo = true
+      this.editInventory(row, true)
+    },
+    editInventory(row, bool) {
+      this.showAddOrEdit = true
+      this.showAddOrEditTitle = bool ? '查看领用详细' : '编辑领用'
+      this.editCheckInfoLoading = true
+      getCheckInfo(row.checkId).then(res => {
+        if (res.code === 0) {
+          const data = res.data
+
+          this.addOption.checkId = row.checkId
+
+          for (const key in this.addOption) {
+            if (Array.isArray(this.addOption[key])) {
+              this.addOption[key] = data[key] ? data[key].split(',') : []
+            } else {
+              this.addOption[key] = data[key]
+            }
+          }
+
+          if (data.distributeUserId) {
+            this.MainSortData.userList.forEach(ele => {
+              if (this.addOption.distributeUserId.findIndex(item => item === ele.reguserId) !== -1) {
+                this.checkedUserTags += ele.chineseName
+                this.checkedUserTags += ' ; '
+              }
+            })
+          }
+
+          if (data.distributeUserId) {
+            this.MainSortData.areaList.forEach(ele => {
+              if (this.addOption.areaId.findIndex(item => item === ele.area_id) !== -1) {
+                this.checkedAreaTags += ele.area_name
+                this.checkedAreaTags += ' ; '
+              }
+            })
+          }
+
+          if (data.assetkindId) {
+            this.defaultAssetkindCheckedKeys = data.assetkindId.split(',')
+            this.checkedAssetkindName = this.getAllCheckedItem(this.MainSortData.assetkindList, this.defaultAssetkindCheckedKeys, 'assetkindId', 'assetkindName')
+          }
+
+          if (data.checkMerchantId) {
+            this.defaultCheckedKeys = data.checkMerchantId.split(',')
+            this.checkedMerchantName = this.getAllCheckedItem(this.MainSortData.groupList, this.defaultCheckedKeys, 'groupId', 'groupName')
+          }
+
+          this.editCheckInfoLoading = false
+        } else {
+          this.$message({ type: 'error', message: '获取详细失败,请稍后再试' })
+          this.showAddOrEdit = false
+        }
+        this.editCheckInfoLoading = false
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'error', message: '获取详细失败,请稍后再试' })
+        this.editCheckInfoLoading = false
+        this.showAddOrEdit = false
+      })
+    },
+    getAllCheckedItem(arr, ids, idStr, nameStr) {
+      let str = ''
+      arr.forEach(item => {
+        const index = ids.findIndex(ele => ele === item[idStr])
+        if (index !== -1) {
+          str += item[nameStr]
+          str += ' ; '
+        }
+        if (item.children && item.children.length) {
+          const childstr = this.getAllCheckedItem(item.children, ids, idStr, nameStr)
+          str += childstr
+        }
+      })
+      return str
+    },
+    changeCheckStatus(val, row) {
+      console.log('val', val)
+      console.log('row', row)
+      row.statusLoading = true
+      updateCheckStatus({ checkId: row.checkId, checkStatus: val }).then(res => {
+        if (res.code === 0) {
+          this.$message({ type: 'success', message: '修改盘点状态成功' })
+          row.checkStatus = val
+        } else {
+          this.$message({ type: 'error', message: '修改盘点状态失败,请稍后再试' })
+        }
+        row.statusLoading = false
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'error', message: '修改盘点状态失败,请稍后再试' })
+        row.statusLoading = false
+      })
+    },
     userSelectChange(val) {
       console.log('val', val)
-      this.checkedUserTags = val.map(ele => ele.chineseName).join(' ; ')
+      let str = ''
+      val.forEach(item => {
+        const idx = this.MainSortData.userList.findIndex(ele => ele.reguserId === item)
+        if (idx !== -1) {
+          str += this.MainSortData.userList[idx].chineseName
+          str += ' ; '
+        }
+      })
+
+      this.checkedUserTags = str
+
+      // this.checkedUserTags = val.map(ele => ele.chineseName).join(' ; ')
     },
     userAreaChange(val) {
       console.log('val', val)
-      this.checkedAreaTags = val.map(ele => ele.area_name).join(' ; ')
+
+      let str = ''
+      val.forEach(item => {
+        const idx = this.MainSortData.areaList.findIndex(ele => ele.area_id === item)
+        if (idx !== -1) {
+          str += this.MainSortData.areaList[idx].area_name
+          str += ' ; '
+        }
+      })
+
+      this.checkedAreaTags = str
     },
 
     AssetkindTreeClick(item, { checkedKeys, checkedNodes }) {
@@ -357,10 +501,20 @@ export default {
         this.pageQuery.orderType = ''
         this.getList()
         return
+      } else {
+        switch (column.property) {
+          case 'taskQty' :
+            this.pageQuery.orderName = 'task_qty'
+            break
+          case 'checkStatus':
+            this.pageQuery.orderName = 'check_status'
+            break
+          default:
+            this.pageQuery.orderName = column.property
+        }
       }
       this.pageQuery.pageNo = 1
       this.pageQuery.pageSize = 10
-      this.pageQuery.orderName = column.property
       this.pageQuery.orderType = column.order.toUpperCase()
       this.getList()
     },
@@ -371,6 +525,7 @@ export default {
         if (res.code === 0 && res.data && res.data.items) {
           res.data.items.forEach(ele => {
             ele.createTaskLoading = false
+            ele.statusLoading = false
           })
           this.tableData = res.data.items
           this.pageTotal = res.data.total
@@ -396,19 +551,121 @@ export default {
     handleSelectionChange(val) {
       this.multipleSelection = val
     },
+
     addNew() {
-      this.showAddOrEditTitle = '新增'
+      this.clearCreateStatus()
+      this.showAddOrEditTitle = '新增领用'
       this.showAddOrEdit = true
     },
-    editClick(e) {
-      if (e === 1) {
-        this.showAddOrEditTitle = '编辑'
-        this.showAddOrEdit = true
+    deteleInventory(row) {
+      this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        deleteCheck(row.checkId).then(res => {
+          if (res.code === 0) {
+            this.$message({ type: 'success', message: '删除成功!' })
+            this.getList()
+          } else {
+            this.$message({ type: 'error', message: '删除失败，请稍后再试' })
+          }
+        }).catch(err => {
+          this.$message({ type: 'error', message: '删除失败，请稍后再试' })
+          console.log('err', err)
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
+    },
+    createConfirm(bool) {
+      if (!bool) {
+        this.clearCreateStatus()
+        return
       }
+      this.$refs.addOption.validate(validate => {
+        if (validate) {
+          const query = {
+            ...this.addOption
+          }
+          query.areaId = query.areaId.join(',')
+          query.checkMerchantId = query.checkMerchantId.join(',')
+          query.distributeUserId = query.distributeUserId.join(',')
+          query.assetkindId = query.assetkindId.join(',')
+          console.log('query', query)
+
+          if (this.showAddOrEditTitle === '编辑领用') {
+            this.commitEditCheck(query)
+            return
+          }
+
+          if (query.checkId) {
+            delete query.checkId
+          }
+
+          saveCheck(query).then(res => {
+            if (res.code === 0) {
+              this.$message({ type: 'success', message: '添加资产盘点成功' })
+              this.clearCreateStatus()
+              this.getList()
+            } else {
+              this.showAddOrEdit = false
+              this.$message({ type: 'error', message: '添加资产盘点失败,请稍后再试' })
+            }
+          }).catch(err => {
+            console.log('err', err)
+            this.$message({ type: 'error', message: '添加资产盘点失败,请稍后再试' })
+            this.showAddOrEdit = false
+          })
+        }
+      })
+    },
+    commitEditCheck(query) {
+      updateCheck(query).then(res => {
+        if (res.code === 0) {
+          this.$message({ type: 'success', message: '修改盘点成功' })
+          this.clearCreateStatus()
+          this.getList()
+        } else {
+          this.showAddOrEdit = false
+          this.$message({ type: 'error', message: '修改盘点失败,请稍后再试' })
+        }
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'error', message: '修改盘点失败,请稍后再试' })
+        this.showAddOrEdit = false
+      })
+    },
+    clearCreateStatus() {
+      this.showAddOrEdit = false
+      this.lookDetailInfo = false
+      this.addOption = {
+        areaId: [],
+        assetkindId: [],
+        buyEnddate: '',
+        buyStartdate: '',
+        checkMerchantId: [],
+        checkname: '',
+        distributeUserId: [],
+        memo: ''
+      }
+      this.checkedUserTags = ''
+      this.checkedMerchantName = ''
+      this.checkedAssetkindName = ''
+      this.checkedAreaTags = ''
+      this.defaultAssetkindCheckedKeys = []
+      this.defaultCheckedKeys = []
+      this.$nextTick(() => {
+        this.$refs.addOption.clearValidate()
+      })
     },
     handleAddNodeClick(item) {
 
     }
+
   }
 }
 </script>

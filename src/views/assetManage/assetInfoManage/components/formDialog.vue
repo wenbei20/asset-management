@@ -232,6 +232,8 @@
               :on-success="handleAvatarSuccess"
               :headers="{'X-Token':XToken}"
               :before-upload="beforeAvatarUpload"
+              :limit="5"
+              :file-list="checkedImages"
             >
               <i class="el-icon-plus avatar-uploader-icon" />
 
@@ -322,6 +324,7 @@ export default {
   },
   data() {
     return {
+      checkedImages: [],
       defaultProps: {
         children: 'children',
         label: 'assetkindName',
@@ -344,7 +347,6 @@ export default {
         parentAssetcode: '',
         // 配置项
 
-        adminReguserId: '',
         areaId: '',
         assetcode: '',
         assetkindId: '',
@@ -354,7 +356,6 @@ export default {
         contact: '',
         limitdate: '',
         memo: '',
-        merchantId: '',
         money: '',
         norms: '',
         posname: '',
@@ -433,7 +434,8 @@ export default {
       const obj = this.editAssetData
       for (const key in this.xjzyxxForm) {
         if (key === 'images') {
-          this.xjzyxxForm.images = JSON.parse(obj[key])
+          this.checkedImages = Array.isArray(obj.images) ? obj.images.map(item => { return { name: item.name, url: item.fullPath, path: item.path } }) : []
+          this.xjzyxxForm.images = []
         } else {
           this.xjzyxxForm[key] = obj[key]
         }
@@ -476,6 +478,7 @@ export default {
     },
     closeThis() {
       this.innerVisible = false
+      this.checkedImages = []
       this.$emit('update:visible', false)
       this.$emit('clearEditAssetData')
       for (const key in this.xjzyxxForm) {
@@ -516,6 +519,13 @@ export default {
       this.$refs.assetForm.validate(validate => {
         if (validate) {
           this.xjzyxxForm.parentAssetcode = this.fatherAssetCode
+
+          console.log('this.checkedImages', this.checkedImages)
+          const oldImages = this.checkedImages.map(item => { return { name: item.name, path: item.path } })
+
+          this.xjzyxxForm.images = [...this.xjzyxxForm.images, ...oldImages]
+          console.log('this.xjzyxxForm.images', this.xjzyxxForm.images)
+
           this.$emit('confirm', this.xjzyxxForm)
         }
       })

@@ -690,6 +690,13 @@ export default {
         if (res.code === 0) {
           this.EditAssetDialogLoading = false
           this.editAssetData = { ...res.data }
+          if (res.data.images) {
+            try {
+              this.editAssetData.images = JSON.parse(res.data.images)
+            } catch {
+              this.editAssetData.images = []
+            }
+          }
         } else {
           this.$message({ type: 'error', message: '获取资产信息失败，请稍后再试' })
           setTimeout(() => {

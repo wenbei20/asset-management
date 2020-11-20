@@ -20,6 +20,7 @@
 </template>
 
 <script>
+import { getGssy } from '@/api/home.js'
 export default {
   name: 'BarChart2',
   data() {
@@ -32,10 +33,10 @@ export default {
         },
         yAxis: {
           type: 'category',
-          data: ['资产1', '资产2', '资产3', '资产4', '资产5', '资产6', '资产7']
+          data: []
         },
         series: [{
-          data: [120, 200, 150, 80, 70, 110, 130],
+          data: [],
           type: 'bar',
           showBackground: false,
           itemStyle: {
@@ -70,34 +71,53 @@ export default {
           }
         }]
       },
-      tableData: []
+      tableData: [],
+      arr:[]
     }
   },
   mounted() {
-    this.myChart = this.$echarts.init(this.$refs.myChart)
-    this.drawChart(this.option1)
-    this.clickChart()
+    this.getGssy('')
   },
   methods: {
     handleTabClick(tab, event) {
       console.log(tab, event)
     },
-    drawChart(option) {
+    drawChart() {
       // 绘制图表
-      this.myChart.setOption(option)
+      this.myChart = this.$echarts.init(this.$refs.myChart)
+      this.myChart.setOption(this.option1)
+      this.clickChart()
       window.addEventListener('resize', () => {
         this.myChart.resize()
+      })
+    },
+    getGssy(group_id){
+      //this.option4.series[0].data=[]
+      getGssy({'groupId':group_id}).then(response => {
+          let xdata=[]
+          let sdata=[]
+     
+          this.arr = response.data.compCount
+          console.log(response.data.compCount)
+    
+          response.data.compCount.forEach(function (item){
+            xdata.push(item.group_name)
+            sdata.push(item.group_num)
+          })
+
+          this.option1.series[0].data=sdata
+          this.option1.yAxis.data=xdata
+          this.drawChart()
+          
+         
       })
     },
     // 图表点击下钻
     clickChart() {
       this.myChart.on('click', params => {
         console.log(72, params)
-        if (params.name.includes('资产')) {
-          this.drawChart(this.option2)
-        } else if (params.name.includes('二级')) {
-          this.barChartVisible = false
-        }
+        this.getGssy(this.arr[params.dataIndex].group_id)
+     
       })
     }
   }
