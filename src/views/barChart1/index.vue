@@ -20,6 +20,7 @@
 </template>
 
 <script>
+import { getZcfl } from '@/api/home.js'
 export default {
   name: 'BarChart1',
   data() {
@@ -74,19 +75,38 @@ export default {
     }
   },
   mounted() {
-    this.myChart = this.$echarts.init(this.$refs.myChart)
-    this.drawChart(this.option1)
-    this.clickChart()
+
+    this.getZcfl()
+
   },
   methods: {
     handleTabClick(tab, event) {
       console.log(tab, event)
     },
-    drawChart(option) {
+    drawChart() {
       // 绘制图表
-      this.myChart.setOption(option)
+      this.myChart = this.$echarts.init(this.$refs.myChart)
+      this.myChart.setOption(this.option1)
+      this.clickChart()
       window.addEventListener('resize', () => {
         this.myChart.resize()
+      })
+    },
+    getZcfl(){
+      //this.option4.series[0].data=[]
+      getZcfl().then(response => {
+          let xdata=[]
+          let sdata=[]
+          response.data.propAssetsCount.forEach(function (item){
+            
+            xdata.push(item.assetkind_name)
+           
+            sdata.push(item.count_num)
+          })
+          console.log(xdata)
+          this.option1.series[0].data=sdata
+          this.option1.xAxis.data=xdata
+          this.drawChart()
       })
     },
     // 图表点击下钻

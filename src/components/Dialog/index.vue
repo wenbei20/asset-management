@@ -6,8 +6,8 @@
     </div>
     <slot />
     <div slot="footer" class="dialog-footer">
-      <el-button @click="closeThis(false)">取 消</el-button>
-      <el-button type="primary" @click="closeThis(true)">确 定</el-button>
+      <el-button :loading="commitLoading" @click="closeThis(false)">取 消</el-button>
+      <el-button :loading="commitLoading" type="primary" @click="closeThis(true)">确 定</el-button>
     </div>
   </el-dialog>
 
@@ -25,6 +25,10 @@ export default {
       default: '新建'
     },
     visible: {
+      type: Boolean,
+      default: false
+    },
+    commitLoading: {
       type: Boolean,
       default: false
     }
@@ -47,7 +51,11 @@ export default {
   methods: {
     closeThis(bool) {
       // if (bool) this.$emit('confirm')
-      this.innerVisible = false
+      // bool ? null : this.innerVisible = false
+      if (bool) {
+        this.$emit('confirm', bool)
+        return
+      }
       this.$emit('update:visible', false)
     },
     fullscreen() {

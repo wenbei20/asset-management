@@ -138,6 +138,30 @@ export function getInnerAssetList(params) {
     params
   })
 }
+
+export function deleteReceive(data) {
+  return request({
+    url: '/sys/receive/delete',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function assetDetailList(data) {
+  return request({
+    url: '/sys/receive/assetDetailList',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+export function getUpdateData(data) {
+  return request({
+    url: '/sys/receive/update',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
 /*
 *********************
 ********* 资产调拨管理

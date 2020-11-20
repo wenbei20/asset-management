@@ -15,7 +15,7 @@
         highlight-hover-row
         :auto-resize="true"
         stripe
-        class="vxetable"
+        class="vxetable outvxetable"
         :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
         :data="tableData"
         :sort-config="{remote:true}"
@@ -55,10 +55,19 @@
             <el-tag v-else type="success">已完成</el-tag>
           </template>
         </vxe-table-column>
-        <vxe-table-column field="title" title="状态修改">
+        <vxe-table-column title="状态修改">
           <template #default="{row}">
-            <el-link type="primary" :underline="false" @click="allocationUser(row)">分配用户</el-link>
-            |
+            <el-switch
+              v-model="row.checkStatus"
+              active-color="#13ce66"
+              inactive-color="#ff4949"
+              :active-value="1"
+              :inactive-value="0"
+            />
+          </template>
+        </vxe-table-column>
+        <vxe-table-column title="操作">
+          <template #default="{row}">
             <el-link type="primary" :underline="false">详情</el-link>
             |
             <el-link type="primary" :underline="false">删除</el-link>
@@ -87,7 +96,7 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="盘点单名称" :label-width="addOptionWidth">
-              <el-input placeholder="请输入盘点单名称" />
+              <el-input v-model="addOption.checkname" placeholder="请输入盘点单名称" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -95,9 +104,8 @@
               <el-dropdown trigger="click" placement="bottom-start" style="width:100%">
                 <el-input v-model="checkedUserTags" placeholder="请选择分配用户" />
                 <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
-                  <el-checkbox-group v-model="addOption.distributeUserId" class="UserCheckbox">
-                    <el-checkbox label="用户1" />
-                    <el-checkbox label="用户2" />
+                  <el-checkbox-group v-model="addOption.distributeUserId" class="UserCheckbox" @change="userSelectChange">
+                    <el-checkbox v-for="(ele , i ) in MainSortData.userList" :key="i" :label="ele">{{ ele.chineseName }}</el-checkbox>
                   </el-checkbox-group>
                 </el-dropdown-menu>
               </el-dropdown>
@@ -131,11 +139,24 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="单位" :label-width="addOptionWidth">
-              <el-select v-model="addOption.checkMerchantId" placeholder="请选择单位" :style="{ width: '100%' }">
-                <el-option label="区域一" value="1" />
-                <el-option label="区域2" value="2" />
-              </el-select>
-            </el-form-item>
+              <el-dropdown trigger="click" placement="bottom-start" style="width:100%">
+                <el-input v-model="checkedMerchantName" placeholder="请选择单位" />
+
+                <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
+                  <el-tree
+                    ref="MerchantDialogTree"
+                    show-checkbox
+                    node-key="groupId"
+                    :props="defaultProps"
+                    :data="MainSortData.groupList"
+                    :default-checked-keys="defaultCheckedKeys"
+                    :expand-on-click-node="false"
+                    :default-expand-all="true"
+                    @check="MerchantTreeClick"
+                  />
+                </el-dropdown-menu>
+
+              </el-dropdown></el-form-item>
           </el-col>
           <!-- <el-col :span="12">
             <el-form-item label="部门" :label-width="addOptionWidth">
@@ -145,8 +166,23 @@
           <el-col :span="12">
             <el-form-item label="资产分类" :label-width="addOptionWidth">
 
-              <el-input v-model="addOption.assetkindId" placeholder="请选择资产分类" />
-            </el-form-item>
+              <el-dropdown trigger="click" placement="bottom-start" style="width:100%">
+                <el-input v-model="checkedAssetkindName" placeholder="请选择资产分类" />
+
+                <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
+                  <el-tree
+                    ref="MerchantDialogTree"
+                    show-checkbox
+                    node-key="assetkindId"
+                    :props="assetkindProps"
+                    :data="MainSortData.assetkindList"
+                    :default-checked-keys="defaultAssetkindCheckedKeys"
+                    :expand-on-click-node="false"
+                    :default-expand-all="true"
+                    @check="AssetkindTreeClick"
+                  />
+                </el-dropdown-menu>
+              </el-dropdown></el-form-item>
           </el-col>
         </el-row>
 
@@ -154,8 +190,14 @@
 
           <el-col :span="12">
             <el-form-item label="区域" :label-width="addOptionWidth">
-
-              <el-input v-model="addOption.areaId" placeholder="说明" />
+              <el-dropdown trigger="click" placement="bottom-start" style="width:100%">
+                <el-input v-model="checkedAreaTags" placeholder="请选择区域" />
+                <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
+                  <el-checkbox-group v-model="addOption.areaId" class="UserCheckbox" @change="userAreaChange">
+                    <el-checkbox v-for="(ele , i ) in MainSortData.areaList" :key="i" :label="ele">{{ ele.area_name }}</el-checkbox>
+                  </el-checkbox-group>
+                </el-dropdown-menu>
+              </el-dropdown>
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -167,7 +209,7 @@
 
       </el-form>
     </Dialog>
-    <el-dialog title="分配用户" :visible.sync="showEditUserDialog" width="600px" :close-on-click-modal="false">
+    <!-- <el-dialog title="分配用户" :visible.sync="showEditUserDialog" width="600px" :close-on-click-modal="false">
       <el-form ref="EditDialog" :model="DialogData" label-position="right" style="padding-right:20px;">
         <el-form-item label="分配用户" label-width="100px" prop="person">
           <el-dropdown trigger="click" placement="bottom-start" style="width:100%">
@@ -181,7 +223,7 @@
           </el-dropdown>
         </el-form-item>
       </el-form>
-    </el-dialog>
+    </el-dialog> -->
 
   </div>
 </template>
@@ -195,6 +237,11 @@ export default {
   components: { Dialog, Pagination },
   data() {
     return {
+      checkedAreaTags: '',
+      checkedAssetkindName: '',
+      defaultAssetkindCheckedKeys: [],
+      defaultCheckedKeys: [],
+      checkedMerchantName: '',
       showEditUserDialog: false,
       DialogData: {
         userList: []
@@ -204,6 +251,10 @@ export default {
         children: 'children',
         label: 'groupName',
         isLeaf: 'leaf'
+      },
+      assetkindProps: {
+        children: 'children',
+        label: 'assetkindName'
       },
       showAddOrEditTitle: '',
       showAddOrEdit: false,
@@ -246,6 +297,41 @@ export default {
     })
   },
   methods: {
+    userSelectChange(val) {
+      console.log('val', val)
+      this.checkedUserTags = val.map(ele => ele.chineseName).join(' ; ')
+    },
+    userAreaChange(val) {
+      console.log('val', val)
+      this.checkedAreaTags = val.map(ele => ele.area_name).join(' ; ')
+    },
+
+    AssetkindTreeClick(item, { checkedKeys, checkedNodes }) {
+      console.log('item', item)
+
+      let checkedAssetkindName = ''
+      const arr = []
+      checkedNodes.forEach((ele, idx) => {
+        const backstr = idx === (checkedNodes.length - 1) ? '' : ' ; '
+        checkedAssetkindName += ele.assetkindName + backstr
+        arr.push(ele.assetkindId)
+      })
+      this.checkedAssetkindName = checkedAssetkindName
+      this.addOption.assetkindId = arr
+    },
+    MerchantTreeClick(item, { checkedKeys, checkedNodes }) {
+      console.log('item', item)
+
+      let checkedMerchantName = ''
+      const arr = []
+      checkedNodes.forEach((ele, idx) => {
+        const backstr = idx === (checkedNodes.length - 1) ? '' : ' ; '
+        checkedMerchantName += ele.groupName + backstr
+        arr.push(ele.groupId)
+      })
+      this.checkedMerchantName = checkedMerchantName
+      this.addOption.checkMerchantId = arr
+    },
     allocationUser(row) {
       this.showEditUserDialog = true
     },
@@ -283,7 +369,9 @@ export default {
       this.tableLoading = true
       getListCheck(this.pageQuery).then(res => {
         if (res.code === 0 && res.data && res.data.items) {
-          res.data.items.forEach(ele => { ele.createTaskLoading = false })
+          res.data.items.forEach(ele => {
+            ele.createTaskLoading = false
+          })
           this.tableData = res.data.items
           this.pageTotal = res.data.total
           this.pageQuery.pageSize = res.data.limit
@@ -332,5 +420,11 @@ export default {
 .UserCheckbox >>> .el-checkbox {
   display: block;
   padding: 4px 10px;
+}
+.innerTreeForDepart {
+  min-width: 200px;
+}
+.outvxetable >>> .vxe-table--body-wrapper {
+      min-height: 350px;
 }
 </style>

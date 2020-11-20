@@ -64,7 +64,7 @@
       :sort-config="{remote:true}"
       @sort-change="sortChangeEvent"
     >
-      <vxe-table-column type="checkbox" width="40" :resizable="false" />
+      <!-- <vxe-table-column type="checkbox" width="40" :resizable="false" /> -->
       <!-- <vxe-table-column width="32" class="meuntd" :resizable="false" :edit-render="{}">
         <template>
           <div class="moreOuter">
@@ -99,7 +99,7 @@
         </template>
       </vxe-table-column>
 
-      <vxe-table-column field="assetkindName" title="资产类别" sortable min-width="100" :visible="tableShowColumn.zclb" />
+      <vxe-table-column field="assetkindName" title="资产类别" sortable min-width="140" :visible="tableShowColumn.zclb" />
 
       <vxe-table-column field="standardtypeName" title="标准型号" sortable min-width="100" :visible="tableShowColumn.bzxh" />
 
@@ -645,6 +645,14 @@ export default {
       this.checkedMerchartName = ''
       this.allMechartUser.list = []
       this.allMechartUser.loading = false
+
+      this.pageQuery = {
+        orderType: '',
+        orderName: '',
+        pageNo: 1,
+        pageSize: 10
+      }
+      this.getList()
     },
     mechartTreeNodeClick(item) {
       this.gjssForm.useMerchantId = item.groupId
@@ -680,7 +688,13 @@ export default {
       this.hidetree = e
     },
     clearSearchRes() {
-
+      this.pageQuery = {
+        orderType: '',
+        orderName: '',
+        pageNo: 1,
+        pageSize: 10
+      }
+      this.getList()
     },
     changeFullscreen() {
       this.isHighSearchFullscreen = !this.isHighSearchFullscreen
