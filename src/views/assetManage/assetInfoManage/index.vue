@@ -209,21 +209,7 @@
               </el-col>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
-            <el-form-item label="资产名称" :label-width="formLabelWidth">
-              <el-col :span="10" style="padding:0px;">
-                <el-select v-model="gjssForm.assetnameLogicType" size="small" placeholder="请选择条件" :style="{ width: '100%' }">
-                  <el-option label="等于" value="EQ" />
-                  <el-option label="不等于" value="NOTEQ" />
-                  <el-option label="包含" value="CON" />
-                  <el-option label="开头为" value="STARTWITH" />
-                </el-select>
-              </el-col>
-              <el-col :span="13" :offset="1" style="padding:0px;">
-                <el-input v-model="gjssForm.assetname" size="small" placeholder="请输入资产名称" />
-              </el-col>
-            </el-form-item>
-          </el-col>
+
           <el-col :span="12">
             <el-form-item label="资产类别" :label-width="formLabelWidth">
 
@@ -260,11 +246,27 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="标准型号" :label-width="formLabelWidth">
-              <el-select v-model="gjssForm.standardtypeId" size="small" placeholder="请选择条件" :style="{ width: '100%' }">
-                <el-option v-for="(item,i) in MainSortData.standardtypeList" :key="i" :label="item.asset_name" :value="item.standardtype_id" />
+            <el-form-item v-loading="standardtypeLoading" label="标准型号" :label-width="formLabelWidth">
+              <el-select v-model="gjssForm.standardtypeId" size="small" placeholder="请选择标准型号" :style="{ width: '100%' }" :disabled="!checkedAssetkindId">
+                <el-option v-for="(item,i) in standardtypeList" :key="i" :label="item.standardtypeName" :value="item.standardtypeId" />
               </el-select>
 
+            </el-form-item>
+          </el-col>
+
+          <el-col :span="12">
+            <el-form-item label="资产名称" :label-width="formLabelWidth">
+              <el-col :span="10" style="padding:0px;">
+                <el-select v-model="gjssForm.assetnameLogicType" size="small" placeholder="请选择条件" :style="{ width: '100%' }">
+                  <el-option label="等于" value="EQ" />
+                  <el-option label="不等于" value="NOTEQ" />
+                  <el-option label="包含" value="CON" />
+                  <el-option label="开头为" value="STARTWITH" />
+                </el-select>
+              </el-col>
+              <el-col :span="13" :offset="1" style="padding:0px;">
+                <el-input v-model="gjssForm.assetname" size="small" placeholder="请输入资产名称" />
+              </el-col>
             </el-form-item>
           </el-col>
 
@@ -410,12 +412,14 @@
 </template>
 
 <script>
-import { getAssetsList, createAssets, deleteAsset, baseCode, copyAsset, getListChild, getAllMechartUser, getRfid, getAssetInfo, printTag, sendCard, doAssetUpdate } from '@/api/assetManage'
+import { getAssetsList, createAssets, deleteAsset, baseCode, copyAsset, getListChild, getAllMechartUser, getRfid, getAssetInfo, printTag, sendCard, doAssetUpdate, standardtype, templateFileDown } from '@/api/assetManage'
 import { getListRegUserByChineseName } from '@/api/settings'
 import fromDialog from './components/formDialog'
 import cardDialog from './components/CardDialog'
 import Pagination from '@/components/Pagination'
 import print from 'print-js'
+import axios from 'axios'
+import { mapState } from 'vuex'
 export default {
   name: 'AssetInfoManage',
   components: { fromDialog, Pagination, cardDialog },
@@ -444,7 +448,8 @@ export default {
   },
   data() {
     return {
-
+      standardtypeList: [],
+      standardtypeLoading: false,
       commitEditDialogLoading: false,
       editAssetData: { assetId: '' },
       testFilterList: [],
@@ -592,6 +597,7 @@ export default {
       },
       checkedAssetkindId: '',
       EditingAssetData: {}
+
     }
   },
   computed: {
@@ -600,7 +606,11 @@ export default {
     },
     checkedDepartTags() {
       return ''
-    }
+    },
+    ...mapState({
+      XToken: state => state.user.token
+
+    })
 
   },
   created() {
@@ -677,6 +687,18 @@ export default {
       if (item.children && item.children.length) return
       this.gjssForm.assetkindId = item.assetkindId
       this.checkedAssetkindId = item.assetkindName
+      this.$nextTick(() => {
+        this.$refs.statusTree.hide()
+      })
+
+      this.standardtypeLoading = true
+      standardtype({ assetkindId: item.assetkindId }).then(res => {
+        if (res.code === 0) {
+          this.standardtypeList = res.data
+        }
+      }).finally(() => {
+        this.standardtypeLoading = false
+      })
     },
     statusSeleChange(val) {
       console.log('val', val)
@@ -806,13 +828,35 @@ export default {
         this.batchPrintTags()
         return
       } else if (command === '1') {
-        console.log('command', command)
-        const a = document.createElement('a')
-        a.setAttribute('href', '/asset/static/img/wave.29c712eb.png')
-        a.setAttribute('download', '11222')
-        a.setAttribute('target', '_blank')
-        const clickEvent = new MouseEvent('click', { 'bubbles': true, 'cancelable': true })
-        a.dispatchEvent(clickEvent)
+        // console.log('command', command)
+        // const a = document.createElement('a')
+        // a.setAttribute('href', '/asset/static/img/wave.29c712eb.png')
+        // a.setAttribute('download', '11222')
+        // a.setAttribute('target', '_blank')
+        // const clickEvent = new MouseEvent('click', { 'bubbles': true, 'cancelable': true })
+        // a.dispatchEvent(clickEvent)
+        const postUrl = process.env.NODE_ENV === 'development' ? '/dev-api/sys/assets/template' : '/sys/assets/template'
+        axios({
+          method: 'post',
+          url: postUrl,
+          headers: {
+            'X-Token': this.XToken
+          },
+          responseType: 'blob'
+        })
+          .then(res => {
+            console.log('response: ', res)
+            const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/zip' }))
+            const link = document.createElement('a')
+            link.style.display = 'none'
+            link.href = url
+            link.download = 'ceshi'
+            document.body.appendChild(link)
+            link.click()
+          })
+          .catch(error => {
+            console.log('error', error)
+          })
       }
     },
 

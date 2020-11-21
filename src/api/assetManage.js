@@ -8,6 +8,21 @@ export function getRfid() {
   })
 }
 
+export function standardtype(data) {
+  return request({
+    url: '/sys/assets/standardtype',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+// export function templateFileDown() {
+//   return request({
+//     url: '/sys/assets/template',
+//     method: 'post'
+//   })
+// }
+
 export function doAssetUpdate(data) {
   return request({
     url: '/sys/assets/doUpdate',

@@ -27,9 +27,9 @@
           </el-form-item>
         </el-col>
         <el-col :span="8">
-          <el-form-item label="标准型号" :label-width="formLabelWidth" prop="standardtypeId">
-            <el-select v-model="xjzyxxForm.standardtypeId" size="small" placeholder="请选择标准型号" :style="{ width: '100%' }">
-              <el-option v-for="(item,i) in mainSortData.standardtypeList" :key="i" :label="item.asset_name" :value="item.standardtype_id" />
+          <el-form-item v-loading="standardtypeLoading" label="标准型号" :label-width="formLabelWidth" prop="standardtypeId">
+            <el-select v-model="xjzyxxForm.standardtypeId" :disabled="!checkedAssetkindId" size="small" placeholder="选择资产类别后,请选择标准型号" :style="{ width: '100%' }">
+              <el-option v-for="(item,i) in standardtypeList" :key="i" :label="item.standardtypeName" :value="item.standardtypeId" />
             </el-select>
           </el-form-item>
         </el-col>
@@ -276,7 +276,7 @@
   </el-dialog>
 </template>
 <script>
-import { getAllMechartUser } from '@/api/assetManage'
+import { getAllMechartUser, standardtype } from '@/api/assetManage'
 import { mapState } from 'vuex'
 export default {
   filters: {
@@ -389,7 +389,9 @@ export default {
       allMechartUser: {
         loading: false,
         list: []
-      }
+      },
+      standardtypeLoading: false,
+      standardtypeList: []
 
     }
   },
@@ -455,6 +457,14 @@ export default {
       this.checkedAssetkindId = item.assetkindName
       this.$nextTick(() => {
         this.$refs.statusInnerDrop.hide()
+      })
+
+      standardtype({ assetkindId: item.assetkindId }).then(res => {
+        if (res.code === 0) {
+          this.standardtypeList = res.data
+        }
+      }).finally(() => {
+        this.standardtypeLoading = false
       })
     },
     mechartTreeNodeClick(item) {

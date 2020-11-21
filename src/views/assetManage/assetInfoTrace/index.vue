@@ -86,10 +86,10 @@
           </div>
         </template>
       </vxe-table-column> -->
-      <vxe-table-column width="100" title="业务类型" sortable :visible="tableShowColumn.ywlx">
-        <template #default="{ row }">
+      <vxe-table-column field="busstatusName" width="100" title="业务类型" sortable :visible="tableShowColumn.ywlx">
+        <!-- <template #default="{ row }">
           <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
-        </template>
+        </template> -->
       </vxe-table-column>
 
       <vxe-table-column field="assetcode" title="资产编码" sortable min-width="100" :visible="tableShowColumn.zcbm" />
