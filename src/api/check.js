@@ -3,7 +3,7 @@ import {data2FormData} from '@/utils'
 
 export function getTaskList(data) {
     return request({
-      url: '/adb/listCheck',
+      url: '/sys/adb/listCheck',
       method: 'post',
       data: data2FormData(data)
     })
@@ -11,7 +11,7 @@ export function getTaskList(data) {
 
 export function taskDownload(params) {
     return request({
-      url: '/adb/taskDownload',
+      url: '/sys/adb/taskDownload',
       method: 'get',
       params
     })
@@ -19,14 +19,14 @@ export function taskDownload(params) {
 
   export function taskUploadList() {
     return request({
-      url: '/adb/taskUploadList',
+      url: '/sys/adb/taskUploadList',
       method: 'get'
     })
   }
 
   export function taskUpload(params) {
     return request({
-      url: '/adb/taskUpload',
+      url: '/sys/adb/taskUpload',
       method: 'get',
       params
     })
@@ -34,7 +34,23 @@ export function taskDownload(params) {
 
   export function getStatus() {
     return request({
-      url: '/adb/getStatus',
+      url: '/sys/adb/getStatus',
       method: 'get'
+    })
+  }
+
+  export function listBackFile(data) {
+    return request({
+      url: '/sys/adb/listBackFile',
+      method: 'post',
+      data: data2FormData(data)
+    })
+  }
+
+  export function dataImport(data) {
+    return request({
+      url: '/sys/adb/dataImport',
+      method: 'post',
+      data: data2FormData(data)
     })
   }
