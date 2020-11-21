@@ -1,6 +1,8 @@
 <template>
   <div class="navbar">
-    <div class="logo">北京创想有限公司</div>
+    <div class="logo">
+      <!-- 北京创想有限公司 -->
+    </div>
     <hamburger :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
 
     <breadcrumb class="breadcrumb-container" />

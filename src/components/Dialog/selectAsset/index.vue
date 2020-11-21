@@ -29,7 +29,7 @@
           </tempalte>
         </template>
       </vxe-table-column>
-      <vxe-table-column field="assetcode" title="资产编码" />
+      <vxe-table-column field="assetcode" title="资产编号" />
       <vxe-table-column field="assetname" title="资产名称" />
       <vxe-table-column field="guizeNo" title="规格型号" />
       <vxe-table-column field="snNo" title="SN号" />
@@ -76,7 +76,7 @@
             />
           </template>
         </vxe-table-column>
-        <vxe-table-column field="assetcode" title="资产编码" />
+        <vxe-table-column field="assetcode" title="资产编号" />
         <vxe-table-column field="assetname" title="资产名称" />
         <vxe-table-column field="guizeNo" title="规格型号" />
         <vxe-table-column field="snNo" title="SN号" />

@@ -34,7 +34,7 @@
           </el-form-item>
         </el-col>
         <el-col :span="8">
-          <el-form-item label="资产编码" :label-width="formLabelWidth" prop="assetcode">
+          <el-form-item label="资产编号" :label-width="formLabelWidth" prop="assetcode">
             <el-input v-model="xjzyxxForm.assetcode" size="small" placeholder="请输入资产编码" />
           </el-form-item>
         </el-col>
@@ -432,6 +432,18 @@ export default {
     console.log('mainSortData', this.mainSortData)
   },
   methods: {
+    beforeTemplateUpload() {
+      const isXls = file.type === 'xls/xlsx'
+
+      if (!isXls) {
+        this.$message.error('导入资产文件只能是xls或xlsx格式!')
+      }
+
+      return isXls
+    },
+    handleTemplateExceed() {
+
+    },
     copyEditData() {
       const obj = this.editAssetData
       for (const key in this.xjzyxxForm) {

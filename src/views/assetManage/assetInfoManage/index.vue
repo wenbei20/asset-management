@@ -29,6 +29,13 @@
             <el-dropdown-item command="plfk">批量发卡</el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
+
+        <el-upload
+          :action="upLoadTemplatUrl"
+          multiple
+          :on-exceed="handleExceed"
+          :file-list="fileList"
+        />
       </el-col>
     </el-row>
     <el-row type="flex" justify="space-between" align="middle" :style="{ fontSize: '12px' }">
@@ -105,7 +112,7 @@
           </template>
         </vxe-table-column>
 
-        <vxe-table-column field="assetcode" title="资产编码" sortable min-width="100" :visible="tableShowColumn.zcbm" />
+        <vxe-table-column field="assetcode" title="资产编号" sortable min-width="100" :visible="tableShowColumn.zcbm" />
         <vxe-table-column field="assetname" title="资产名称" sortable tree-node width="300" :visible="tableShowColumn.zcmc">
           <template #default="{ row }">
             <span class="titleText"><i /> {{ row.assetname }}</span>
@@ -135,6 +142,7 @@
         <vxe-table-column field="memo" title="备注信息" min-width="100" :visible="tableShowColumn.bzxx" />
         <!-- <vxe-table-column field="statusName" title="物资状态" min-width="100" sortable :visible="tableShowColumn.wzzt" /> -->
         <vxe-table-column field="rfidCode" title="RFID码" min-width="200" :visible="tableShowColumn.RFID" />
+        <vxe-table-column title="是否盘点" min-width="100" :visible="tableShowColumn.RFID">--</vxe-table-column>
 
       </vxe-table>
     </div>
@@ -195,7 +203,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="资产编码" :label-width="formLabelWidth">
+            <el-form-item label="资产编号" :label-width="formLabelWidth">
               <el-col :span="10" style="padding:0px;">
                 <el-select v-model="gjssForm.assetcodeLogicType" size="small" placeholder="请选择条件" :style="{ width: '100%' }">
                   <el-option label="等于" value="EQ" />
@@ -515,7 +523,7 @@ export default {
       gjssVisible: false,
       settingVisible: false,
       popoverSwitchList: [
-        { name: '资产编码', model: 'zcbm', disabled: false },
+        { name: '资产编号', model: 'zcbm', disabled: false },
         { name: '资产名称', model: 'zcmc', disabled: false },
         { name: '资产类别', model: 'zclb', disabled: false },
         { name: '标准型号', model: 'bzxh', disabled: false },
@@ -596,8 +604,8 @@ export default {
         loading: false
       },
       checkedAssetkindId: '',
-      EditingAssetData: {}
-
+      EditingAssetData: {},
+      upLoadTemplatUrl: ''
     }
   },
   computed: {
@@ -622,6 +630,11 @@ export default {
         }
       }
     })
+    if (process.env.NODE_ENV === 'development') {
+      this.upLoadTemplatUrl = '/dev-api/sys/assets/importAssets'
+    } else {
+      this.upLoadTemplatUrl = '/sys/assets/importAssets'
+    }
   },
   methods: {
     clearEditAssetData() {

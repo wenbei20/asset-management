@@ -196,7 +196,7 @@
                 <span v-if="!row.imageList || row.imageList.length === 0" class="innerTree_noimages">暂无</span>
               </template>
             </vxe-table-column>
-            <vxe-table-column field="assetcode" title="资产编码" min-width="120" />
+            <vxe-table-column field="assetcode" title="资产编号" min-width="120" />
             <vxe-table-column field="assetname" title="资产名称" min-width="120" />
             <vxe-table-column field="groupName" title="所属单位" min-width="120" />
             <vxe-table-column field="useMerchantName" title="使用单位" min-width="120" />
@@ -225,7 +225,7 @@
               <span v-if="!row.imageList || row.imageList.length === 0" class="innerTree_noimages">暂无</span>
             </template>
           </vxe-table-column>
-          <vxe-table-column field="assetcode" title="资产编码" min-width="120" />
+          <vxe-table-column field="assetcode" title="资产编号" min-width="120" />
           <vxe-table-column field="assetname" title="资产名称" min-width="120" />
           <vxe-table-column field="groupName" title="所属单位" min-width="120" />
           <vxe-table-column field="useMerchantName" title="使用单位" min-width="120" />
@@ -264,7 +264,7 @@
         :data="DetailTable.data"
       >
 
-        <vxe-table-column field="assetcode" title="资产编码" min-width="120" />
+        <vxe-table-column field="assetcode" title="资产编号" min-width="120" />
         <vxe-table-column field="assetname" title="资产名称" min-width="120" />
         <!-- <vxe-table-column field="groupName" title="所属单位" min-width="120" /> -->
         <!-- <vxe-table-column field="useMerchantName" title="使用单位" min-width="120" /> -->

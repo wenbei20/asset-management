@@ -8,7 +8,7 @@
               <h3 class="title">
                 <strong>登录</strong>
                 <el-divider direction="vertical" />
-                北京创想有限公司
+                <!-- 北京创想有限公司 -->
               </h3>
             </div>
             <!--密码登录-->

@@ -15,14 +15,14 @@
           </el-select>
         </el-col>
       </el-form-item>
-      <el-form-item label="资产编码" :label-width="formLabelWidth">
+      <el-form-item label="资产编号" :label-width="formLabelWidth">
         <el-col :span="10">
           <el-select v-model="form.assetCoding" placeholder="请选择条件" :style="{ width: '100%' }">
-            <el-option label="资产编码" value="1" />
+            <el-option label="资产编号" value="1" />
           </el-select>
         </el-col>
         <el-col :span="13" :offset="1">
-          <el-input v-model="form.assetCodingInput" placeholder="请输入资产编码" />
+          <el-input v-model="form.assetCodingInput" placeholder="请输入资产编号" />
         </el-col>
       </el-form-item>
       <el-form-item label="资产名称" :label-width="formLabelWidth">
