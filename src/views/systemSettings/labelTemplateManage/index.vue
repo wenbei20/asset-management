@@ -2,24 +2,24 @@
   <div class="app-container">
     <div class="heading">
       标签模版：
-      <el-radio-group v-model="radio1">
-        <el-radio-button label="条形码"></el-radio-button>
-        <el-radio-button label="二维码"></el-radio-button>
-      </el-radio-group>
+      <!-- <el-radio-group v-model="radioValue">
+        <el-radio-button :label="1">条形码</el-radio-button>
+        <el-radio-button :label="2">二维码</el-radio-button>
+      </el-radio-group> -->
     </div>
     <!--list-->
     <div class="list">
       <div
         v-for="item in txmList"
-        :key="item.key"
-        :class="['labelTemplate', item.id === txmActive ? 'active' : null]"
+        :key="item.uuid"
+        :class="['labelTemplate', item.defaultinfo === 1 ? 'active' : null]"
       >
         <table width="100%">
           <tr
-            v-for="tr in item.fields"
-            :key="tr.key"
+            v-for="tr in JSON.parse(item.content)"
+            :key="tr"
           >
-            <td width="40%">{{ tr.label }}</td>
+            <td width="40%">{{ tr }}</td>
             <td width="60%">xxxxxx</td>
           </tr>
           <tr>
@@ -27,9 +27,9 @@
           </tr>
         </table>
         <div class="bottom">
-          <el-button size="small" @click="handleTxmEdit(item)">编辑</el-button>
-          <template v-if="item.id === txmActive">
-            <el-button type="primary" size="small" @click="handleTxmDeselect(item)">已选中</el-button>
+          <!-- <el-button size="small" @click="handleTxmEdit(item)">编辑</el-button> -->
+          <template v-if="item.defaultinfo === 1">
+            <el-button type="primary" size="small">已选中</el-button>
           </template>
           <template v-else>
             <el-button size="small" @click="handleTxmSelect(item)">选择</el-button>
@@ -57,41 +57,42 @@
 </template>
 
 <script>
-// import { queryRfidList } from '@/api/settings'
+import { queryRfidList, /* saveRfid, */ setRfidDefault } from '@/api/settings'
 import txm from '@/assets/setting/txm.png'
 
 export default {
   name: 'LabelTemplateManage',
   data() {
     return {
-      radio1: '条形码',
+      radioValue: 1, // 1 条形码, 2 二维码
       txm,
       txmActive: '', // 选中的条形码
       txmCurrentEditing: '', // 当前正在编辑的条形码
-      txmList: [ // 条形码列表
-        {
-          id: '1',
-          fields: [
-            { label: '资产名称', key: 'assetName' },
-            { label: '购入日期', key: 'purchaseDate' }
-          ]
-        },
-        {
-          id: '2',
-          fields: [
-            { label: '购入日期', key: 'purchaseDate' },
-            { label: '所属公司', key: 'company' },
-            { label: '购入公司', key: 'purchaseCompany' }
-          ]
-        },
-        {
-          id: '3',
-          fields: [
-            { label: '使用公司', key: 'useCompany' },
-            { label: '使用部门', key: 'useDepartment' }
-          ]
-        }
-      ],
+      txmList: [], // 条形码列表
+      // txmList: [ // 条形码列表
+      //   {
+      //     id: '1',
+      //     fields: [
+      //       { label: '资产名称', key: 'assetName' },
+      //       { label: '购入日期', key: 'purchaseDate' }
+      //     ]
+      //   },
+      //   {
+      //     id: '2',
+      //     fields: [
+      //       { label: '购入日期', key: 'purchaseDate' },
+      //       { label: '所属公司', key: 'company' },
+      //       { label: '购入公司', key: 'purchaseCompany' }
+      //     ]
+      //   },
+      //   {
+      //     id: '3',
+      //     fields: [
+      //       { label: '使用公司', key: 'useCompany' },
+      //       { label: '使用部门', key: 'useDepartment' }
+      //     ]
+      //   }
+      // ],
       txmFieldsSource: [ // 所有条形码字段
         { label: '资产名称', key: 'assetName' },
         { label: '规格型号', key: 'specificationModel' },
@@ -107,15 +108,17 @@ export default {
     }
   },
   mounted() {
-    // this.getList()
-    this.txmActive = this.txmList[0].id
+    this.getList()
   },
   methods: {
     // 获取列表
     getList() {
-      // queryRfidList().then((res) => {
-      //   console.log('20 res', res)
-      // }).catch((err) => { console.log('err', err) })
+      queryRfidList({ formtypeId: this.radioValue }).then((res) => {
+        console.log('20 res', res)
+        if (res.code === 0) {
+          this.txmList = res.data
+        }
+      }).catch((err) => { console.log('err', err) })
     },
     // 编辑(条形码)
     handleTxmEdit(item) {
@@ -126,12 +129,18 @@ export default {
     },
     // 选中(条形码)
     handleTxmSelect(item) {
-      console.log(item)
-      this.txmActive = item.id
-    },
-    // 取消选中(条形码)
-    handleTxmDeselect(item) {
-      console.log(item)
+      const { uuid, formtypeId } = item
+      console.log(133, item)
+      setRfidDefault({ uuid, formtypeId }).then((res) => {
+        if (res.code === 0) {
+          this.getList()
+          this.$message({
+            showClose: true,
+            message: '选中标签模版成功！',
+            type: 'success'
+          })
+        }
+      }).catch((err) => { console.log('err', err) })
     },
     // 关闭(条形码)弹出框
     closeDialogTxm() {

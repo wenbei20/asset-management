@@ -181,9 +181,9 @@ export const constantRoutes = [
     }]
   },
   {
-    path: '/systemSetting',
+    path: '/systemSettings',
     component: Layout,
-    redirect: '/systemSetting/systemUser',
+    redirect: '/systemSettings/systemUser',
     meta: { title: '系统设置', icon: 'el-icon-s-help' },
     children: [
       {
