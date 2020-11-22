@@ -74,7 +74,11 @@
         </div>
       </div>
     </div>
-    <add-person ref="addperson" :dialog-visible.sync="showAddPerson" type="regUser" @confirmData="confirmData" />
+    <add-person ref="addperson" :dialog-visible.sync="showAddPerson" type="regUser" @confirmData="confirmData">
+      <template slot="table">
+        啦啦啦啦啦
+      </template>
+    </add-person>
   </div>
 </template>
 

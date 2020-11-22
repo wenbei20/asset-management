@@ -41,7 +41,7 @@
 
     </div>
     <div v-else class="tabscnt">
-      <el-row v-loading="treeLoading" style="min-height:260px;">
+      <el-row v-if="type === 'sysUser'" v-loading="treeLoading" style="min-height:260px;">
         <el-col :span="6" :gutter="20">
 
           <el-tree
@@ -55,12 +55,16 @@
           />
         </el-col>
         <el-col v-loading="checkboxLoading" :span="18" style="min-height:260px;" class="treeCheckList">
-          <el-checkbox-group v-model="treeCheckList">
+          <!-- <el-checkbox-group v-model="treeCheckList">
             <el-checkbox v-for="(ele ,i ) in orgAllPerson" :key="i" :label="ele.reguserId">{{ ele.chineseName }}</el-checkbox>
-          </el-checkbox-group>
+          </el-checkbox-group> -->
+          <slot name="table" />
           <div v-if="!activeGroupId" class="treeCheckboxTips">请选择组织</div>
           <div v-if="activeGroupId && !checkboxLoading && orgAllPerson.length === 0" class="treeCheckboxTips">暂无成员</div>
         </el-col>
+      </el-row>
+      <el-row v-else v-loading="treeLoading" style="min-height:260px;">
+        <slot name="table" />
       </el-row>
 
       <el-row style="text-align:right;">
