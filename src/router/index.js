@@ -204,12 +204,12 @@ export const constantRoutes = [
         component: () => import('@/views/systemSettings/userManage'),
         meta: { title: '用户管理', icon: 'tree' }
       },
-      {
-        path: 'departmentManage',
-        name: 'DepartmentManage',
-        component: () => import('@/views/systemSettings/departmentManage'),
-        meta: { title: '部门管理', icon: 'tree' }
-      },
+      // {
+      //   path: 'departmentManage',
+      //   name: 'DepartmentManage',
+      //   component: () => import('@/views/systemSettings/departmentManage'),
+      //   meta: { title: '部门管理', icon: 'tree' }
+      // },
       {
         path: 'classificationManage',
         name: 'ClassificationManage',
