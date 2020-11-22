@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <div v-if="barChartVisible" id="myChart" ref="myChart" style="width: 100%; height: 600px;" />
+    <div v-if="barChartVisible" id="myChart" ref="myChart" style="width: 100%; height: calc(100vh - 100px);" />
     <div v-else>
       <el-table
         :data="tableData"
@@ -72,7 +72,7 @@ export default {
         }]
       },
       tableData: [],
-      arr:[]
+      arr: []
     }
   },
   mounted() {
@@ -91,25 +91,23 @@ export default {
         this.myChart.resize()
       })
     },
-    getGssy(group_id){
-      //this.option4.series[0].data=[]
-      getGssy({'groupId':group_id}).then(response => {
-          let xdata=[]
-          let sdata=[]
-     
-          this.arr = response.data.compCount
-          console.log(response.data.compCount)
-    
-          response.data.compCount.forEach(function (item){
-            xdata.push(item.group_name)
-            sdata.push(item.group_num)
-          })
+    getGssy(group_id) {
+      // this.option4.series[0].data=[]
+      getGssy({ 'groupId': group_id }).then(response => {
+        const xdata = []
+        const sdata = []
 
-          this.option1.series[0].data=sdata
-          this.option1.yAxis.data=xdata
-          this.drawChart()
-          
-         
+        this.arr = response.data.compCount
+        console.log(response.data.compCount)
+
+        response.data.compCount.forEach(function(item) {
+          xdata.push(item.group_name)
+          sdata.push(item.group_num)
+        })
+
+        this.option1.series[0].data = sdata
+        this.option1.yAxis.data = xdata
+        this.drawChart()
       })
     },
     // 图表点击下钻
@@ -117,7 +115,6 @@ export default {
       this.myChart.on('click', params => {
         console.log(72, params)
         this.getGssy(this.arr[params.dataIndex].group_id)
-     
       })
     }
   }

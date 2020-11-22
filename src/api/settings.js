@@ -356,3 +356,30 @@ export function saveStandardType(data) {
     data: data2FormData(data)
   })
 }
+
+// 修改规格标准
+export function updateStandardType(data) {
+  return request({
+    url: '/sys/standard/updateStandardType/' + data.uuid,
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+// 删除规格标准
+export function deleteStandardType(params) {
+  return request({
+    url: '/sys/standard/deleteStandardType/' + params.uuid,
+    method: 'get',
+    params
+  })
+}
+
+// 批量删除规格标准
+export function batchDeleteStandardType(data) {
+  return request({
+    url: '/sys/standard/batchDeleteStandardType',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}

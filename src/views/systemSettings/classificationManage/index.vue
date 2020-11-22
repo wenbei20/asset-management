@@ -67,7 +67,7 @@
                 </el-form>
               </template>
               <template v-else>
-                <el-alert title="请点击左侧分类，查看基本信息" type="info" :close="false" />
+                <el-alert title="请点击左侧分类，查看基本信息" type="info" />
               </template>
             </el-tab-pane>
             <!--标准型号-->
@@ -76,6 +76,9 @@
                 <div class="clearfix" style="margin-bottom: 20px;">
                   <el-button type="primary" size="small" @click="handleNewStandardType">
                     <i class="el-icon-plus" /> 新建
+                  </el-button>
+                  <el-button size="small" plain :disabled="!tableSelection.length" @click="handleStandardTypeItemBatchDelete">
+                    批量删除
                   </el-button>
                   <div style="float: right;">
                     <el-tooltip class="item" effect="light" content="帮助说明..." placement="bottom-start">
@@ -86,23 +89,33 @@
                   </div>
                 </div>
                 <el-table
+                  v-loading="tableLoading"
                   :data="tableData"
                   style="width: 100%; border: #eee solid 1px;"
+                  @selection-change="handleSelectionChange"
                 >
+                  <el-table-column type="selection" width="55" />
                   <el-table-column prop="assetName" label="资产名称" />
                   <el-table-column prop="standardtypeName" label="规格型号" />
                   <el-table-column prop="unit" label="计量单位" />
                   <el-table-column prop="original" label="原值" />
                   <el-table-column>
                     <template slot-scope="scope">
-                      <el-button @click="handleStandardTypeItemEdit(scope.row)">编辑</el-button>
-                      <el-button @click="handleStandardTypeItemDelete(scope.row)">删除</el-button>
+                      <el-dropdown>
+                        <span class="el-dropdown-link">
+                          <i class="el-icon-more" style="transform: rotate(90deg)" />
+                        </span>
+                        <el-dropdown-menu slot="dropdown">
+                          <el-dropdown-item @click.native="handleStandardTypeItemEdit(scope.row)">编辑</el-dropdown-item>
+                          <el-dropdown-item @click.native="handleStandardTypeItemDelete(scope.row)">删除</el-dropdown-item>
+                        </el-dropdown-menu>
+                      </el-dropdown>
                     </template>
                   </el-table-column>
                 </el-table>
               </template>
               <template v-else>
-                <el-alert title="请点击左侧分类，查看标准型号" type="info" :close="false" />
+                <el-alert title="请点击左侧分类，查看标准型号" type="info" />
               </template>
             </el-tab-pane>
           </el-tabs>
@@ -119,8 +132,10 @@
     />
     <!--新建标准型号-->
     <AddDialogStandardType
+      ref="addDialogStandardType"
       :visible="newStandardTypeVisible"
       :current-node="currentNode"
+      :new-standard-type="newStandardType"
       @changeNewStandardTypeVisible="changeNewStandardTypeVisible"
       @saveStandardTypeSuccess="saveStandardTypeSuccess"
     />
@@ -128,7 +143,7 @@
 </template>
 
 <script>
-import { queryAssetKindList, getAssetKind, checkAssetKindByAssetKindIdExist, deleteAssetKind, updateAssetKindStatus, saveAssetKind, getStandardTypeList } from '@/api/settings'
+import { queryAssetKindList, getAssetKind, checkAssetKindByAssetKindIdExist, deleteAssetKind, updateAssetKindStatus, saveAssetKind, getStandardTypeList, getStandardType, deleteStandardType, batchDeleteStandardType } from '@/api/settings'
 import AddDialogClassification from './components/addDialogClassification'
 import AddDialogStandardType from './components/addDialogStandardType'
 export default {
@@ -160,6 +175,7 @@ export default {
     return {
       newClassificationType: '', // 新建分类（同级: sibling，下级: child）
       newClassificationVisible: false, // 新建分类（弹出框状态）
+      newStandardType: '', // 新建/修改标准型号
       newStandardTypeVisible: false, // 新建标准规格（弹出框状态）
       treeLoading: false,
       treeData: [],
@@ -180,7 +196,9 @@ export default {
         ]
       },
       parentOptions: [], // 上级分类
+      tableLoading: false,
       tableData: [], // 标准型号列表
+      tableSelection: [], // 标准型号列表多选项
       pageNo: 1,
       pageSize: 10,
       pageTotal: 0
@@ -321,39 +339,74 @@ export default {
 
     // Fn: 查询规格标准列表
     getStandardTypeList(data) {
+      this.tableLoading = true
       const params = {
         assetkindId: data.assetkindId,
         pageNo: this.pageNo,
         pageSize: this.pageSize
       }
       getStandardTypeList(params).then((res) => {
+        this.tableLoading = false
         if (res.code === 0) {
           this.tableData = res.data.items
           this.pageTotal = res.data.total
           this.pageNo = res.data.page
           this.pageSize = res.data.limit
         }
-      }).catch((err) => { console.log('err', err) })
+      }).catch((err) => {
+        this.tableLoading = false
+      })
     },
 
     // Fn: 新建标准规格
     handleNewStandardType() {
+      this.newStandardType = 'new'
       this.changeNewStandardTypeVisible(true)
     },
 
     // Fn: 编辑（标准规则型号）
     handleStandardTypeItemEdit(item) {
-      console.log('编辑（标准规则型号）', item)
+      getStandardType(item.uuid).then((res) => {
+        if (res.code === 0 && res.data) {
+          this.newStandardType = 'edit'
+          this.$refs.addDialogStandardType.changeDialogForm(res.data)
+          this.changeNewStandardTypeVisible(true)
+        }
+      }).catch((err) => { console.log('err', err) })
     },
 
     // Fn: 删除（标准规则型号）
     handleStandardTypeItemDelete(item) {
-      console.log('删除（标准规则型号）', item)
+      deleteStandardType(item.uuid).then((res) => {
+        if (res.code === 0) {
+          this.$message({
+            type: 'success',
+            message: '删除成功！',
+            showClose: true
+          })
+          this.getStandardTypeList(this.currentNode)
+        }
+      }).catch((err) => { console.log('err', err) })
+    },
+
+    // Fn: 多选
+    handleSelectionChange(val) {
+      this.tableSelection = val
     },
 
     // Fn: 批量删除（标准规则型号）
-    handleStandardTypeItemBatchDelete(item) {
-      console.log('批量删除（标准规则型号）', item)
+    handleStandardTypeItemBatchDelete() {
+      const params = this.tableSelection.map((item) => item.uuid)
+      batchDeleteStandardType(params).then((res) => {
+        if (res.code === 0) {
+          this.$message({
+            type: 'success',
+            message: '批量删除成功！',
+            showClose: true
+          })
+          this.getStandardTypeList(this.currentNode)
+        }
+      }).catch((err) => { console.log('err', err) })
     },
 
     // Fn: 显示/隐藏（新建标准规格 弹出框）

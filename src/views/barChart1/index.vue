@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <div v-if="barChartVisible" id="myChart" ref="myChart" style="width: 100%; height: 600px;" />
+    <div v-if="barChartVisible" id="myChart" ref="myChart" style="width: 100%; height: calc(100vh - 100px);" />
     <div v-else>
       <el-table
         :data="tableData"
@@ -50,13 +50,11 @@ export default {
         }]
       },
       tableData: [],
-      arr:[]
+      arr: []
     }
   },
   mounted() {
-
     this.getZcfl('')
-
   },
   methods: {
     handleTabClick(tab, event) {
@@ -71,22 +69,21 @@ export default {
         this.myChart.resize()
       })
     },
-    getZcfl(assetkindId){
-      //this.option4.series[0].data=[]
-      getZcfl({'groupId':assetkindId}).then(response => {
-          let xdata=[]
-          let sdata=[]
-          this.arr = response.data.propAssetsCount
-          response.data.propAssetsCount.forEach(function (item){
-         
-            xdata.push(item.assetkind_name)
-           
-            sdata.push(item.count_num)
-          })
+    getZcfl(assetkindId) {
+      // this.option4.series[0].data=[]
+      getZcfl({ 'groupId': assetkindId }).then(response => {
+        const xdata = []
+        const sdata = []
+        this.arr = response.data.propAssetsCount
+        response.data.propAssetsCount.forEach(function(item) {
+          xdata.push(item.assetkind_name)
 
-          this.option1.series[0].data=sdata
-          this.option1.xAxis.data=xdata
-          this.drawChart()
+          sdata.push(item.count_num)
+        })
+
+        this.option1.series[0].data = sdata
+        this.option1.xAxis.data = xdata
+        this.drawChart()
       })
     },
     // 图表点击下钻
@@ -95,11 +92,11 @@ export default {
         console.log(72, params.dataIndex)
         console.log(this.arr[params.dataIndex].assetkind_id)
         this.getZcfl(this.arr[params.dataIndex].assetkind_id)
-        //if (params.name.includes('资产')) {
-          //this.drawChart(this.option2)
-        //} else if (params.name.includes('二级')) {
-          //this.barChartVisible = false
-       // }
+        // if (params.name.includes('资产')) {
+        // this.drawChart(this.option2)
+        // } else if (params.name.includes('二级')) {
+        // this.barChartVisible = false
+        // }
       })
     }
   }
