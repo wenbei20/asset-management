@@ -125,14 +125,15 @@ export default {
           textStyle: {
             color: '#8C8C8C'
           },
-          height: 150
+          height: 150,
+          show:false
         },
         series: [
           {
             name: '资产状态占比',
             type: 'pie',
             radius: [50, 100],
-            center: ['40%', '50%'],
+            center: ['50%', '50%'],
             data: [
               /*{ value: 20, name: '闲置' },
               { value: 30, name: '在用' },
@@ -162,14 +163,15 @@ export default {
           textStyle: {
             color: '#8C8C8C'
           },
-          height: 150
+          height: 150,
+          show:false
         },
         series: [
           {
             name: '公司使用占比',
             type: 'pie',
             radius: [50, 100],
-            center: ['30%', '50%'],
+            center: ['50%', '50%'],
             data: [
            
             ]
@@ -194,14 +196,15 @@ export default {
           textStyle: {
             color: '#8C8C8C'
           },
-          height: 150
+          height: 150,
+          show:false
         },
         series: [
           {
             name: '区域使用占比',
             type: 'pie',
             radius: [50, 100],
-            center: ['30%', '50%'],
+            center: ['50%', '50%'],
             data: [
            
             ]
@@ -226,14 +229,15 @@ export default {
           textStyle: {
             color: '#8C8C8C'
           },
-          height: 150
+          height: 150,
+          show:false
         },
         series: [
           {
             name: '资产分类统计',
             type: 'pie',
             radius: [50, 100],
-            center: ['30%', '50%'],
+            center: ['50%', '50%'],
             data: [
               /*{ value: 20, name: '闲置' },
               { value: 30, name: '在用' },
