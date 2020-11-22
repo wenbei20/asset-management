@@ -29,7 +29,7 @@
         </div>
       </el-tab-pane>
   
-      <el-tab-pane label="备份文件上传" name="fileUpload">
+      <el-tab-pane label="盘点文件上传" name="fileUpload">
         <el-table
           :data="tableFilepload"
           border
@@ -47,7 +47,7 @@
         </div>
       </el-tab-pane>
 
-      <el-tab-pane label="备份文件上传记录" name="taskUpload">
+      <el-tab-pane label="盘点文件上传记录" name="taskUpload">
         <el-table
           :data="tableTaskUpload"
           border
@@ -69,12 +69,31 @@
         />
       </el-tab-pane>
 
+      
+      <el-tab-pane label="备份文件上传" name="backUpload">
+        <el-table
+          :data="backList"
+          border
+          style="width: 100%"
+        >
+          <el-table-column prop="fileName" label="文件名称" />
+          <el-table-column label="文件上传" width="120">
+             <template slot-scope="scope">
+              <el-button type="primary" @click="backUpload(scope.row)">文件上传</el-button>
+             </template>
+          </el-table-column>
+        </el-table>
+        <div style="margin-top: 20px">
+          <el-button plain  @click="getStatus()">测试链接</el-button>
+        </div>
+      </el-tab-pane>
+
     </el-tabs>
   </div>
 </template>
 
 <script>
-import { getTaskList,taskDownload,taskUploadList,taskUpload,getStatus,listBackFile,dataImport } from '@/api/check.js'
+import { getTaskList,taskDownload,taskUploadList,taskUpload,getStatus,listBackFile,dataImport,backupList,backUpload } from '@/api/check.js'
 export default {
   name: 'InfomationExchange',
   data() {
@@ -83,6 +102,7 @@ export default {
       tableTaskDownload: [],
       tableTaskUpload: [],
       tableFilepload: [],
+      backList: [],
       pageNo: 1,
       pageSize: 10,
       pageTotal: 0,
@@ -95,6 +115,7 @@ export default {
     this.getTaskList()
     this.taskUploadList()
     this.listBackFile()
+    this.backupList()
   },
   methods: {
     handleTabClick(tab, event) {
@@ -180,11 +201,39 @@ export default {
         //this.tableLoading = false
       })
     },
+    backupList(){
+       backupList().then((res) => {
+        if (res.code === 0 && res.data) {
+          console.log(res.data)
+          this.backList  = res.data
+        }
+        //this.tableLoading = false
+      }).catch(err => {
+        console.log('err', err)
+        //this.tableLoading = false
+      })
+    },
     taskUpload(item){
       const params = {
         fileName: item.fileName
       }
        taskUpload(params).then((res) => {
+         console.log(res)
+        if (res.code === 0) {
+               this.$message({ type:'success',message:'上传成功'});
+        }
+
+      }).catch(err => {
+         this.$message({ type:'error',message:'上传失败'});
+        console.log('err', err)
+
+      })
+    },
+    backUpload(item){
+      const params = {
+        fileName: item.fileName
+      }
+       backUpload(params).then((res) => {
          console.log(res)
         if (res.code === 0) {
                this.$message({ type:'success',message:'上传成功'});

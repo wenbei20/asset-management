@@ -54,3 +54,18 @@ export function taskDownload(params) {
       data: data2FormData(data)
     })
   }
+
+  export function backupList() {
+    return request({
+      url: '/sys/adb/backupList',
+      method: 'get'
+    })
+  }
+
+  export function backUpload(params) {
+    return request({
+      url: '/sys/adb/backUpload',
+      method: 'get',
+      params
+    })
+  }
