@@ -265,3 +265,94 @@ export function setRfidDefault(params) {
     params
   })
 }
+
+/*
+*******************************
+********* 分类管理（or 资产类别管理）
+*******************************
+**/
+
+// 资产类型列表
+export function queryAssetKindList(params) {
+  return request({
+    url: '/sys/assetKind/listAssetKind',
+    method: 'get',
+    params
+  })
+}
+
+// 根据uuid查询资产类型
+export function getAssetKind(id) {
+  return request({
+    url: '/sys/assetKind/getAssetKind/' + id,
+    method: 'get'
+  })
+}
+
+// 检查编号是否被使用
+export function checkAssetKindByAssetKindIdExist(data) {
+  return request({
+    url: '/sys/assetKind/checkAssetKindByAssetKindIdExist',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+// 删除资产类型
+export function deleteAssetKind(params) {
+  return request({
+    url: '/sys/assetKind/deleteAssetKind/' + params.uuid,
+    method: 'get'
+    // params
+  })
+}
+
+// 启用禁用分类
+export function updateAssetKindStatus(params) {
+  return request({
+    url: '/sys/assetKind/updateAssetKindStatus/' + params.uuid,
+    method: 'get'
+    // params
+  })
+}
+
+// 保存资产类型
+export function saveAssetKind(data) {
+  return request({
+    url: '/sys/assetKind/saveAssetKind',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+/*
+*********************
+********* 规格标准管理
+*********************
+**/
+
+// 根据分类编号查询规格标准列表
+export function getStandardTypeList(params) {
+  return request({
+    url: '/sys/standard/listStandardType',
+    method: 'get',
+    params
+  })
+}
+
+// 根据uuid查询规格标准
+export function getStandardType(id) {
+  return request({
+    url: '/sys/standard/getStandardType/' + id,
+    method: 'get'
+  })
+}
+
+// 保存规格标准
+export function saveStandardType(data) {
+  return request({
+    url: '/sys/standard/SaveStandardType',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
