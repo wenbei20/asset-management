@@ -148,7 +148,11 @@ export default {
           break
       }
       this.dialogVisible = true
-    }
+    },
+    handleNodeClick() {
+
+    },
+    handleClose() {}
   }
 }
 </script>

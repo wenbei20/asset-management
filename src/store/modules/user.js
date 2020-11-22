@@ -1,6 +1,6 @@
 import { login, logout, getInfo } from '@/api/user'
 import { getToken, setToken, removeToken } from '@/utils/auth'
-import { resetRouter } from '@/router'
+import router, { resetRouter, sysContentRouters } from '@/router'
 
 const getDefaultState = () => {
   return {
@@ -46,15 +46,20 @@ const mutations = {
 
 const actions = {
   // user login
-  login({ commit }, userInfo) {
+  login({ commit, dispatch }, userInfo) {
+    console.log('arguments', arguments)
     const { username, password } = userInfo
     return new Promise((resolve, reject) => {
-      login({ username: username.trim(), power: password }).then(response => {
+      login({ username: username.trim(), power: password }).then(async response => {
         console.log(response)
         if (response.code === 0) {
           commit('SET_TOKEN', response.data.token)
           commit('SET_MERCHART_NAME', response.data.merchantName)
           commit('SET_USERCHNAME', response.data.userChname)
+
+          // const addrouter = await dispatch('permission/getSettingRoutes')
+
+          // router.addRoutes(addrouter)
 
           setToken(response.data.token)
           // getPermission().then(res=>{

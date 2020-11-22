@@ -136,6 +136,14 @@ export function updateMerchant(data, id) {
   })
 }
 
+export function getListSysUserByChineseName(params) {
+  return request({
+    url: '/sys/regUser/listSysUserByChineseName',
+    method: 'get',
+    params
+  })
+}
+
 export function getListRegUserByChineseName(params) {
   return request({
     url: '/sys/regUser/listRegUserByChineseName',

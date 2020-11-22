@@ -42,29 +42,29 @@ function HandleReturnRoutes(arr) {
     if (item.component === 'Layout') {
       item.component = Layout
     } else if (item.component) {
-      const tempName = item.path
+      const tempName = '@/views ' + item.path
       //eslint -disable-next-line
-      //   item.component = () => import(`@/views${temp}`)
-      switch (tempName) {
-        case 'systemUser' :
-          item.component = () => import('@/views/systemSettings/systemUser')
-          break
-        case 'commercialUser':
-          item.component = () => import('@/views/systemSettings/commercialUser')
-          break
-        case 'userManage':
-          item.component = () => import('@/views/systemSettings/userManage')
-          break
-        case 'userPower':
-          item.component = () => import('@/views/systemSettings/power/user')
-          break
-        case 'sysUserPower':
-          item.component = () => import('@/views/systemSettings/power/systemUser')
-          break
-        case 'comUserPower':
-          item.component = () => import('@/views/systemSettings/power/commercial')
-          break
-      }
+      item.component = () => import(tempName)
+      // switch (tempName) {
+      //   case 'systemUser' :
+      //     item.component = () => import('@/views/systemSettings/systemUser')
+      //     break
+      //   case 'commercialUser':
+      //     item.component = () => import('@/views/systemSettings/commercialUser')
+      //     break
+      //   case 'userManage':
+      //     item.component = () => import('@/views/systemSettings/userManage')
+      //     break
+      //   case 'userPower':
+      //     item.component = () => import('@/views/systemSettings/power/user')
+      //     break
+      //   case 'sysUserPower':
+      //     item.component = () => import('@/views/systemSettings/power/systemUser')
+      //     break
+      //   case 'comUserPower':
+      //     item.component = () => import('@/views/systemSettings/power/commercial')
+      //     break
+      // }
     }
 
     if (item.children) {

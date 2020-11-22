@@ -266,7 +266,7 @@ export default {
     getListRights(roleId) {
       this.rightTreeLoading = true
       this.defaultCheckedList = []
-      getListRightsByRoleId({ roleId, rightkeyKind: 0 }).then(res => {
+      getListRightsByRoleId({ roleId, rightkeyKind: 1 }).then(res => {
         if (res.code === 0 && Array.isArray(res.data)) {
           console.log('res', res)
           this.getRightCheckedKey(res.data)

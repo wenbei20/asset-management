@@ -223,6 +223,9 @@
           <vxe-table-column field="imageList" title="照片" min-width="60">
             <template #default="{ row }">
               <span v-if="!row.imageList || row.imageList.length === 0" class="innerTree_noimages">暂无</span>
+
+              <svg-icon v-else icon-class="tupian" style="height:36px;width:36px;" />
+
             </template>
           </vxe-table-column>
           <vxe-table-column field="assetcode" title="资产编号" min-width="120" />
@@ -756,4 +759,5 @@ export default {
 .innerTreeForDepart {
   min-width: 200px;
 }
+
 </style>

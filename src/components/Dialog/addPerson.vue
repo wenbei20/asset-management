@@ -2,7 +2,7 @@
   <el-dialog
     v-el-drag-dialog
     :visible="innerVisible"
-    width="830px"
+    :width="showAddPersonTree ? '80%' : '830px' "
     title="添加成员"
     class="settings_qiyongDialog"
     :close-on-click-modal="false"
@@ -10,13 +10,13 @@
   >
 
     <div v-if="!showAddPersonTree" class="tabscnt">
-      <div class="inputOuter" :class="{noStructure:noStructure}" @click="$refs.autocomplete.focus()">
+      <!-- <div class="inputOuter" :class="{noStructure:noStructure}" @click="$refs.autocomplete.focus()"> -->
+      <div class="inputOuter" @click="$refs.autocomplete.focus()">
         <span v-for="(ele , i) in selectedPersons" :key="i" class="selectedPersons">
           {{ ele.chineseName }}
           <i class="el-icon-close" @click.stop="delectThisPserson(ele)" />
         </span>
 
-        <!-- <el-input v-model="addinfo.putin" class="textarea" placeholder="请输入已有成员的昵称" /> -->
         <el-autocomplete
           ref="autocomplete"
           v-model="addUserInfoSeleReguser"
@@ -31,17 +31,18 @@
         </el-autocomplete>
       </div>
 
-      <div v-if="!noStructure" class="yonghuzu">
+      <!-- <div v-if="!noStructure" class="yonghuzu"> -->
+      <div class="yonghuzu">
         <span class="putinAdd" @click="forAddpersonTree">
           <i class="el-icon-user-solid" />
-          通过组织架构添加
+          {{ type === 'regUser' ? '通过组织架构添加' : '通过用户列表添加' }}
         </span>
-
       </div>
+
     </div>
     <div v-else class="tabscnt">
       <el-row v-loading="treeLoading" style="min-height:260px;">
-        <el-col :span="8" :gutter="20">
+        <el-col :span="6" :gutter="20">
 
           <el-tree
             :props="defaultProps"
@@ -53,7 +54,7 @@
             @node-click="handleNodeClick"
           />
         </el-col>
-        <el-col v-loading="checkboxLoading" :span="16" style="min-height:260px;" class="treeCheckList">
+        <el-col v-loading="checkboxLoading" :span="18" style="min-height:260px;" class="treeCheckList">
           <el-checkbox-group v-model="treeCheckList">
             <el-checkbox v-for="(ele ,i ) in orgAllPerson" :key="i" :label="ele.reguserId">{{ ele.chineseName }}</el-checkbox>
           </el-checkbox-group>
@@ -78,7 +79,7 @@
 </template>
 
 <script>
-import { getListRegUserByChineseName, getOrganizationGroup, getListRegUserByGroupId } from '@/api/settings'
+import { getListRegUserByChineseName, getOrganizationGroup, getListRegUserByGroupId, getListSysUserByChineseName } from '@/api/settings'
 import elDragDialog from '@/directive/el-drag-dialog'
 export default {
   directives: { elDragDialog },
@@ -89,6 +90,10 @@ export default {
     noStructure: {
       type: Boolean,
       default: false
+    },
+    type: {
+      type: String,
+      default: 'sysUser'
     }
   },
   data() {
@@ -221,11 +226,19 @@ export default {
     },
     querySearchAsync(queryString, cb) {
       if (queryString) {
-        getListRegUserByChineseName({ chineseName: queryString }).then(res => {
-          if (res.code === 0) {
-            return cb(res.data)
-          }
-        })
+        if (this.type === 'sysUser') {
+          getListSysUserByChineseName({ chineseName: queryString }).then(res => {
+            if (res.code === 0) {
+              return cb(res.data)
+            }
+          })
+        } else {
+          getListRegUserByChineseName({ chineseName: queryString }).then(res => {
+            if (res.code === 0) {
+              return cb(res.data)
+            }
+          })
+        }
         // cb([])
       } else {
         cb([])

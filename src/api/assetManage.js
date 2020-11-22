@@ -16,12 +16,14 @@ export function standardtype(data) {
   })
 }
 
-// export function templateFileDown() {
-//   return request({
-//     url: '/sys/assets/template',
-//     method: 'post'
-//   })
-// }
+export function exportAssets(data) {
+  return request({
+    url: '/sys/assets/export',
+    method: 'post',
+    data: data2FormData(data)
+
+  })
+}
 
 export function doAssetUpdate(data) {
   return request({

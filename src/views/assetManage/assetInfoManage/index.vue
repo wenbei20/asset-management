@@ -1,5 +1,17 @@
 <template>
   <div class="app-container">
+    <div id="test">
+      <div v-for="(ele , i ) in printCodeList" :key="i" class="item">
+        <div class="leftTips">
+          <div v-for="(item , idx) in ele.content" :key="idx">
+            <span class="lt_title">{{ item.name }}：</span>
+            <span class="lt_cnt">{{ item.value }}</span>
+          </div>
+        </div>
+        <div :id="ele.rfidCode" class="codeImg" />
+      </div>
+    </div>
+
     <el-row>
       <el-col :span="17">
         <el-select v-model="companyValue" placeholder="请选择搜索类别" style="padding:0 6px;width: 160px;">
@@ -23,19 +35,24 @@
           </el-button>
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item command="1">下载导入模板</el-dropdown-item>
-            <el-dropdown-item>批量导入资产</el-dropdown-item>
-            <el-dropdown-item>导出资产</el-dropdown-item>
+            <el-upload
+              ref="upLoadTemplat"
+              :action="upLoadTemplatUrl"
+              multiple
+              :before-upload="beforeTemplateUpload"
+              :on-exceed="handleTemplateExceed"
+              :on-success="TemplateUploadSuccess"
+            >
+              <template slot="trigger">
+                <el-dropdown-item command="pldr">批量导入资产</el-dropdown-item>
+              </template>
+            </el-upload>
+            <el-dropdown-item command="dczc">导出资产</el-dropdown-item>
             <el-dropdown-item command="pldybq" style="border-top:1px solid #dfe6ee;">批量打印标签</el-dropdown-item>
             <el-dropdown-item command="plfk">批量发卡</el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
 
-        <el-upload
-          :action="upLoadTemplatUrl"
-          multiple
-          :on-exceed="handleExceed"
-          :file-list="fileList"
-        />
       </el-col>
     </el-row>
     <el-row type="flex" justify="space-between" align="middle" :style="{ fontSize: '12px' }">
@@ -111,6 +128,14 @@
             <span class="statuspan" :class="row.statusName | statusClass">{{ row.statusName }}</span>
           </template>
         </vxe-table-column>
+        <vxe-table-column field="imageList" title="照片" width="100">
+          <template #default="{ row }">
+            <span v-if="!row.imageList || row.imageList.length === 0" class="innerTree_noimages">暂无</span>
+
+            <svg-icon v-else icon-class="tupian" style="height:36px;width:36px;" />
+
+          </template>
+        </vxe-table-column>
 
         <vxe-table-column field="assetcode" title="资产编号" sortable min-width="100" :visible="tableShowColumn.zcbm" />
         <vxe-table-column field="assetname" title="资产名称" sortable tree-node width="300" :visible="tableShowColumn.zcmc">
@@ -142,8 +167,7 @@
         <vxe-table-column field="memo" title="备注信息" min-width="100" :visible="tableShowColumn.bzxx" />
         <!-- <vxe-table-column field="statusName" title="物资状态" min-width="100" sortable :visible="tableShowColumn.wzzt" /> -->
         <vxe-table-column field="rfidCode" title="RFID码" min-width="200" :visible="tableShowColumn.RFID" />
-        <vxe-table-column title="是否盘点" min-width="100" :visible="tableShowColumn.RFID">--</vxe-table-column>
-
+        <vxe-table-column field="checkedFlag" title="是否盘点" min-width="100" :visible="tableShowColumn.sfpd" />
       </vxe-table>
     </div>
     <pagination
@@ -420,7 +444,7 @@
 </template>
 
 <script>
-import { getAssetsList, createAssets, deleteAsset, baseCode, copyAsset, getListChild, getAllMechartUser, getRfid, getAssetInfo, printTag, sendCard, doAssetUpdate, standardtype, templateFileDown } from '@/api/assetManage'
+import { getAssetsList, createAssets, deleteAsset, baseCode, copyAsset, getListChild, getAllMechartUser, getRfid, getAssetInfo, printTag, sendCard, doAssetUpdate, standardtype } from '@/api/assetManage'
 import { getListRegUserByChineseName } from '@/api/settings'
 import fromDialog from './components/formDialog'
 import cardDialog from './components/CardDialog'
@@ -428,6 +452,7 @@ import Pagination from '@/components/Pagination'
 import print from 'print-js'
 import axios from 'axios'
 import { mapState } from 'vuex'
+import QRCode from 'qrcodejs2'
 export default {
   name: 'AssetInfoManage',
   components: { fromDialog, Pagination, cardDialog },
@@ -511,7 +536,8 @@ export default {
         lxfs: true,
         fzr: true,
         wbsj: true,
-        wbsm: true
+        wbsm: true,
+        sfpd: true
       },
       copyForTableShowColumn: {},
       isAllreadyConfirmColSetting: false,
@@ -541,7 +567,8 @@ export default {
         { name: '存放地点', model: 'cfdd', disabled: false },
         { name: '备注信息', model: 'bzxx', disabled: false },
         // { name: '物资状态', model: 'wzzt', dissabled: false },
-        { name: 'RFID码', model: 'RFID', disabled: false }
+        { name: 'RFID码', model: 'RFID', disabled: false },
+        { name: '是否盘点', model: 'sfpd', disabled: false }
 
       ],
 
@@ -605,7 +632,8 @@ export default {
       },
       checkedAssetkindId: '',
       EditingAssetData: {},
-      upLoadTemplatUrl: ''
+      upLoadTemplatUrl: '',
+      printCodeList: []
     }
   },
   computed: {
@@ -637,6 +665,21 @@ export default {
     }
   },
   methods: {
+    handleTemplateExceed() {
+
+    },
+    beforeTemplateUpload(file) {
+      const isXls = file.type === 'xls/xlsx'
+
+      if (!isXls) {
+        this.$message.error('导入资产文件只能是xls或xlsx格式!')
+      }
+
+      return isXls
+    },
+    TemplateUploadSuccess() {
+      console.log('TemplateUploadSuccess',)
+    },
     clearEditAssetData() {
       this.editAssetData = { assetId: '' }
     },
@@ -863,13 +906,61 @@ export default {
             const link = document.createElement('a')
             link.style.display = 'none'
             link.href = url
-            link.download = 'ceshi'
+            link.download = '导入模板'
             document.body.appendChild(link)
             link.click()
           })
           .catch(error => {
             console.log('error', error)
           })
+      } else if (command === 'dczc') {
+        // this.$refs.upLoadTemplat.
+        const query = {
+          ...this.gjssForm,
+          orderType: this.pageQuery.orderType,
+          orderName: this.pageQuery.orderName
+        }
+
+        query.statusId = query.statusId.map(item => item.status_id).join(',')
+
+        const fd = new FormData()
+        for (const key in query) {
+          fd.append(key, query[key])
+        }
+
+        const postUrl = process.env.NODE_ENV === 'development' ? '/dev-api/sys/assets/export' : '/sys/assets/export'
+        axios({
+          method: 'post',
+          url: postUrl,
+          data: fd,
+          headers: {
+            'X-Token': this.XToken
+          },
+          responseType: 'blob'
+        })
+          .then(res => {
+            console.log('response: ', res)
+            const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' }))
+            const link = document.createElement('a')
+            link.style.display = 'none'
+            link.href = url
+            // link.download = '导出资产'
+            document.body.appendChild(link)
+            link.click()
+          })
+          .catch(error => {
+            console.log('error', error)
+          })
+        //   (query).then(res => {
+        //   if (res.code === 0) {
+        //     this.$message({ type: 'success', message: '导出资产成功' })
+        //   } else {
+        //     this.$message({ type: 'error', message: '导出资产失败，请稍后再试' })
+        //   }
+        // }).catch(err => {
+        //   console.log('err', err)
+        //   this.$message({ type: 'error', message: '导出资产失败，请稍后再试' })
+        // })
       }
     },
 
@@ -990,7 +1081,7 @@ export default {
         pageNo: 1,
         pageSize: 10
       }
-      this.getList()
+      // this.getList()
     },
     searchList() {
       if (!this.searchIpt.trim()) {
@@ -1119,20 +1210,35 @@ export default {
     printSingleTag(row) {
       printTag({ assetsIds: row.assetId }).then(res => {
         if (res.code === 0) {
-          const style = '@page { size:auto;margin: 0cm 1cm 0cm 1cm; } @media print { .blueText{ color:#f00}  }'
-          print({
-            printable: 'vxtable',
-            type: 'html',
-            style: style,
-            scanStyles: false
+          this.printCodeList = res.data
+          this.$nextTick(() => {
+            this.printFun(res.data)
           })
         }
       }).catch(err => {
         console.log('err', err)
       })
+    },
+    printFun(data) {
+      data.forEach(item => {
+        const qrcode = new QRCode(item.rfidCode, {
+          width: 100,
+          height: 100,
+          text: item.rfidCode
+        })
+        console.log('qrcode', qrcode)
+      })
+
+      const style = '@page { size:auto;margin: 0cm 1cm 0cm 1cm; } @media print { #test .item{ display: flex;}  #test .leftTips{ width: 80%; font-size: 14px;}  #test .codeImg{ width:20%;} }'
+      print({
+        printable: 'vxtable',
+        type: 'html',
+        style: style
+      })
     }
 
   }
+
 }
 </script>
 
@@ -1307,6 +1413,22 @@ export default {
     margin-right: 30px;
     cursor: pointer;
 }
+#test {
+  // height: 300px ;
+  // width: 500px ;
+  background-color: rgba(255,0,0,.2);
+  .item {
+    display: flex;
+    align-items: center;
+    .leftTips {
+      width: 80%;
+      font-size: 14px;
+    }
+    .codeImg {
+      width: 20%;
+    }
+  }
+}
 </style>
 <style  scoped>
 .avatar-uploader >>> .el-upload {
@@ -1374,4 +1496,12 @@ export default {
   display: block;
   padding: 4px 10px;
 }
+.innerTree_noimages {
+  display: inline-block;
+  padding: 5px 10px;
+  background-color: #f0f0f0;
+  border: 1px solid #e9e9e9;
+  color: #aaa;
+}
+
 </style>
