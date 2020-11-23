@@ -708,7 +708,7 @@ export default {
     batchPrintTags() {
       const checkedArr = this.$refs.xTree.getCheckboxRecords()
       if (!checkedArr.length) {
-        this.$message({ type: 'warning', message: '请勾选需要发卡的资产' })
+        this.$message({ type: 'warning', message: '请勾选需要打印标签的资产' })
         return
       }
 
@@ -1229,7 +1229,7 @@ export default {
         console.log('qrcode', qrcode)
       })
 
-      const style = '@page { size:auto;margin: 0cm 1cm 0cm 1cm; } @media print { #test .item{ display: flex;}  #test .leftTips{ width: 80%; font-size: 14px;}  #test .codeImg{ width:20%;} }'
+      const style = '@page { size:15.74in 11.81in;margin: 0cm 1cm 0cm 1cm; } @media print { #test .item{ display: flex; width:40cm;height:30cm;}  #test .leftTips{ width: 70%; font-size: 14px;}  #test .codeImg{ width:30%;} }'
       print({
         printable: 'test',
         type: 'html',

@@ -1,6 +1,7 @@
 import { login, logout, getInfo } from '@/api/user'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import router, { resetRouter, sysContentRouters } from '@/router'
+import store from '@/store'
 
 const getDefaultState = () => {
   return {
@@ -61,12 +62,17 @@ const actions = {
           commit('SET_MERCHART_NAME', response.data.merchantName)
           commit('SET_USERCHNAME', response.data.userChname)
           commit('SET_REGUSERID', response.data.uuid)
+          setToken(response.data.token)
 
           // const addrouter = await dispatch('permission/getSettingRoutes')
 
           // router.addRoutes(addrouter)
 
-          setToken(response.data.token)
+          const addrouter = await store.dispatch('permission/getSettingRoutes')
+          router.options.routes = router.options.routes.concat(addrouter)
+          router.addRoutes(addrouter)
+          console.log('router', router)
+
           // getPermission().then(res=>{
           //     console.log('getPermission', res)
           // })

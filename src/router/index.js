@@ -52,293 +52,138 @@ export const constantRoutes = [
       component: () => import('@/views/home/index'),
       meta: { title: '首页', icon: 'dashboard' }
     }]
-  },
-  {
-    path: '/assetManage',
-    component: Layout,
-    redirect: '/assetManage/assetInfoManage',
-    name: 'AssetManage',
-    meta: { title: '资产管理', icon: 'el-icon-s-help' },
-    children: [
-      {
-        path: 'assetInfoManage',
-        name: 'AssetInfoManage',
-        component: () => import('@/views/assetManage/assetInfoManage/index'),
-        meta: { title: '资产信息管理', icon: 'table' }
-      },
-      {
-        path: 'assetReceiving',
-        name: 'AssetReceiving',
-        component: () => import('@/views/assetManage/assetReceiving/index'),
-        meta: { title: '资产领用', icon: 'table' }
-      },
-      {
-        path: 'assetInfoTrace',
-        name: 'AssetInfoTrace',
-        component: () => import('@/views/assetManage/assetInfoTrace/index'),
-        meta: { title: '资产信息追溯', icon: 'table' }
-      }
-    ]
-  },
-  {
-    path: '/assetTransferManage',
-    component: Layout,
-    children: [{
-      path: '/assetTransferManage',
-      name: 'AssetTransferManage',
-      component: () => import('@/views/assetTransferManage/index'),
-      meta: { title: '资产调拨管理', icon: 'dashboard' }
-    }]
-  },
-  {
-    path: '/assetDisposalManage',
-    component: Layout,
-    redirect: '/assetDisposalManage/withdrawal',
-    meta: { title: '资产处置管理', icon: 'nested' },
-    children: [
-      {
-        path: 'withdrawal',
-        name: 'Withdrawal',
-        component: () => import('@/views/assetDisposalManage/withdrawal'),
-        meta: { title: '退运', icon: 'dashboard' }
-      },
-      {
-        path: 'scrap',
-        name: 'Scrap',
-        component: () => import('@/views/assetDisposalManage/scrap'),
-        meta: { title: '报废', icon: 'dashboard' }
-      }
-    ]
-  },
-  {
-    path: '/assetMaintenanceManage',
-    component: Layout,
-    children: [{
-      path: '/assetMaintenanceManage',
-      name: 'AssetMaintenanceManage',
-      component: () => import('@/views/assetMaintenanceManage/index'),
-      meta: { title: '资产维修管理', icon: 'dashboard' }
-    }]
-  },
-  {
-    path: '/assetLoanManage',
-    component: Layout,
-    children: [{
-      path: '/assetLoanManage',
-      name: 'AssetLoanManage',
-      component: () => import('@/views/assetLoanManage/index'),
-      meta: { title: '资产借还管理', icon: 'dashboard' }
-    }]
-  },
-  {
-    path: '/assetInventoryManage',
-    component: Layout,
-    children: [{
-      path: '/assetInventoryManage',
-      name: 'AssetInventoryManage',
-      component: () => import('@/views/assetInventoryManage/index'),
-      meta: { title: '资产盘点管理', icon: 'dashboard' }
-    }]
-  },
-  {
-    path: '/statisticalAnalysis',
-    component: Layout,
-    children: [{
-      path: '/statisticalAnalysis',
-      name: 'StatisticalAnalysis',
-      component: () => import('@/views/statisticalAnalysis/index'),
-      meta: { title: '统计分析', icon: 'dashboard' }
-    }]
-  },
-  {
-    path: '/barChart1',
-    component: Layout,
-    children: [{
-      path: '/barChart1',
-      name: 'BarChart1',
-      component: () => import('@/views/barChart1/index'),
-      meta: { title: '柱状图一', icon: 'dashboard' }
-    }]
-  },
-  {
-    path: '/barChart2',
-    component: Layout,
-    children: [{
-      path: '/barChart2',
-      name: 'BarChart2',
-      component: () => import('@/views/barChart2/index'),
-      meta: { title: '柱状图二', icon: 'dashboard' }
-    }]
-  },
-  {
-    path: '/infomationExchange',
-    component: Layout,
-    children: [{
-      path: '/infomationExchange',
-      name: 'InfomationExchange',
-      component: () => import('@/views/infomationExchange/index'),
-      meta: { title: '信息上传下发', icon: 'dashboard' }
-    }]
-  },
-  {
-    path: '/systemSettings',
-    component: Layout,
-    redirect: '/systemSettings/systemUser',
-    meta: { title: '系统设置', icon: 'el-icon-s-help' },
-    children: [
-      {
-        path: 'systemUser',
-        name: 'systemUser',
-        component: () => import('@/views/systemSettings/systemUser'),
-        meta: { title: '系统用户管理', icon: 'table' }
-      },
-      {
-        path: 'commercialUser',
-        name: 'commercialUser',
-        component: () => import('@/views/systemSettings/commercialUser'),
-        meta: { title: '商户管理', icon: 'tree' }
-      },
-      {
-        path: 'userManage',
-        name: 'userManage',
-        component: () => import('@/views/systemSettings/userManage'),
-        meta: { title: '用户管理', icon: 'tree' }
-      },
-      // {
-      //   path: 'departmentManage',
-      //   name: 'DepartmentManage',
-      //   component: () => import('@/views/systemSettings/departmentManage'),
-      //   meta: { title: '部门管理', icon: 'tree' }
-      // },
-      {
-        path: 'classificationManage',
-        name: 'ClassificationManage',
-        component: () => import('@/views/systemSettings/classificationManage'),
-        meta: { title: '分类管理', icon: 'tree' }
-      },
-      {
-        path: 'labelTemplateManage',
-        name: 'LabelTemplateManage',
-        component: () => import('@/views/systemSettings/labelTemplateManage'),
-        meta: { title: '标签模版管理', icon: 'tree' }
-      },
-      {
-        path: 'userPower',
-        name: 'userPower',
-        component: () => import('@/views/systemSettings/power/user'),
-        meta: { title: '注册用户权限配置', icon: 'tree' }
-      },
-      {
-        path: 'sysUserPower',
-        name: 'sysUserPower',
-        component: () => import('@/views/systemSettings/power/systemUser'),
-        meta: { title: '系统用户权限配置', icon: 'tree' }
-      },
-      {
-        path: 'comUserPower',
-        name: 'comUserPower',
-        component: () => import('@/views/systemSettings/power/commercial'),
-        meta: { title: '商户权限配置', icon: 'tree' }
-      }
-    ]
   }
   // {
-  //   path: '/example',
+  //   path: '/assetManage',
   //   component: Layout,
-  //   redirect: '/example/table',
-  //   name: 'Example',
-  //   meta: { title: 'Example', icon: 'el-icon-s-help' },
+  //   redirect: '/assetManage/assetInfoManage',
+  //   name: 'AssetManage',
+  //   meta: { title: '资产管理', icon: 'el-icon-s-help' },
   //   children: [
   //     {
-  //       path: 'table',
-  //       name: 'Table',
-  //       component: () => import('@/views/table/index'),
-  //       meta: { title: 'Table', icon: 'table' }
+  //       path: 'assetInfoManage',
+  //       name: 'AssetInfoManage',
+  //       component: () => import('@/views/assetManage/assetInfoManage/index'),
+  //       meta: { title: '资产信息管理', icon: 'table' }
   //     },
   //     {
-  //       path: 'tree',
-  //       name: 'Tree',
-  //       component: () => import('@/views/tree/index'),
-  //       meta: { title: 'Tree', icon: 'tree' }
+  //       path: 'assetReceiving',
+  //       name: 'AssetReceiving',
+  //       component: () => import('@/views/assetManage/assetReceiving/index'),
+  //       meta: { title: '资产领用', icon: 'table' }
+  //     },
+  //     {
+  //       path: 'assetInfoTrace',
+  //       name: 'AssetInfoTrace',
+  //       component: () => import('@/views/assetManage/assetInfoTrace/index'),
+  //       meta: { title: '资产信息追溯', icon: 'table' }
   //     }
   //   ]
   // },
-
   // {
-  //   path: '/form',
+  //   path: '/assetTransferManage',
   //   component: Layout,
+  //   children: [{
+  //     path: '/assetTransferManage',
+  //     name: 'AssetTransferManage',
+  //     component: () => import('@/views/assetTransferManage/index'),
+  //     meta: { title: '资产调拨管理', icon: 'dashboard' }
+  //   }]
+  // },
+  // {
+  //   path: '/assetDisposalManage',
+  //   component: Layout,
+  //   redirect: '/assetDisposalManage/withdrawal',
+  //   meta: { title: '资产处置管理', icon: 'nested' },
   //   children: [
   //     {
-  //       path: 'index',
-  //       name: 'Form',
-  //       component: () => import('@/views/form/index'),
-  //       meta: { title: 'Form', icon: 'form' }
+  //       path: 'withdrawal',
+  //       name: 'Withdrawal',
+  //       component: () => import('@/views/assetDisposalManage/withdrawal'),
+  //       meta: { title: '退运', icon: 'dashboard' }
+  //     },
+  //     {
+  //       path: 'scrap',
+  //       name: 'Scrap',
+  //       component: () => import('@/views/assetDisposalManage/scrap'),
+  //       meta: { title: '报废', icon: 'dashboard' }
   //     }
   //   ]
   // },
-
   // {
-  //   path: '/nested',
+  //   path: '/assetMaintenanceManage',
   //   component: Layout,
-  //   redirect: '/nested/menu1',
-  //   name: 'Nested',
-  //   meta: {
-  //     title: 'Nested',
-  //     icon: 'nested'
-  //   },
-  //   children: [
-  //     {
-  //       path: 'menu1',
-  //       component: () => import('@/views/nested/menu1/index'), // Parent router-view
-  //       name: 'Menu1',
-  //       meta: { title: 'Menu1' },
-  //       children: [
-  //         {
-  //           path: 'menu1-1',
-  //           component: () => import('@/views/nested/menu1/menu1-1'),
-  //           name: 'Menu1-1',
-  //           meta: { title: 'Menu1-1' }
-  //         },
-  //         {
-  //           path: 'menu1-2',
-  //           component: () => import('@/views/nested/menu1/menu1-2'),
-  //           name: 'Menu1-2',
-  //           meta: { title: 'Menu1-2' },
-  //           children: [
-  //             {
-  //               path: 'menu1-2-1',
-  //               component: () => import('@/views/nested/menu1/menu1-2/menu1-2-1'),
-  //               name: 'Menu1-2-1',
-  //               meta: { title: 'Menu1-2-1' }
-  //             },
-  //             {
-  //               path: 'menu1-2-2',
-  //               component: () => import('@/views/nested/menu1/menu1-2/menu1-2-2'),
-  //               name: 'Menu1-2-2',
-  //               meta: { title: 'Menu1-2-2' }
-  //             }
-  //           ]
-  //         },
-  //         {
-  //           path: 'menu1-3',
-  //           component: () => import('@/views/nested/menu1/menu1-3'),
-  //           name: 'Menu1-3',
-  //           meta: { title: 'Menu1-3' }
-  //         }
-  //       ]
-  //     },
-  //     {
-  //       path: 'menu2',
-  //       component: () => import('@/views/nested/menu2/index'),
-  //       name: 'Menu2',
-  //       meta: { title: 'menu2' }
-  //     }
-  //   ]
-  // }
-
+  //   children: [{
+  //     path: '/assetMaintenanceManage',
+  //     name: 'AssetMaintenanceManage',
+  //     component: () => import('@/views/assetMaintenanceManage/index'),
+  //     meta: { title: '资产维修管理', icon: 'dashboard' }
+  //   }]
+  // },
   // {
-  //   path: '/systemSetting',
+  //   path: '/assetLoanManage',
   //   component: Layout,
+  //   children: [{
+  //     path: '/assetLoanManage',
+  //     name: 'AssetLoanManage',
+  //     component: () => import('@/views/assetLoanManage/index'),
+  //     meta: { title: '资产借还管理', icon: 'dashboard' }
+  //   }]
+  // },
+  // {
+  //   path: '/assetInventoryManage',
+  //   component: Layout,
+  //   children: [{
+  //     path: '/assetInventoryManage',
+  //     name: 'AssetInventoryManage',
+  //     component: () => import('@/views/assetInventoryManage/index'),
+  //     meta: { title: '资产盘点管理', icon: 'dashboard' }
+  //   }]
+  // },
+  // {
+  //   path: '/statisticalAnalysis',
+  //   component: Layout,
+  //   children: [{
+  //     path: '/statisticalAnalysis',
+  //     name: 'StatisticalAnalysis',
+  //     component: () => import('@/views/statisticalAnalysis/index'),
+  //     meta: { title: '统计分析', icon: 'dashboard' }
+  //   }]
+  // },
+  // {
+  //   path: '/barChart1',
+  //   component: Layout,
+  //   children: [{
+  //     path: '/barChart1',
+  //     name: 'BarChart1',
+  //     component: () => import('@/views/barChart1/index'),
+  //     meta: { title: '柱状图一', icon: 'dashboard' }
+  //   }]
+  // },
+  // {
+  //   path: '/barChart2',
+  //   component: Layout,
+  //   children: [{
+  //     path: '/barChart2',
+  //     name: 'BarChart2',
+  //     component: () => import('@/views/barChart2/index'),
+  //     meta: { title: '柱状图二', icon: 'dashboard' }
+  //   }]
+  // },
+  // {
+  //   path: '/infomationExchange',
+  //   component: Layout,
+  //   children: [{
+  //     path: '/infomationExchange',
+  //     name: 'InfomationExchange',
+  //     component: () => import('@/views/infomationExchange/index'),
+  //     meta: { title: '信息上传下发', icon: 'dashboard' }
+  //   }]
+  // },
+  // {
+  //   path: '/systemSettings',
+  //   component: Layout,
+  //   redirect: '/systemSettings/systemUser',
   //   meta: { title: '系统设置', icon: 'el-icon-s-help' },
   //   children: [
   //     {
@@ -359,6 +204,24 @@ export const constantRoutes = [
   //       component: () => import('@/views/systemSettings/userManage'),
   //       meta: { title: '用户管理', icon: 'tree' }
   //     },
+  //     // {
+  //     //   path: 'departmentManage',
+  //     //   name: 'DepartmentManage',
+  //     //   component: () => import('@/views/systemSettings/departmentManage'),
+  //     //   meta: { title: '部门管理', icon: 'tree' }
+  //     // },
+  //     {
+  //       path: 'classificationManage',
+  //       name: 'ClassificationManage',
+  //       component: () => import('@/views/systemSettings/classificationManage'),
+  //       meta: { title: '分类管理', icon: 'tree' }
+  //     },
+  //     {
+  //       path: 'labelTemplateManage',
+  //       name: 'LabelTemplateManage',
+  //       component: () => import('@/views/systemSettings/labelTemplateManage'),
+  //       meta: { title: '标签模版管理', icon: 'tree' }
+  //     },
   //     {
   //       path: 'userPower',
   //       name: 'userPower',
@@ -378,7 +241,7 @@ export const constantRoutes = [
   //       meta: { title: '商户权限配置', icon: 'tree' }
   //     }
   //   ]
-  // },
+  // }
 
   // 404 page must be placed at the end !!!
 
@@ -417,6 +280,7 @@ const router = createRouter()
 export function resetRouter() {
   const newRouter = createRouter()
   router.matcher = newRouter.matcher // reset router
+  router.options = newRouter.options // reset router
 }
 
 export default router

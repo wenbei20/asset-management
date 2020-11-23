@@ -38,10 +38,10 @@ module.exports = {
     },
     proxy: {
       '/dev-api': {
-        //target: 'http://111.225.216.36:8879/',
-         target: 'http://127.0.0.1:8000/',
+        // target: 'http://111.225.216.36:8879/',
+        //  target: 'http://127.0.0.1:8000/',
         // target: 'http://192.168.12.209:8000/',
-        // target: 'http://192.168.12.98:8000/',
+        target: 'http://192.168.12.98:8000/',
         // target: 'http://192.168.12.105:8000/',
         ws: true,
         changeOrigin: true,
@@ -85,7 +85,8 @@ module.exports = {
 
     // when there are many pages, it will cause too many meaningless requests
     config.plugins.delete('prefetch')
-
+    // config.resolve.alias
+    //   .set('@', resolve('src'))
     // set svg-sprite-loader
     config.module
       .rule('svg')

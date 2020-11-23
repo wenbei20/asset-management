@@ -11,6 +11,7 @@
       <el-dropdown class="avatar-container" trigger="click">
         <div class="avatar-wrapper">
           <el-avatar>{{ UserName | getFirstName }}</el-avatar>
+          <span class="UserName">{{ UserName }}</span>
           <i class="el-icon-caret-bottom" />
         </div>
         <el-dropdown-menu slot="dropdown" class="user-dropdown">
@@ -128,17 +129,17 @@ export default {
           this.userDataPowerStatus = 'commit'
           updateUserPower(query).then(async res => {
             if (res.code === 0) {
-              this.$message({ tyep: 'success', message: '修改密码成功，请重新登录' })
+              this.$message({ type: 'success', message: '修改密码成功，请重新登录' })
               await this.$store.dispatch('user/logout')
               this.$router.push(`/login?redirect=${this.$route.fullPath}`)
             } else {
-              this.$message({ tyep: 'error', message: '修改密码失败，请稍后再试' })
+              this.$message({ type: 'error', message: res.msg })
               this.showAddDialog = false
             }
             this.userDataPowerStatus = ''
           }).catch(err => {
             console.log('err', err)
-            this.$message({ tyep: 'error', message: '修改密码失败，请稍后再试' })
+            this.$message({ type: 'error', message: '修改密码失败，请稍后再试' })
             this.showAddDialog = false
             this.userDataPowerStatus = ''
           })
@@ -222,5 +223,13 @@ export default {
       }
     }
   }
+}
+.UserName {
+  display: inline-block;
+  padding: 0 10px;
+  vertical-align: middle;
+  color: #Fff;
+  position: relative;
+  top: -16px;
 }
 </style>

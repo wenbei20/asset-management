@@ -2,7 +2,7 @@
   <el-dialog
     v-el-drag-dialog
     :visible="innerVisible"
-    :width="showAddPersonTree ? '80%' : '830px' "
+    :width="showAddPersonTree ? '70%' : '830px' "
     title="添加成员"
     class="settings_qiyongDialog"
     :close-on-click-modal="false"
@@ -64,14 +64,22 @@
             :nav-search-options="navSearchOptions"
             :table-data="tableData"
             :table-show-props="tableShowProps"
+            :selected-persons="selectedPersons"
             @getpageTableData="getTableList"
           />
           <div v-if="!ActiveUserGroupid" class="treeCheckboxTips">请选择组织</div>
           <div v-if="ActiveUserGroupid && !checkboxLoading && !tableData.length" class="treeCheckboxTips">暂无成员</div>
         </el-col>
       </el-row>
-      <el-row v-else v-loading="treeLoading" style="min-height:260px;">
-        <searchList />
+      <el-row v-else v-loading="checkboxLoading" style="min-height:260px;">
+        <searchList
+          ref="listNotRegUser"
+          :nav-search-options="navSearchOptions"
+          :table-data="tableData"
+          :table-show-props="tableShowProps"
+          :selected-persons="selectedPersons"
+          @getpageTableData="getTableList"
+        />
       </el-row>
 
       <el-row style="text-align:right;">
@@ -170,6 +178,9 @@ export default {
   created() {
 
   },
+  mounted() {
+
+  },
   methods: {
     getTableList(data) {
       if (this.type === 'regUser') {
@@ -215,7 +226,28 @@ export default {
     },
     forAddpersonTree() {
       this.showAddPersonTree = true
-      this.$emit('refreshTableData')
+      // this.$emit('refreshTableData')
+      if (this.type !== 'regUser') {
+        const query = {
+          pageNo: 1,
+          pageSize: 10,
+          userType: this.type === 'sysUser' ? 0 : 1
+        }
+        getSysUserList(query).then(res => {
+          if (res.code === 0) {
+            this.tableData = res.data.items
+            console.log('this.tableData', this.tableData)
+            this.$nextTick(() => {
+              this.$refs.listNotRegUser.setPageTotal(res.data.total)
+            })
+          }
+        }).catch(err => {
+          this.tableData = []
+          console.log('err', err)
+        }).finally(() => {
+          this.checkboxLoading = false
+        })
+      }
     },
     handleNodeClick(item) {
       console.log('handleNodeClick', item)
@@ -279,16 +311,25 @@ export default {
       })
     },
     AddtreePerson() {
-      this.showAddPersonTree = false
-      console.log('treeCheckList', this.treeCheckList)
-      console.log('allOrgAllPerson', this.allOrgAllPerson)
-      this.treeCheckList.forEach(ele => {
-        const idx = this.allOrgAllPerson.allperson.findIndex(item => item.reguserId === ele)
-        if (idx !== -1) {
-          this.selectedPersons.push({ ...this.allOrgAllPerson.allperson[idx] })
+      // console.log('treeCheckList', this.treeCheckList)
+      // console.log('allOrgAllPerson', this.allOrgAllPerson)
+      // this.treeCheckList.forEach(ele => {
+      //   const idx = this.allOrgAllPerson.allperson.findIndex(item => item.reguserId === ele)
+      //   if (idx !== -1) {
+      //     this.selectedPersons.push({ ...this.allOrgAllPerson.allperson[idx] })
+      //   }
+      // })
+      // console.log('selectedPersons', this.selectedPersons)
+      console.log('this.$refs', this.$refs.searchList)
+      this.$nextTick(() => {
+        const seleData = this.$refs.searchList.selectedTableData
+        if (seleData && Object.keys(seleData).length) {
+          for (const key in seleData) {
+            this.selectedPersons.push({ ...seleData[key] })
+          }
         }
       })
-      console.log('selectedPersons', this.selectedPersons)
+      this.showAddPersonTree = false
     },
     querySearchAsync(queryString, cb) {
       if (queryString) {
