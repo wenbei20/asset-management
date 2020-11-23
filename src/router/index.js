@@ -79,7 +79,7 @@ export const constantRoutes = [
   //       meta: { title: '资产信息追溯', icon: 'table' }
   //     }
   //   ]
-  // },
+  // }
   // {
   //   path: '/assetTransferManage',
   //   component: Layout,
@@ -280,7 +280,7 @@ const router = createRouter()
 export function resetRouter() {
   const newRouter = createRouter()
   router.matcher = newRouter.matcher // reset router
-  router.options = newRouter.options // reset router
+  router.options.routes = newRouter.options.routes // reset router
 }
 
 export default router

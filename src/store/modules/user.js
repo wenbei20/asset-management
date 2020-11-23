@@ -88,11 +88,11 @@ const actions = {
           resolve()
         } else {
           console.log('response.msg', response.msg)
-          reject(response.msg)
+          reject({ msg: response.msg })
         }
       }).catch(err => {
         console.log(err)
-        reject(err)
+        reject({ msg: '登录失败，请稍后再试' })
       })
     })
   },

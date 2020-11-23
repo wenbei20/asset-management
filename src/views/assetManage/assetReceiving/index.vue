@@ -31,7 +31,7 @@
         <el-button type="default" icon="el-icon-printer" :style="{ marginLeft: '5px' }" plain>
           打印
         </el-button>
-        <el-button type="default" icon="el-icon-receiving" :style="{ marginLeft: '5px' }" plain>
+        <el-button type="default" icon="el-icon-receiving" :style="{ marginLeft: '5px' }" plain @click="exportAllAsset">
           导出
         </el-button>
       </el-col>
@@ -290,6 +290,7 @@ import { getReceiveList, baseCode, getAllMechartUser, createReceive, getInnerAss
 import Dialog from '@/components/Dialog/index'
 import Pagination from '@/components/Pagination'
 import { mapState } from 'vuex'
+import axios from 'axios'
 export default {
   name: 'AssetInfoManage',
   components: { Dialog, Pagination },
@@ -710,6 +711,42 @@ export default {
           this.showAddOrEdit = false
         }, 1000)
       })
+    },
+    exportAllAsset() {
+      const query = {
+        ...this.pageQuery
+      }
+      delete query.receivecode
+      delete query.receivedate
+
+      const fd = new FormData()
+      for (const key in query) {
+        fd.append(key, query[key])
+      }
+
+      const postUrl = process.env.NODE_ENV === 'development' ? '/dev-api/sys/receive/export' : '/sys/receive/export'
+      axios({
+        method: 'post',
+        url: postUrl,
+        data: fd,
+        headers: {
+          'X-Token': this.XToken
+        },
+        responseType: 'blob'
+      })
+        .then(res => {
+          console.log('response: ', res)
+          const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' }))
+          const link = document.createElement('a')
+          link.style.display = 'none'
+          link.href = url
+          // link.download = '导出资产'
+          document.body.appendChild(link)
+          link.click()
+        })
+        .catch(error => {
+          console.log('error', error)
+        })
     }
   }
 }

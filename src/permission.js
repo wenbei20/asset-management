@@ -47,8 +47,12 @@ router.beforeEach(async(to, from, next) => {
       const addRoutes = store.getters.addRoutes
       if (!addRoutes || !addRoutes.length) {
         const newrouters = await store.dispatch('permission/getSettingRoutes')
-        router.options.routes = router.options.routes.concat(newrouters)
+        newrouters.forEach(item => {
+          router.options.routes.push(item)
+        })
+
         router.addRoutes(newrouters)
+        console.log('router', router)
       }
     }
   } else {

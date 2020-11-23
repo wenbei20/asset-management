@@ -170,8 +170,8 @@ export default {
               let err = ''
               // console.log('err', err.message === "Network Error")
 
-              if (!error.message) {
-                err = error
+              if (error.msg) {
+                err = error.msg
               } else if (error.message === 'Network Error') {
                 err = '网络连接失败，请稍后重试！'
               } else {
