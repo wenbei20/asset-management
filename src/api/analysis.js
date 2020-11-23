@@ -1,9 +1,10 @@
 import request from '@/utils/request'
 import {data2FormData} from '@/utils'
 
-export function getList() {
+export function listCheckCollect(params) {
     return request({
-      url: '/home/assetCheckdeStatistics',
-      method: 'post'
+      url: '/sys/checkcollect/listCheckCollect',
+      method: 'get',
+      params
     })
 }
