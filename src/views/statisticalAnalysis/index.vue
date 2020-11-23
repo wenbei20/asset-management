@@ -10,25 +10,37 @@
       :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
       :data="tableData"
     >
-      <vxe-table-column type="checkbox" width="40" :resizable="false" />
-      <vxe-table-column field="merchantName" title="使用部门" />
-      <vxe-table-column field="sumMoney" title="金额" />
-      <vxe-table-column field="countNum" title="数量" />
-      <vxe-table-column field="checkedFlag" :formatter="stateFormat" title="是否盘点"></vxe-table-column>
+
+      <vxe-table-column field="checkcode" title="盘点单号" />
+      <vxe-table-column field="checkname" title="盘点名称" />
+      <vxe-table-column field="checktime" title="盘点时间" />
+      <vxe-table-column field="taskQty" title="盘点任务量" />
+      <vxe-table-column field="taskCheck" title="已盘点任务量" />
+      <vxe-table-column field="taskPk" title="盘盈量" />
+      <vxe-table-column field="taskPy" title="盘亏量" />
 
     </vxe-table>
+        <el-pagination
+          background
+          layout="prev, pager, next, jumper"
+          style="text-align:right;margin-top:20px;"
+          :total="pageLogTotal"
+        />
   </div>
 </template>
 
 <script>
-import { getList } from '@/api/analysis.js'
+import { listCheckCollect } from '@/api/analysis.js'
 export default {
   name: 'StatisticalAnalysis',
   data() {
     return {
       tableData: [
         
-      ]
+      ],
+      pageNo: 1,
+      pageSize: 10,
+      pageTotal: 0
     }
   },
   mounted() {
@@ -37,16 +49,14 @@ export default {
   },
    methods: {
      getData(){
-      getList().then(response => {
-        this.tableData=response.data
+      const { pageLogNo, pageLogSize } = this;
+      const params = { ...this.requestParams, pageLogNo, pageLogSize }
+      listCheckCollect(params).then(response => {
+        this.tableData=response.data.items
+        this.pageTotal = res.data.total
+        this.pageSize = res.data.limit
+        this.pageNo = res.data.page
       })
-    },
-    stateFormat(row, column) {
-    if (row.checkedFlag === 0) {
-        return '否'
-      } else  {
-        return '是'
-      } 
     }
   }
 }
