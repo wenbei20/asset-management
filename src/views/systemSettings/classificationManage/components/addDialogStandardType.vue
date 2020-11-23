@@ -33,7 +33,7 @@
 </template>
 
 <script>
-import { saveStandardType } from '@/api/settings'
+import { saveStandardType, updateStandardType } from '@/api/settings'
 export default {
   name: 'AddDialogStandardType',
   props: {
@@ -44,6 +44,10 @@ export default {
     currentNode: {
       type: Object,
       default: () => {}
+    },
+    newStandardType: {
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -67,30 +71,42 @@ export default {
     }
   },
   methods: {
+    // Fn: 初始化dialogForm
+    initDialogForm() {
+      this.changeDialogForm({
+        assetName: '',
+        standardtypeName: '',
+        standardtypeId: ''
+      })
+    },
     // Fn: 关闭
     handleClose() {
-      this.$emit('changeNewClassificationVisible', false)
+      this.$emit('changeNewStandardTypeVisible', false)
+      this.initDialogForm()
     },
     // Fn: 确认
     handleConfirm() {
       this.$refs.dialogForm.validate((valid) => {
         if (valid) {
-          this.saveStandardType()
+          this.save()
         } else {
           console.log('error submit!!')
           return false
         }
       })
     },
+    // Fn: 改变form数据
+    changeDialogForm(data) {
+      this.dialogForm = data
+    },
     // Fn: 保存
-    saveStandardType() {
+    save() {
       const { assetkindId } = this.currentNode
       const params = {
         assetkindId,
         ...this.dialogForm
       }
-      saveStandardType(params).then((res) => {
-        console.log(119, res)
+      this.confirmFunction(params).then((res) => {
         if (res.code === 0) {
           this.$message({
             type: 'success',
@@ -98,8 +114,13 @@ export default {
             showClose: true
           })
           this.$emit('saveStandardTypeSuccess')
+          this.initDialogForm()
         }
       }).catch((err) => { console.log('err', err) })
+    },
+    // Fn: 确认调用接口方法
+    confirmFunction(params) {
+      return this.newStandardType === 'new' ? saveStandardType(params) : updateStandardType(params)
     }
   }
 }

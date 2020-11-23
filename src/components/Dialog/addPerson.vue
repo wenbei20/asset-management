@@ -67,7 +67,7 @@
             @getpageTableData="getTableList"
           />
           <div v-if="!ActiveUserGroupid" class="treeCheckboxTips">请选择组织</div>
-          <div v-if="ActiveUserGroupid && !checkboxLoading && tableData.length === 0" class="treeCheckboxTips">暂无成员</div>
+          <div v-if="ActiveUserGroupid && !checkboxLoading && !tableData.length" class="treeCheckboxTips">暂无成员</div>
         </el-col>
       </el-row>
       <el-row v-else v-loading="treeLoading" style="min-height:260px;">
@@ -241,7 +241,10 @@ export default {
       getSysUserList({ groupId: item.groupId, pageNo: 1, pageSize: 10, userType: 2 }).then(res => {
         if (res.code === 0) {
           this.tableData = res.data.items
-          this.$refs.searchList.setPageTotal(res.data.total)
+          console.log('this.tableData', this.tableData)
+          this.$nextTick(() => {
+            this.$refs.searchList.setPageTotal(res.data.total)
+          })
         }
       }).catch(err => {
         this.tableData = []
