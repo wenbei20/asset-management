@@ -11,7 +11,8 @@ const getDefaultState = () => {
     merchantName: '',
     userChname: '',
     roles: [],
-    type: ''
+    type: '',
+    reguserId: ''
   }
 }
 
@@ -41,6 +42,9 @@ const mutations = {
   },
   SET_USERCHNAME: (state, userChname) => {
     state.userChname = userChname
+  },
+  SET_REGUSERID: (state, reguserId) => {
+    state.reguserId = reguserId
   }
 }
 
@@ -56,6 +60,7 @@ const actions = {
           commit('SET_TOKEN', response.data.token)
           commit('SET_MERCHART_NAME', response.data.merchantName)
           commit('SET_USERCHNAME', response.data.userChname)
+          commit('SET_REGUSERID', response.data.uuid)
 
           // const addrouter = await dispatch('permission/getSettingRoutes')
 

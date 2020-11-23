@@ -14,7 +14,7 @@
           <i class="el-icon-caret-bottom" />
         </div>
         <el-dropdown-menu slot="dropdown" class="user-dropdown">
-          <el-dropdown-item>
+          <el-dropdown-item @click.native="showAddDialog = true">
             <span style="display:block;">修改密码</span>
           </el-dropdown-item>
           <el-dropdown-item divided @click.native="logout">
@@ -23,6 +23,23 @@
         </el-dropdown-menu>
       </el-dropdown>
     </div>
+    <el-dialog title="修改密码" :visible.sync="showAddDialog" width="600px" :close-on-click-modal="false">
+      <el-form ref="changepsw" :model="changepsw" label-position="right" style="padding-right:20px;" :rules="changepswRules">
+        <el-form-item label="当前密码" prop="oldPower" :label-width="formLabelWidth">
+          <el-input v-model="changepsw.oldPower" autocomplete="off" type="password" />
+        </el-form-item>
+        <el-form-item label="密码" prop="power" :label-width="formLabelWidth">
+          <el-input v-model="changepsw.power" autocomplete="off" type="password" />
+        </el-form-item>
+        <el-form-item label="确认密码" prop="rePower" :label-width="formLabelWidth">
+          <el-input v-model="changepsw.rePower" autocomplete="off" type="password" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button :loading="userDataPowerStatus === 'commit'" @click="showAddDialog=false">取 消</el-button>
+        <el-button :loading="userDataPowerStatus === 'commit'" type="primary" @click="confirmDataPower">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -30,11 +47,53 @@
 import { mapGetters, mapState } from 'vuex'
 import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
-
+import { updateUserPower } from '@/api/settings'
 export default {
   components: {
     Breadcrumb,
     Hamburger
+  },
+  data() {
+    var validatePass = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请输入密码'))
+      } else {
+        if (this.changepsw.rePower !== '') {
+          this.$refs.changepsw.validateField('rePower')
+        }
+        callback()
+      }
+    }
+    var validatePass2 = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请再次输入密码'))
+      } else if (value !== this.changepsw.power) {
+        callback(new Error('两次输入密码不一致!'))
+      } else {
+        callback()
+      }
+    }
+    return {
+      changepswRules: {
+        oldPower: [
+          { message: '请输入当前密码', trigger: 'blur', required: true }
+        ],
+        power: [
+          { validator: validatePass, trigger: 'blur', required: true }
+        ],
+        rePower: [
+          { validator: validatePass2, trigger: 'blur', required: true }
+        ]
+      },
+      showAddDialog: false,
+      changepsw: {
+        oldPower: '',
+        power: '',
+        rePower: ''
+      },
+      userDataPowerStatus: '',
+      formLabelWidth: '100px'
+    }
   },
   computed: {
     ...mapGetters([
@@ -42,7 +101,8 @@ export default {
       'avatar'
     ]),
     ...mapState({
-      UserName: state => state.user.userChname
+      UserName: state => state.user.userChname,
+      reguserId: state => state.user.reguserId
     })
   },
   filters: {
@@ -57,6 +117,33 @@ export default {
     async logout() {
       await this.$store.dispatch('user/logout')
       this.$router.push(`/login?redirect=${this.$route.fullPath}`)
+    },
+    confirmDataPower() {
+      this.$refs.changepsw.validate(vali => {
+        if (vali) {
+          const query = {
+            ...this.changepsw,
+            reguserId: this.reguserId
+          }
+          this.userDataPowerStatus = 'commit'
+          updateUserPower(query).then(async res => {
+            if (res.code === 0) {
+              this.$message({ tyep: 'success', message: '修改密码成功，请重新登录' })
+              await this.$store.dispatch('user/logout')
+              this.$router.push(`/login?redirect=${this.$route.fullPath}`)
+            } else {
+              this.$message({ tyep: 'error', message: '修改密码失败，请稍后再试' })
+              this.showAddDialog = false
+            }
+            this.userDataPowerStatus = ''
+          }).catch(err => {
+            console.log('err', err)
+            this.$message({ tyep: 'error', message: '修改密码失败，请稍后再试' })
+            this.showAddDialog = false
+            this.userDataPowerStatus = ''
+          })
+        }
+      })
     }
   }
 }

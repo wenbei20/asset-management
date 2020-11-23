@@ -41,7 +41,7 @@
 
     </div>
     <div v-else class="tabscnt">
-      <el-row v-if="type === 'sysUser'" v-loading="treeLoading" style="min-height:260px;">
+      <el-row v-if="type === 'regUser'" v-loading="treeLoading" style="min-height:260px;">
         <el-col :span="6" :gutter="20">
 
           <el-tree
@@ -58,13 +58,20 @@
           <!-- <el-checkbox-group v-model="treeCheckList">
             <el-checkbox v-for="(ele ,i ) in orgAllPerson" :key="i" :label="ele.reguserId">{{ ele.chineseName }}</el-checkbox>
           </el-checkbox-group> -->
-          <slot name="table" />
-          <div v-if="!activeGroupId" class="treeCheckboxTips">请选择组织</div>
-          <div v-if="activeGroupId && !checkboxLoading && orgAllPerson.length === 0" class="treeCheckboxTips">暂无成员</div>
+          <searchList
+            v-if="ActiveUserGroupid && tableData.length"
+            ref="searchList"
+            :nav-search-options="navSearchOptions"
+            :table-data="tableData"
+            :table-show-props="tableShowProps"
+            @getpageTableData="getTableList"
+          />
+          <div v-if="!ActiveUserGroupid" class="treeCheckboxTips">请选择组织</div>
+          <div v-if="ActiveUserGroupid && !checkboxLoading && tableData.length === 0" class="treeCheckboxTips">暂无成员</div>
         </el-col>
       </el-row>
       <el-row v-else v-loading="treeLoading" style="min-height:260px;">
-        <slot name="table" />
+        <searchList />
       </el-row>
 
       <el-row style="text-align:right;">
@@ -83,10 +90,12 @@
 </template>
 
 <script>
-import { getListRegUserByChineseName, getOrganizationGroup, getListRegUserByGroupId, getListSysUserByChineseName } from '@/api/settings'
+import { getListRegUserByChineseName, getOrganizationGroup, getListRegUserByGroupId, getListSysUserByChineseName, getSysUserList, getlistMerchant } from '@/api/settings'
 import elDragDialog from '@/directive/el-drag-dialog'
+import searchList from '@/views/systemSettings/power/components/searchList'
 export default {
   directives: { elDragDialog },
+  components: { searchList },
   props: {
     dialogVisible: {
       type: Boolean
@@ -130,7 +139,19 @@ export default {
       allOrgAllPerson: {
         allperson: [],
         alreadyGroupId: []
-      }
+      },
+      tableShowProps: [
+        { title: '用户名', key: 'reguserName' },
+        { title: '姓名', key: 'chineseName' },
+        { title: '手机号', key: 'mobile' },
+        { title: '邮箱', key: 'email' }
+      ],
+      navSearchOptions: [
+        { value: 'reguserName', label: '用户名' },
+        { value: 'chineseName', label: '姓名' }
+      ],
+      tableData: [],
+      ActiveUserGroupid: ''
     }
   },
   computed: {
@@ -150,6 +171,31 @@ export default {
 
   },
   methods: {
+    getTableList(data) {
+      if (this.type === 'regUser') {
+        this.getReguserList(data)
+      } else if (this.type === 'commercial') {
+        this.getCommercial(data)
+      }
+    },
+    getCommercial(data) {
+      if (!data) data = { pageSize: 10, pageNp: 1 }
+      getlistMerchant(data).then(res => {
+        if (res.code === 0) {
+          this.tableData = res.data.items
+          this.$refs.searchList.setPageTotal(res.data.total)
+        }
+      })
+    },
+    getReguserList(data) {
+      getSysUserList({ ...data, userType: 2 }).then(res => {
+        if (res.code === 0) {
+          this.tableData = res.data.items
+          this.$refs.searchList.setPageTotal(res.data.total)
+        }
+      })
+    },
+
     confirm() {
       // this.$emit('update:dialogVisible', false)
       this.confirmLoading = true
@@ -169,23 +215,36 @@ export default {
     },
     forAddpersonTree() {
       this.showAddPersonTree = true
+      this.$emit('refreshTableData')
     },
     handleNodeClick(item) {
       console.log('handleNodeClick', item)
       this.activeGroupId = item.groupId
       this.checkboxLoading = true
-      getListRegUserByGroupId({ groupId: item.groupId }).then(res => {
-        if (res.code === 0 && res.data.length) {
-          this.orgAllPerson = res.data
-          if (this.allOrgAllPerson.alreadyGroupId.findIndex(ele => ele === item.groupId) === -1) {
-            this.allOrgAllPerson.alreadyGroupId.push(item.groupId)
-            this.allOrgAllPerson.allperson = this.allOrgAllPerson.allperson.concat(res.data)
-          }
-        } else {
-          this.orgAllPerson = []
+      this.ActiveUserGroupid = item.groupId
+      // getListRegUserByGroupId({ groupId: item.groupId }).then(res => {
+      //   if (res.code === 0 && res.data.length) {
+      //     this.orgAllPerson = res.data
+      //     if (this.allOrgAllPerson.alreadyGroupId.findIndex(ele => ele === item.groupId) === -1) {
+      //       this.allOrgAllPerson.alreadyGroupId.push(item.groupId)
+      //       this.allOrgAllPerson.allperson = this.allOrgAllPerson.allperson.concat(res.data)
+      //     }
+      //   } else {
+      //     this.orgAllPerson = []
+      //   }
+      // }).catch(err => {
+      //   this.orgAllPerson = []
+      //   console.log('err', err)
+      // }).finally(() => {
+      //   this.checkboxLoading = false
+      // })
+      getSysUserList({ groupId: item.groupId, pageNo: 1, pageSize: 10, userType: 2 }).then(res => {
+        if (res.code === 0) {
+          this.tableData = res.data.items
+          this.$refs.searchList.setPageTotal(res.data.total)
         }
       }).catch(err => {
-        this.orgAllPerson = []
+        this.tableData = []
         console.log('err', err)
       }).finally(() => {
         this.checkboxLoading = false

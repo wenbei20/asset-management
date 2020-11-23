@@ -74,16 +74,13 @@
         </div>
       </div>
     </div>
-    <add-person ref="addperson" :dialog-visible.sync="showAddPerson" type="regUser" @confirmData="confirmData">
-      <template slot="table">
-        啦啦啦啦啦
-      </template>
-    </add-person>
+    <add-person ref="addperson" :dialog-visible.sync="showAddPerson" type="regUser" @confirmData="confirmData" />
+
   </div>
 </template>
 
 <script>
-import { getlistRole, saveRole, updateRole, deleteRole, getlistRegUserByRoleId, getListRightsByRoleId, saveRoleRights, saveRoleUser } from '@/api/settings'
+import { getlistRole, saveRole, updateRole, deleteRole, getlistRegUserByRoleId, getListRightsByRoleId, saveRoleRights, saveRoleUser, getSysUserList } from '@/api/settings'
 import addPerson from '@/components/Dialog/addPerson'
 export default {
   components: { addPerson },

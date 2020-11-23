@@ -364,3 +364,13 @@ export function saveStandardType(data) {
     data: data2FormData(data)
   })
 }
+
+// 修改密码
+
+export function updateUserPower(data) {
+  return request({
+    url: '/sys/regUser/updatePower/' + data.reguserId,
+    method: 'post',
+    data: data2FormData(data)
+  })
+}

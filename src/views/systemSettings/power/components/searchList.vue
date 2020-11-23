@@ -2,7 +2,7 @@
   <div>
 
     <el-row>
-      <el-select v-model="SearchType" placeholder="请选择搜索类别" style="padding:0 6px;width: 160px;">
+      <el-select v-model="SearchType" placeholder="请选择搜索类别" style="padding:0 6px 0 0 ;width: 160px;">
         <el-option v-for="(ele , i ) in navSearchOptions" :key="i" :value="ele.value" :label="ele.label" />
       </el-select>
 
@@ -16,7 +16,7 @@
         <el-button slot="append" icon="el-icon-search" @click="searchList" />
       </el-input>
     </el-row>
-    <div class="maintable">
+    <div class="maintable" style="padding-top:20px;">
       <vxe-table
         ref="xTree"
         v-loading="tableLoading"
@@ -31,12 +31,24 @@
         <vxe-table-column type="checkbox" width="40" :resizable="false" />
         <vxe-table-column v-for="(item,idx) in tableShowProps" :key="idx" :field="item.key" :title="item.title" min-width="100" />
       </vxe-table>
+      <pagination
+        v-show="pageTotal>0"
+        background
+        :total="pageTotal"
+        layout="prev, pager, next, jumper"
+        :page.sync="pageQuery.pageNo"
+        :limit.sync="pageQuery.pageSize"
+        style="text-align:right;margin-top:20px;"
+        @pagination="getList"
+      />
     </div>
 
   </div>
 </template>
 <script>
+import Pagination from '@/components/Pagination'
 export default {
+  components: { Pagination },
   props: {
     navSearchOptions: {
       type: Array,
@@ -55,7 +67,12 @@ export default {
     return {
       SearchType: '',
       searchIpt: '',
-      tableLoading: false
+      tableLoading: false,
+      pageTotal: 0,
+      pageQuery: {
+        pageNo: 1,
+        pageSize: 10
+      }
     }
   },
   methods: {
@@ -64,6 +81,12 @@ export default {
     },
     searchList() {
 
+    },
+    getList() {
+      this.$emit('getpageTableData', this.pageQuery)
+    },
+    setPageTotal(total) {
+      this.pageTotal = total
     }
   }
 }

@@ -74,7 +74,7 @@
         </div>
       </div>
     </div>
-    <add-person ref="addperson" :dialog-visible.sync="showAddPerson" :no-structure="true" @confirmData="confirmData" />
+    <add-person ref="addperson" type="commercial" :dialog-visible.sync="showAddPerson" :no-structure="true" @confirmData="confirmData" />
   </div>
 </template>
 

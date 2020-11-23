@@ -1231,7 +1231,7 @@ export default {
 
       const style = '@page { size:auto;margin: 0cm 1cm 0cm 1cm; } @media print { #test .item{ display: flex;}  #test .leftTips{ width: 80%; font-size: 14px;}  #test .codeImg{ width:20%;} }'
       print({
-        printable: 'vxtable',
+        printable: 'test',
         type: 'html',
         style: style
       })
