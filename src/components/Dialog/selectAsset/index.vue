@@ -116,8 +116,8 @@ export default {
       default: () => {}
     },
     isSelectedToREfresh: {
-      type: Boolean,
-      default: false
+      type: String,
+      default: ''
     },
     merchantId: {
       type: String,
@@ -141,6 +141,14 @@ export default {
       innerTableSelection: [],
       innerTableSelectionKeys: [],
       innerTableLoading: false
+    }
+  },
+  watch: {
+    assetSelected: {
+      handler(val) {
+        this.assetTableData = val
+      },
+      deep: true
     }
   },
   created() {
@@ -184,7 +192,7 @@ export default {
     selectAsset() {
       if (this.isSelectedToREfresh) {
         if (!this.merchantId) {
-          this.$message({ type: 'warning', message: '请先选择调出公司' })
+          this.$message({ type: 'warning', message: '请先选择' + this.isSelectedToREfresh })
           return
         }
 

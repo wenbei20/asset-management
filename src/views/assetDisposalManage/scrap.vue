@@ -1,18 +1,8 @@
 <template>
   <div class="app-container">
     <el-row>
-      <el-button type="primary" icon="el-icon-plus" @click="showAddDialog=true">新建</el-button>
+      <el-button type="primary" icon="el-icon-plus" @click="handleNew">新建</el-button>
       <el-button icon="el-icon-refresh" @click="revert">还原</el-button>
-      <el-dropdown :style="{ marginLeft: '5px' }">
-        <el-button type="default" icon="el-icon-edit" plain>
-          编辑<i class="el-icon-arrow-down el-icon--right" />
-        </el-button>
-        <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item>修改</el-dropdown-item>
-          <el-dropdown-item>复制</el-dropdown-item>
-          <el-dropdown-item>删除</el-dropdown-item>
-        </el-dropdown-menu>
-      </el-dropdown>
       <el-button type="default" icon="el-icon-receiving" plain :style="{ marginLeft: '5px' }">
         导出
       </el-button>
@@ -30,11 +20,27 @@
         @checkbox-change="handleSelectionChange"
       >
         <vxe-table-column type="checkbox" width="40" :resizable="false" />
-        <vxe-table-column field="eventID" title="报废单号" />
-        <vxe-table-column field="date" title="清理日期" />
-        <vxe-table-column field="person" title="清理人" />
-        <vxe-table-column field="status" title="业务所属单位" />
-        <vxe-table-column field="title" title="清理说明" />
+        <vxe-table-column width="32" class="meuntd" :resizable="false" :edit-render="{}">
+          <template>
+            <div class="moreOuter">
+              <i class="el-icon-more" />
+
+            </div>
+          </template>
+          <template slot="edit" slot-scope="scope">
+            <i class="el-icon-more" style="position:relative;top:1px;left: -1px;" />
+
+            <div class="editmenu">
+              <div class="item" @click="handleEdit(scope.row)">修改</div>
+              <div class="item" @click="handleDelete(scope.row)">删除</div>
+            </div>
+          </template>
+        </vxe-table-column>
+        <vxe-table-column field="discardcode" title="报废单号" />
+        <vxe-table-column field="operdatetime" title="清理日期" />
+        <vxe-table-column field="reguserId" title="清理人" />
+        <vxe-table-column field="merchantId" title="业务所属单位" />
+        <vxe-table-column field="memo" title="清理说明" />
       </vxe-table>
 
       <el-pagination
@@ -44,13 +50,20 @@
         :total="pageTotal"
       />
     </el-row>
-    <add-dialog :visible.sync="showAddDialog" />
+    <add-dialog
+      ref="AddDialog"
+      :visible.sync="showAddDialog"
+      :modal-type="modalType"
+      :form-option="formOption"
+      :main-sort-data="MainSortData"
+      @submit-form="submitMethods"
+    />
   </div>
 </template>
 
 <script>
 import addDialog from './components/addScrap'
-import { assetDiscardBaseCode, queryAssetDiscardList, assetDiscardReturn } from '@/api/assetManage'
+import { assetDiscardBaseCode, queryAssetDiscardList, assetDiscardReturn, getDiscardInfo, deleteAssetDiscard, saveDiscardInfo, updateDiscardInfo } from '@/api/assetManage'
 export default {
   components: { addDialog },
   filters: {
@@ -77,253 +90,10 @@ export default {
       pageNo: 1,
       pageSize: 10,
       pageTotal: 0,
-      tableData: [
-        {
-          id: 1,
-          date: '2016-05-02',
-          name: '王小虎',
-          title: '按照部门统计巡检漏检结果',
-          checked: false,
-          eventID: '1018723',
-          youxian: 'High',
-          diedai: 'V3.2',
-          status: '已实现',
-          person: '赵鹏翔;刘彩萍',
-          startTime: '2020-09-07',
-          endTime: '2020-09-11'
-        },
-        {
-          id: 2,
-          date: '2016-05-04',
-          name: '王小虎',
-          title: '终端软件更新web端开发',
-          checked: false,
-          eventID: '1003470',
-          youxian: 'High',
-          diedai: '--',
-          status: '已拒绝',
-          person: '刘峰',
-          startTime: '2019-03-04',
-          endTime: '2019-09-11',
-          children: [
-            {
-              id: 31,
-              date: '2016-05-01',
-              name: '王小虎',
-              title: '版本号',
-              checked: false,
-              eventID: '1003471',
-              youxian: 'High',
-              diedai: '--',
-              status: '已拒绝',
-              person: '刘峰',
-              startTime: '2019-03-04',
-              endTime: '2019-03-05',
-              children: [
-                {
-                  id: 31,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '版本文件列表',
-                  checked: false,
-                  eventID: '1003481',
-                  youxian: 'High',
-                  diedai: '服务端',
-                  status: '已拒绝',
-                  person: '刘峰',
-                  startTime: '2019-03-04',
-                  endTime: '2019-03-04'
-                }, {
-                  id: 31,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '添加版本号',
-                  checked: false,
-                  eventID: '1003480',
-                  youxian: 'High',
-                  diedai: '服务端',
-                  status: '已拒绝',
-                  person: '刘峰',
-                  startTime: '2019-03-04',
-                  endTime: '2019-03-04'
-                }
-              ]
-            }
-          ]
-        },
-        {
-          id: 3,
-          date: '2016-05-01',
-          name: '王小虎',
-          title: '系统管理',
-          checked: false,
-          eventID: '1003031',
-          youxian: 'High',
-          diedai: '--',
-          status: '规划中',
-          person: '安喜喜',
-          startTime: '--',
-          endTime: '--',
-          children: [
-            {
-              id: 31,
-              date: '2016-05-01',
-              name: '王小虎',
-              title: '系统管理菜单-（菜单管理）',
-              checked: false,
-              eventID: '1003480',
-              youxian: 'High',
-              diedai: '--',
-              status: '规划中',
-              person: '安喜喜',
-              startTime: '--',
-              endTime: '--',
-              children: [
-                {
-                  id: 3,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '系统管理菜单-（菜单管理）列表数据及分页',
-                  checked: false,
-                  eventID: '1004511',
-                  youxian: 'High',
-                  diedai: 'WEB前端',
-                  status: '已实现',
-                  person: '安喜喜',
-                  startTime: '2019-03-05',
-                  endTime: '2019-03-05'
-                },
-                {
-                  id: 3,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '系统管理-（菜单管理）-需求讨论',
-                  checked: false,
-                  eventID: '1004507',
-                  youxian: 'High',
-                  diedai: 'WEB前端',
-                  status: '已实现',
-                  person: '安喜喜',
-                  startTime: '2019-03-05',
-                  endTime: '2019-03-05'
-                }, {
-                  id: 3,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '系统管理-（菜单管理）-页面搭建',
-                  checked: false,
-                  eventID: '1004506',
-                  youxian: 'High',
-                  diedai: 'WEB前端',
-                  status: '已实现',
-                  person: '安喜喜',
-                  startTime: '2019-03-05',
-                  endTime: '2019-03-05'
-                }, {
-                  id: 3,
-                  date: '2016-05-01',
-                  name: '王小虎',
-                  title: '添加 菜单/按钮 权限',
-                  checked: false,
-                  eventID: '1004505',
-                  youxian: 'High',
-                  diedai: 'WEB前端',
-                  status: '已实现',
-                  person: '安喜喜',
-                  startTime: '2019-03-05',
-                  endTime: '2019-03-05'
-                }
-              ]
-            }
-          ]
-        },
-        {
-          id: 4,
-          date: '2016-05-03',
-          name: '王小虎',
-          title: '调试下载临时任务接口',
-          checked: false,
-          eventID: '1003026',
-          youxian: 'Middle',
-          diedai: '--',
-          status: '已实现',
-          person: '代海涛',
-          startTime: '2019-03-05',
-          endTime: '2019-03-05'
-        },
-        {
-          id: 4,
-          date: '2016-05-03',
-          name: '王小虎',
-          title: '优化视频视频录制播放功能',
-          checked: false,
-          eventID: '1002733',
-          youxian: 'Middle',
-          diedai: '--',
-          status: '已实现',
-          person: '代海涛',
-          startTime: '2019-02-19',
-          endTime: '2019-02-19',
-          children: [
-            {
-              id: 4,
-              date: '2016-05-03',
-              name: '王小虎',
-              title: '优化视频录制播放',
-              checked: false,
-              eventID: '1002736',
-              youxian: 'Middle',
-              diedai: 'APP安卓',
-              status: '已实现',
-              person: '代海涛',
-              startTime: '2019-02-19',
-              endTime: '2019-02-19'
-            },
-            {
-              id: 4,
-              date: '2016-05-03',
-              name: '王小虎',
-              title: '优化视频录制大小',
-              checked: false,
-              eventID: '1002734',
-              youxian: 'Middle',
-              diedai: 'APP安卓',
-              status: '已实现',
-              person: '代海涛',
-              startTime: '2019-02-19',
-              endTime: '2019-02-19'
-            }
-          ]
-        },
-        {
-          id: 4,
-          date: '2016-05-03',
-          name: '王小虎',
-          title: '调试刷纽扣提交开始和结束时间接口',
-          checked: false,
-          eventID: '1002705',
-          youxian: 'Middle',
-          diedai: '--',
-          status: '已实现',
-          person: '代海涛',
-          startTime: '2019-03-04',
-          endTime: '2019-03-04'
-        },
-        {
-          id: 4,
-          date: '2016-05-03',
-          name: '王小虎',
-          title: '调试同步巡检任务数据接口',
-          checked: false,
-          eventID: '1002704',
-          youxian: 'Middle',
-          diedai: '--',
-          status: '已实现',
-          person: '代海涛',
-          startTime: '2019-03-01',
-          endTime: '2019-03-01'
-        }
-      ]
+      tableData: [],
+      MainSortData: {},
+      formOption: null,
+      modalType: ''
     }
   },
   mounted() {
@@ -331,12 +101,20 @@ export default {
     this.getList()
   },
   methods: {
+    handleNew() {
+      this.modalType = 'new'
+      this.showAddDialog = true
+      this.$nextTick(() => {
+        this.$refs.AddDialog && this.$refs.AddDialog.clearAllOptions()
+      })
+    },
     // Fn: 资产调拨新增和修改页面中的码表接口
     getBaseCode() {
       assetDiscardBaseCode().then(res => {
         if (res.code === 0 && res.data) {
-          this.areaList = res.data.areaList
-          this.groupList = res.data.groupList
+          for (const key in res.data) {
+            this.$set(this.MainSortData, key, res.data[key])
+          }
         }
       }).catch(err => {
         console.log('err', err)
@@ -350,13 +128,18 @@ export default {
       }
       queryAssetDiscardList(params).then((res) => {
         if (res.code === 0 && res.data) {
-          this.areaList = res.data.areaList
-          this.groupList = res.data.groupList
+          this.tableData = res.data.items
+          this.pageTotal = res.data.total
         }
       }).catch((err) => { console.log('err', err) })
     },
     // 还原
     revert() {
+      const checkedArr = this.$refs.xTree.getCheckboxRecords()
+      if (!checkedArr.length) {
+        this.$message({ type: 'warning', message: '请勾选需要还原的报废单' })
+        return
+      }
       assetDiscardReturn({ discardIds: this.selection })
         .then((res) => {
           if (res.code === 0) {
@@ -370,11 +153,71 @@ export default {
     handleSelectionChange(val) {
       this.tableSelection = val.selection
       this.tableSelectionKeys = this.selection2keys(this.tableSelection)
+    },
+    handleEdit(item) {
+      getDiscardInfo(item.discardId).then((res) => {
+        if (res.code === 0) {
+          const { discard, discardAssetList = [] } = res.data
+          this.modalType = 'edit'
+          this.formOption = {
+            formData: discard,
+            assetList: discardAssetList,
+            discardId: item.discardId
+          }
+          this.showAddDialog = true
+        }
+      })
+    },
+    submitMethods(params, id) {
+      const promise = this.modalType === 'new' ? saveDiscardInfo(params) : updateDiscardInfo(params, id)
+      const msg = this.modalType === 'new' ? '新增' : '编辑'
+      promise.then(res => {
+        if (res.code === 0) {
+          this.$message({ type: 'success', message: msg + '报废成功' })
+          this.pageNo = 1
+          this.getList()
+        } else {
+          this.$message({ type: 'error', message: msg + '报废失败，请稍后再试' })
+        }
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'error', message: msg + '报废失败，请稍后再试' })
+      }).finally(() => {
+        this.showAddDialog = false
+      })
+    },
+    handleDelete(item) {
+      this.$confirm('此操作将永久删除该资产退运, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        deleteAssetDiscard(item.backId).then((res) => {
+          if (res.code === 0) {
+            this.$message({
+              showClose: true,
+              message: '删除成功！',
+              type: 'success'
+            })
+            this.getList()
+          }
+        })
+          .catch((err) => {
+            console.log('err', err)
+          })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
     }
   }
 }
 </script>
-
-<style lang="scss" scoped>
-
+<style  scoped>
+.vxetable >>> .vxe-table--body-wrapper {
+  min-height: 350px;
+}
 </style>
+

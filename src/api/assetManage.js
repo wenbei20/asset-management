@@ -365,7 +365,8 @@ export function queryNewAssetBackList(params) {
 export function exportAssetBack() {
   return request({
     url: '/sys/back/export',
-    method: 'post'
+    method: 'post',
+    responseType: 'blob'
   })
 }
 
@@ -395,7 +396,7 @@ export function queryAssetDiscardList(params) {
 // 删除资产报废信息
 export function deleteAssetDiscard(id) {
   return request({
-    url: '/sys/back/deleteBack/' + id,
+    url: '/sys/discard/deleteDiscard/' + id,
     method: 'get'
   })
 }
@@ -422,6 +423,37 @@ export function assetDiscardExport() {
   return request({
     url: '/sys/discard/export',
     method: 'post'
+  })
+}
+
+export function getDiscardInfo(discardId) {
+  return request({
+    url: '/sys/discard/getDiscard/' + discardId,
+    method: 'get'
+  })
+}
+
+export function findAssetInfo(params) {
+  return request({
+    url: '/sys/discard/findAsset',
+    method: 'get',
+    params
+  })
+}
+
+export function saveDiscardInfo(data) {
+  return request({
+    url: '/sys/discard/saveDiscard',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function updateDiscardInfo(data, discardId) {
+  return request({
+    url: '/sys/discard/updateDiscard/' + discardId,
+    method: 'post',
+    data: data2FormData(data)
   })
 }
 

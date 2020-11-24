@@ -43,13 +43,13 @@
             </el-col>
           </el-form-item>
         </el-col>
-        <el-col :span="16">
+        <el-col :span="12">
           <el-form-item label="备注" :label-width="formLabelWidth">
             <el-col :span="24">
               <el-input
                 v-model="addOption.memo"
                 type="textarea"
-                :rows="2"
+                :rows="1"
                 placeholder="请输入内容"
               />
             </el-col>
@@ -61,7 +61,7 @@
         ref="DialogSelectAsset"
         :asset-selected="assetSelected"
         :query-asset-list="queryAssetList"
-        :is-selected-to-r-efresh="true"
+        is-selected-to-r-efresh="调出公司"
         :merchant-id="addOption.sendMerchantId"
         @changeAssetSelected="changeAssetSelected"
       />
@@ -141,7 +141,8 @@ export default {
           label: node.groupName,
           children: node.children
         }
-      }
+      },
+      lastChangedGroupId: ''
     }
   },
   computed: {
@@ -162,6 +163,13 @@ export default {
     visible: {
       handler(val) {
         this.xjzyxxVisible = val
+        if (val && this.formOption) {
+          this.addOption = { ...this.formOption.formData }
+          this.assetSelected = [...this.formOption.assetList]
+          this.fileList = [...this.formOption.imagesList]
+          const { sendMerchantId } = this.formOption.formData
+          this.lastChangedGroupId = sendMerchantId
+        }
       },
       immediate: true
     },
@@ -186,6 +194,8 @@ export default {
       this.addOption = { ...this.formOption.formData }
       this.assetSelected = [...this.formOption.assetList]
       this.fileList = [...this.formOption.imagesList]
+      const { sendMerchantId } = this.formOption.formData
+      this.lastChangedGroupId = sendMerchantId
     }
   },
   methods: {
@@ -218,8 +228,12 @@ export default {
       this.assetSelected = val
     },
     // Fn: 调出公司变更
-    sendMerchantIdChange(val) {
-      // console.log('调出公司变更', val)
+    sendMerchantIdChange(node, instanceId) {
+      if (this.lastChangedGroupId !== node.groupId) {
+        this.assetSelected = []
+        this.$refs.DialogSelectAsset.clearOptions()
+        this.lastChangedGroupId = node.groupId
+      }
     },
     // Fn: 调入公司变更
     getMerchantIdChange(val) {

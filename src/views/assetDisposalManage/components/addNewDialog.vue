@@ -73,6 +73,7 @@
 
       <!--选择资产-->
       <DialogSelectAsset
+        ref="DialogSelectAsset"
         :asset-selected="assetSelected"
         :query-asset-list="queryAssetList"
         @changeAssetSelected="changeAssetSelected"
@@ -171,6 +172,16 @@ export default {
     visible: {
       handler(val) {
         this.xjzyxxVisible = val
+        if (val && this.formOption) {
+          this.addOption = { ...this.formOption.formData }
+          this.assetSelected = [...this.formOption.assetList]
+
+          const { useMerchantId } = this.formOption.formData
+
+          if (useMerchantId && this.mainSortData.groupList.length) {
+            this.checkeduseMerchantId = this.getGroupName(this.mainSortData.groupList, useMerchantId)
+          }
+        }
       },
       immediate: true
     },
@@ -179,18 +190,6 @@ export default {
         this.addOption.assetUuids = val.map((item) => item.assetId).join(',')
       },
       deep: true
-    }
-  },
-  created() {
-    if (this.formOption) { // 当编辑，传入有数据时
-      this.addOption = { ...this.formOption.formData }
-      this.assetSelected = [...this.formOption.assetList]
-
-      const { useMerchantId } = this.formOption.formData
-
-      if (useMerchantId && this.mainSortData.groupList.length) {
-        this.checkeduseMerchantId = this.getGroupName(this.mainSortData.groupList, useMerchantId)
-      }
     }
   },
   methods: {
@@ -245,7 +244,7 @@ export default {
       this.assetSelected = val
     },
     handleConfirm() {
-      if (!this.addOption.assetUuids.length) {
+      if (!this.assetSelected.length) {
         this.$message({ type: 'warning', message: '请选择资产' })
         return
       }
@@ -264,7 +263,25 @@ export default {
       })
     },
     handleCancel() {
-
+      this.xjzyxxVisible = false
+      this.$emit('update:visible', false)
+    },
+    clearAllOptions() {
+      this.addOption = {
+        backUserId: '',
+        backdate: '',
+        useMerchantId: '',
+        areaId: '',
+        posname: '',
+        memo: '',
+        assetUuids: []
+      }
+      this.assetSelected = []
+      this.checkeduseMerchantId = ''
+      this.$nextTick(() => {
+        this.$refs.assetForm.clearValidate()
+      })
+      this.$refs.DialogSelectAsset.clearOptions()
     }
   }
 }

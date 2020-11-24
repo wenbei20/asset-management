@@ -17,7 +17,7 @@
         :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
         :data="tableData"
       >
-        <vxe-table-column type="checkbox" width="40" :resizable="false" />
+        <!-- <vxe-table-column type="checkbox" width="40" :resizable="false" /> -->
         <vxe-table-column width="32" class="meuntd" :resizable="false" :edit-render="{}">
           <template>
             <div class="moreOuter">
@@ -36,8 +36,8 @@
         </vxe-table-column>
         <vxe-table-column field="regUserId" title="退库处理人" />
         <vxe-table-column field="operdatetime" title="实际退库时间" />
-        <vxe-table-column field="useMerchantId" title="业务所属单位" />
-        <vxe-table-column field="status" title="退库后使用公司" />
+        <vxe-table-column field="merchantId" title="业务所属单位" />
+        <vxe-table-column field="useMerchantId" title="退库后使用公司" />
         <vxe-table-column field="posname" title="退库后区域" />
         <vxe-table-column field="areaId" title="退库后存放地点" />
 
@@ -62,18 +62,20 @@
     <!--新增/编辑-->
     <add-dialog
       v-if="showAddDialog"
+      ref="AddDialog"
       :visible.sync="showAddDialog"
       :modal-type="modalType"
       :form-option="formOption"
       :main-sort-data="MainSortData"
-      :group-list="groupList"
-      @submit-form="submitForm"
+      @submit-form="submitMethods"
     />
   </div>
 </template>
 <script>
 import { queryAssetBackList, assetBackBaseCode, exportAssetBack, getAssetBack, saveAssetBack, updateAssetBack, deleteAssetBack } from '@/api/assetManage'
 import addDialog from './components/addNewDialog'
+import axios from 'axios'
+import { mapState } from 'vuex'
 export default {
   components: { addDialog },
   filters: {
@@ -107,6 +109,13 @@ export default {
       formOption: null,
       MainSortData: {}
     }
+  },
+  computed: {
+    ...mapState({
+      XToken: state => state.user.token
+
+    })
+
   },
   mounted() {
     this.getBaseCode()
@@ -145,6 +154,9 @@ export default {
     handleNew() {
       this.modalType = 'new'
       this.showAddDialog = true
+      this.$nextTick(() => {
+        this.$refs.AddDialog && this.$refs.AddDialog.clearAllOptions()
+      })
     },
     // Fn: 修改
     handleEdit(item) {
@@ -194,12 +206,29 @@ export default {
     },
     // Fn: 导出
     handleExport() {
-      exportAssetBack().then((res) => {
-        console.log(409, res)
+      const postUrl = process.env.NODE_ENV === 'development' ? '/dev-api/sys/back/export' : '/sys/back/export'
+      if (!this.XToken) return
+      axios({
+        method: 'post',
+        url: postUrl,
+        headers: {
+          'X-Token': this.XToken
+        },
+        responseType: 'blob'
       })
-    },
-    submitForm(params, id) {
-      this.submitMethods(params, id)
+        .then(res => {
+          console.log('response: ', res)
+          const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' }))
+          const link = document.createElement('a')
+          link.style.display = 'none'
+          link.href = url
+          // link.download = '导出资产'
+          document.body.appendChild(link)
+          link.click()
+        })
+        .catch(error => {
+          console.log('error', error)
+        })
     },
     submitMethods(params, id) {
       const promise = this.modalType === 'new' ? saveAssetBack(params) : updateAssetBack(params, id)
