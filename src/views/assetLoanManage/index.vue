@@ -13,7 +13,7 @@
           <el-dropdown-item>删除</el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
-      <el-button icon="el-icon-printer" :style="{ marginLeft: '10px' }">打印</el-button>
+      <!-- <el-button icon="el-icon-printer" :style="{ marginLeft: '10px' }">打印</el-button> -->
 
     </el-row>
     <el-row style="padding-top:20px;">
@@ -28,6 +28,22 @@
         :data="tableData"
       >
         <vxe-table-column type="checkbox" width="40" :resizable="false" />
+        <vxe-table-column width="32" class="meuntd" :resizable="false" :edit-render="{}">
+          <template>
+            <div class="moreOuter">
+              <i class="el-icon-more" />
+
+            </div>
+          </template>
+          <template slot="edit" slot-scope="scope">
+            <i class="el-icon-more" style="position:relative;top:1px;left: -1px;" />
+
+            <div class="editmenu">
+              <div class="item" @click="handleEdit(scope.row)">修改</div>
+              <div class="item" @click="handleDelete(scope.row)">删除</div>
+            </div>
+          </template>
+        </vxe-table-column>
         <vxe-table-column field="dataStatus" title="办理状态" />
         <vxe-table-column field="status" title="状态" />
         <vxe-table-column field="lendrecode" title="借还单号" />
@@ -35,12 +51,12 @@
         <vxe-table-column field="lenddate" title="借出时间" />
         <vxe-table-column field="planReturndate" title="预计归还时间" />
         <vxe-table-column field="returndate" title="归还时间" />
-        <vxe-table-column field="options" title="操作" width="200">
+        <!-- <vxe-table-column field="options" title="操作" width="200">
           <template slot-scope="scope">
             <el-button size="small" plain @click="handleEdit(scope.row)">修改</el-button>
             <el-button size="small" plain @click="handleDelete(scope.row)">删除</el-button>
           </template>
-        </vxe-table-column>
+        </vxe-table-column> -->
       </vxe-table>
 
       <el-pagination
@@ -176,6 +192,8 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
-
+<style  scoped>
+.vxetable >>> .vxe-table--body-wrapper {
+  min-height: 350px;
+}
 </style>

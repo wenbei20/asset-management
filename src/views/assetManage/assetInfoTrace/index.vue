@@ -86,13 +86,13 @@
           </div>
         </template>
       </vxe-table-column> -->
-      <vxe-table-column width="100" title="业务类型" sortable :visible="tableShowColumn.ywlx">
-        <template #default="{ row }">
+      <vxe-table-column field="busstatusName" width="100" title="业务类型" sortable :visible="tableShowColumn.ywlx">
+        <!-- <template #default="{ row }">
           <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
-        </template>
+        </template> -->
       </vxe-table-column>
 
-      <vxe-table-column field="assetcode" title="资产编码" sortable min-width="100" :visible="tableShowColumn.zcbm" />
+      <vxe-table-column field="assetcode" title="资产编号" sortable min-width="100" :visible="tableShowColumn.zcbm" />
       <vxe-table-column field="assetname" title="资产名称" sortable tree-node width="300" :visible="tableShowColumn.zcmc">
         <template #default="{ row }">
           <span class="titleText"><i /> {{ row.assetname }}</span>
@@ -149,10 +149,10 @@
             </el-select>
           </el-col>
         </el-form-item>
-        <el-form-item label="资产编码" :label-width="formLabelWidth">
+        <el-form-item label="资产编号" :label-width="formLabelWidth">
           <el-col :span="10">
             <el-select v-model="form.assetCoding" placeholder="请选择条件" :style="{ width: '100%' }">
-              <el-option label="资产编码" value="1" />
+              <el-option label="资产编号" value="1" />
             </el-select>
           </el-col>
           <el-col :span="13" :offset="1">
@@ -240,7 +240,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="资产编码" :label-width="formLabelWidth">
+            <el-form-item label="资产编号" :label-width="formLabelWidth">
               <el-col :span="10" style="padding:0px;">
                 <el-select v-model="gjssForm.assetcodeLogicType" size="small" placeholder="请选择条件" :style="{ width: '100%' }">
                   <el-option label="等于" value="EQ" />
@@ -465,7 +465,7 @@ export default {
       settingVisible: false,
       popoverSwitchList: [
         { name: '业务类型', model: 'ywlx', disabled: false },
-        { name: '资产编码', model: 'zcbm', disabled: false },
+        { name: '资产编号', model: 'zcbm', disabled: false },
         { name: '资产名称', model: 'zcmc', disabled: false },
         { name: '资产类别', model: 'zclb', disabled: false },
         { name: '标准型号', model: 'bzxh', disabled: false },

@@ -8,6 +8,23 @@ export function getRfid() {
   })
 }
 
+export function standardtype(data) {
+  return request({
+    url: '/sys/assets/standardtype',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function exportAssets(data) {
+  return request({
+    url: '/sys/assets/export',
+    method: 'post',
+    data: data2FormData(data)
+
+  })
+}
+
 export function doAssetUpdate(data) {
   return request({
     url: '/sys/assets/doUpdate',
@@ -227,8 +244,9 @@ export function assetTransferList(params) {
 // 删除资产调拨信息
 export function deleteAssetAllot(id) {
   return request({
-    url: '/sys/allot/deleteAllot' + id,
-    method: 'get'
+    url: '/sys/allot/deleteAllot/' + id,
+    method: 'get',
+    params: { allotId: id }
   })
 }
 
@@ -252,7 +270,7 @@ export function saveAssetAllot(data) {
 // 修改资产调拨信息
 export function updateAssetAllot(data) {
   return request({
-    url: '/sys/allot/updateAllot',
+    url: '/sys/allot/updateAllot/' + data.allotId,
     method: 'post',
     data: data2FormData(data)
   })
@@ -326,9 +344,9 @@ export function saveAssetBack(data) {
 }
 
 // 修改资产退运信息
-export function updateAssetBack(data) {
+export function updateAssetBack(data, id) {
   return request({
-    url: '/sys/back/updateBack',
+    url: '/sys/back/updateBack/' + id,
     method: 'post',
     data: data2FormData(data)
   })
@@ -347,7 +365,8 @@ export function queryNewAssetBackList(params) {
 export function exportAssetBack() {
   return request({
     url: '/sys/back/export',
-    method: 'post'
+    method: 'post',
+    responseType: 'blob'
   })
 }
 
@@ -377,7 +396,7 @@ export function queryAssetDiscardList(params) {
 // 删除资产报废信息
 export function deleteAssetDiscard(id) {
   return request({
-    url: '/sys/back/deleteBack/' + id,
+    url: '/sys/discard/deleteDiscard/' + id,
     method: 'get'
   })
 }
@@ -404,6 +423,37 @@ export function assetDiscardExport() {
   return request({
     url: '/sys/discard/export',
     method: 'post'
+  })
+}
+
+export function getDiscardInfo(discardId) {
+  return request({
+    url: '/sys/discard/getDiscard/' + discardId,
+    method: 'get'
+  })
+}
+
+export function findAssetInfo(params) {
+  return request({
+    url: '/sys/discard/findAsset',
+    method: 'get',
+    params
+  })
+}
+
+export function saveDiscardInfo(data) {
+  return request({
+    url: '/sys/discard/saveDiscard',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function updateDiscardInfo(data, discardId) {
+  return request({
+    url: '/sys/discard/updateDiscard/' + discardId,
+    method: 'post',
+    data: data2FormData(data)
   })
 }
 

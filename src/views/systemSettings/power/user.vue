@@ -74,12 +74,13 @@
         </div>
       </div>
     </div>
-    <add-person ref="addperson" :dialog-visible.sync="showAddPerson" @confirmData="confirmData" />
+    <add-person ref="addperson" :dialog-visible.sync="showAddPerson" type="regUser" @confirmData="confirmData" />
+
   </div>
 </template>
 
 <script>
-import { getlistRole, saveRole, updateRole, deleteRole, getlistRegUserByRoleId, getListRightsByRoleId, saveRoleRights, saveRoleUser } from '@/api/settings'
+import { getlistRole, saveRole, updateRole, deleteRole, getlistRegUserByRoleId, getListRightsByRoleId, saveRoleRights, saveRoleUser, getSysUserList } from '@/api/settings'
 import addPerson from '@/components/Dialog/addPerson'
 export default {
   components: { addPerson },
@@ -233,7 +234,7 @@ export default {
     },
     getRightCheckedKey(arr) {
       arr.forEach(item => {
-        if (item.checked) {
+        if (item.checked && !item.children) {
           this.defaultCheckedList.push(item.rightkeyId)
         }
         if (Array.isArray(item.children)) {
@@ -265,7 +266,7 @@ export default {
     getListRights(roleId) {
       this.rightTreeLoading = true
       this.defaultCheckedList = []
-      getListRightsByRoleId({ roleId, rightkeyKind: 0 }).then(res => {
+      getListRightsByRoleId({ roleId, rightkeyKind: this.roleKind }).then(res => {
         if (res.code === 0 && Array.isArray(res.data)) {
           console.log('res', res)
           this.getRightCheckedKey(res.data)
@@ -301,7 +302,9 @@ export default {
       }
     },
     saveGroupRights() {
-      const checkedList = this.$refs.rightsTree.getCheckedNodes().map(ele => ele.rightkeyId).join(',')
+      //
+
+      const checkedList = this.$refs.rightsTree.getCheckedNodes(false, true).map(ele => ele.rightkeyId).join(',')
       console.log('checkedList', checkedList)
       this.saveBtnLoading = true
       saveRoleRights({ rightkeyIds: checkedList, roleId: this.activeGroupName }).then(res => {

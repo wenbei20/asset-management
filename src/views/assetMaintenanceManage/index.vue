@@ -4,10 +4,17 @@
       <el-button type="primary" icon="el-icon-plus" @click="handleNew">新建</el-button>
       <el-button disabled icon="el-icon-setting" :style="{ marginLeft: '10px' }">开始维修</el-button>
       <el-button :disabled="!tableSelection.length" icon="el-icon-setting" @click="handleFinish">完成维修</el-button>
-      <el-button icon="el-icon-printer">打印</el-button>
 
     </el-row>
-    <el-row style="padding-top:20px;">
+    <!-- <el-row style="padding-top:20px;">
+      <el-card shadow="never" body-style="padding: 10px;">
+        <el-button size="small" type="primary" icon="el-icon-plus" @click="handleNew">新建</el-button>
+        <el-button size="small" disabled icon="el-icon-setting" :style="{ marginLeft: '10px' }">开始维修</el-button>
+        <el-button size="small" :disabled="!tableSelection.length" icon="el-icon-setting" @click="handleFinish">完成维修</el-button>
+        <el-button size="small" icon="el-icon-printer">打印</el-button>
+      </el-card>
+    </el-row> -->
+    <el-card shadow="never" body-style="padding: 10px; min-height: calc(100vh - 160px)" style="margin-top:10px;">
       <vxe-table
         ref="xTree"
         resizable
@@ -17,6 +24,7 @@
         class="vxetable"
         :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
         :data="tableData"
+        border
         @checkbox-all="handleSelectionAll"
         @checkbox-change="handleSelectionChange"
       >
@@ -44,7 +52,7 @@
         style="text-align:right;margin-top:20px;"
         :total="pageTotal"
       />
-    </el-row>
+    </el-card>
     <!--新增/编辑-->
     <add-dialog
       v-if="showAddDialog"

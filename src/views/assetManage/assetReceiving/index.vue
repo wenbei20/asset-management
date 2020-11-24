@@ -28,10 +28,10 @@
             <el-dropdown-item :command="3">删除</el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown> -->
-        <el-button type="default" icon="el-icon-printer" :style="{ marginLeft: '5px' }" plain>
+        <!-- <el-button type="default" icon="el-icon-printer" :style="{ marginLeft: '5px' }" plain>
           打印
-        </el-button>
-        <el-button type="default" icon="el-icon-receiving" :style="{ marginLeft: '5px' }" plain>
+        </el-button> -->
+        <el-button type="default" icon="el-icon-receiving" :style="{ marginLeft: '5px' }" plain @click="exportAllAsset">
           导出
         </el-button>
       </el-col>
@@ -194,9 +194,10 @@
             <vxe-table-column field="imageList" title="照片" min-width="60">
               <template #default="{ row }">
                 <span v-if="!row.imageList || row.imageList.length === 0" class="innerTree_noimages">暂无</span>
+                <svg-icon v-else icon-class="tupian" style="height:36px;width:36px;" />
               </template>
             </vxe-table-column>
-            <vxe-table-column field="assetcode" title="资产编码" min-width="120" />
+            <vxe-table-column field="assetcode" title="资产编号" min-width="120" />
             <vxe-table-column field="assetname" title="资产名称" min-width="120" />
             <vxe-table-column field="groupName" title="所属单位" min-width="120" />
             <vxe-table-column field="useMerchantName" title="使用单位" min-width="120" />
@@ -223,9 +224,12 @@
           <vxe-table-column field="imageList" title="照片" min-width="60">
             <template #default="{ row }">
               <span v-if="!row.imageList || row.imageList.length === 0" class="innerTree_noimages">暂无</span>
+
+              <svg-icon v-else icon-class="tupian" style="height:36px;width:36px;" />
+
             </template>
           </vxe-table-column>
-          <vxe-table-column field="assetcode" title="资产编码" min-width="120" />
+          <vxe-table-column field="assetcode" title="资产编号" min-width="120" />
           <vxe-table-column field="assetname" title="资产名称" min-width="120" />
           <vxe-table-column field="groupName" title="所属单位" min-width="120" />
           <vxe-table-column field="useMerchantName" title="使用单位" min-width="120" />
@@ -264,7 +268,7 @@
         :data="DetailTable.data"
       >
 
-        <vxe-table-column field="assetcode" title="资产编码" min-width="120" />
+        <vxe-table-column field="assetcode" title="资产编号" min-width="120" />
         <vxe-table-column field="assetname" title="资产名称" min-width="120" />
         <!-- <vxe-table-column field="groupName" title="所属单位" min-width="120" /> -->
         <!-- <vxe-table-column field="useMerchantName" title="使用单位" min-width="120" /> -->
@@ -287,6 +291,7 @@ import { getReceiveList, baseCode, getAllMechartUser, createReceive, getInnerAss
 import Dialog from '@/components/Dialog/index'
 import Pagination from '@/components/Pagination'
 import { mapState } from 'vuex'
+import axios from 'axios'
 export default {
   name: 'AssetInfoManage',
   components: { Dialog, Pagination },
@@ -621,7 +626,7 @@ export default {
       })
     },
     deteleAsset(row) {
-      this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+      this.$confirm('此操作将永久删除该资产领用, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
@@ -707,6 +712,42 @@ export default {
           this.showAddOrEdit = false
         }, 1000)
       })
+    },
+    exportAllAsset() {
+      const query = {
+        ...this.pageQuery
+      }
+      delete query.receivecode
+      delete query.receivedate
+
+      const fd = new FormData()
+      for (const key in query) {
+        fd.append(key, query[key])
+      }
+
+      const postUrl = process.env.NODE_ENV === 'development' ? '/dev-api/sys/receive/export' : '/sys/receive/export'
+      axios({
+        method: 'post',
+        url: postUrl,
+        data: fd,
+        headers: {
+          'X-Token': this.XToken
+        },
+        responseType: 'blob'
+      })
+        .then(res => {
+          console.log('response: ', res)
+          const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' }))
+          const link = document.createElement('a')
+          link.style.display = 'none'
+          link.href = url
+          // link.download = '导出资产'
+          document.body.appendChild(link)
+          link.click()
+        })
+        .catch(error => {
+          console.log('error', error)
+        })
     }
   }
 }
@@ -756,4 +797,5 @@ export default {
 .innerTreeForDepart {
   min-width: 200px;
 }
+
 </style>

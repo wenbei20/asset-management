@@ -33,11 +33,6 @@ router.beforeEach(async(to, from, next) => {
         try {
           // get user info
           await store.dispatch('user/getInfo')
-          const addrouter = await store.dispatch('permission/getSettingRoutes')
-          router.options.routes = router.options.routes.concat(addrouter)
-          router.addRoutes(addrouter)
-
-          console.log('router', router)
 
           next()
         } catch (error) {
@@ -47,6 +42,17 @@ router.beforeEach(async(to, from, next) => {
           next(`/login?redirect=${to.path}`)
           NProgress.done()
         }
+      }
+
+      const addRoutes = store.getters.addRoutes
+      if (!addRoutes || !addRoutes.length) {
+        const newrouters = await store.dispatch('permission/getSettingRoutes')
+        newrouters.forEach(item => {
+          router.options.routes.push(item)
+        })
+
+        router.addRoutes(newrouters)
+        console.log('router', router)
       }
     }
   } else {

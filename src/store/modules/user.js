@@ -1,6 +1,7 @@
 import { login, logout, getInfo } from '@/api/user'
-import { getToken, setToken, removeToken } from '@/utils/auth'
-import { resetRouter } from '@/router'
+import { getToken, setToken, removeToken, setLocalUserInfo, getLocalUserInfo, removeLocalUserInfo } from '@/utils/auth'
+import router, { resetRouter, sysContentRouters } from '@/router'
+import store from '@/store'
 
 const getDefaultState = () => {
   return {
@@ -11,7 +12,8 @@ const getDefaultState = () => {
     merchantName: '',
     userChname: '',
     roles: [],
-    type: ''
+    type: '',
+    reguserId: ''
   }
 }
 
@@ -41,22 +43,40 @@ const mutations = {
   },
   SET_USERCHNAME: (state, userChname) => {
     state.userChname = userChname
+  },
+  SET_REGUSERID: (state, reguserId) => {
+    state.reguserId = reguserId
   }
 }
 
 const actions = {
   // user login
-  login({ commit }, userInfo) {
+  login({ commit, dispatch }, userInfo) {
+    console.log('arguments', arguments)
     const { username, password } = userInfo
     return new Promise((resolve, reject) => {
-      login({ username: username.trim(), power: password }).then(response => {
+      login({ username: username.trim(), power: password }).then(async response => {
         console.log(response)
         if (response.code === 0) {
           commit('SET_TOKEN', response.data.token)
           commit('SET_MERCHART_NAME', response.data.merchantName)
           commit('SET_USERCHNAME', response.data.userChname)
-
+          commit('SET_REGUSERID', response.data.uuid)
           setToken(response.data.token)
+
+          // const addrouter = await dispatch('permission/getSettingRoutes')
+
+          // router.addRoutes(addrouter)
+          setLocalUserInfo({
+            merchantName: response.data.merchantName,
+            userChname: response.data.userChname,
+            uuid: response.data.uuid
+          })
+          const addrouter = await store.dispatch('permission/getSettingRoutes')
+          router.options.routes = router.options.routes.concat(addrouter)
+          router.addRoutes(addrouter)
+          console.log('router', router)
+
           // getPermission().then(res=>{
           //     console.log('getPermission', res)
           // })
@@ -72,11 +92,11 @@ const actions = {
           resolve()
         } else {
           console.log('response.msg', response.msg)
-          reject(response.msg)
+          reject({ msg: response.msg })
         }
       }).catch(err => {
         console.log(err)
-        reject(err)
+        reject({ msg: '登录失败，请稍后再试' })
       })
     })
   },
@@ -93,13 +113,26 @@ const actions = {
         if (Array.isArray(roles) && roles.length > 0) {
           name = roles[0]
         }
-        // const { roles, name, avatar, introduction } = response
+        console.log('state', state)
+        const { userChname, merchantName, uuid } = getLocalUserInfo()
+        if (!state.merchantName && merchantName) {
+          commit('SET_MERCHART_NAME', merchantName)
+        }
+
+        if (!state.reguserId && uuid) {
+          commit('SET_REGUSERID', uuid)
+        }
+
+        if (!state.userChname && userChname) {
+          commit('SET_USERCHNAME', userChname)
+        }
 
         if (!roles || roles.length <= 0) {
           reject('获取用户信息失败')
         }
 
         commit('SET_ROLES', roles)
+        commit('SET_USERCHNAME', response.data.userChname)
         commit('SET_NAME', name)
         // commit('SET_AVATAR', avatar)
         // commit('SET_INTRODUCTION', introduction)
@@ -112,13 +145,14 @@ const actions = {
 
   // user logout
   logout({ commit, state }) {
+    resetRouter()
     return new Promise((resolve, reject) => {
       logout(state.token).then(() => {
         commit('SET_TOKEN', '')
         commit('SET_ROLES', [])
         removeToken() // must remove  token  first
-        resetRouter()
         resolve()
+        removeLocalUserInfo()
       }).catch(error => {
         reject(error)
       })

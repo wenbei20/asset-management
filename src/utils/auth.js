@@ -13,3 +13,21 @@ export function setToken(token) {
 export function removeToken() {
   return Cookies.remove(TokenKey)
 }
+
+export function setLocalUserInfo(info) {
+  localStorage.setItem('userInfo', JSON.stringify(info))
+}
+
+export function getLocalUserInfo() {
+  let obj = localStorage.getItem('userInfo')
+  try {
+    obj = JSON.parse(obj)
+  } catch {
+    obj = {}
+  }
+  return obj
+}
+
+export function removeLocalUserInfo() {
+  localStorage.removeItem('userInfo')
+}

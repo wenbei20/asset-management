@@ -20,12 +20,12 @@
       <vxe-table-column field="taskPk" title="盘亏量" />
 
     </vxe-table>
-        <el-pagination
-          background
-          layout="prev, pager, next, jumper"
-          style="text-align:right;margin-top:20px;"
-          :total="pageLogTotal"
-        />
+    <el-pagination
+      background
+      layout="prev, pager, next, jumper"
+      style="text-align:right;margin-top:20px;"
+      :total="pageLogTotal"
+    />
   </div>
 </template>
 
@@ -36,7 +36,7 @@ export default {
   data() {
     return {
       tableData: [
-        
+
       ],
       pageNo: 1,
       pageSize: 10,
@@ -45,17 +45,16 @@ export default {
   },
   mounted() {
     this.getData()
-
   },
-   methods: {
-     getData(){
-      const { pageLogNo, pageLogSize } = this;
+  methods: {
+    getData() {
+      const { pageLogNo, pageLogSize } = this
       const params = { ...this.requestParams, pageLogNo, pageLogSize }
       listCheckCollect(params).then(response => {
-        this.tableData=response.data.items
-        this.pageTotal = res.data.total
-        this.pageSize = res.data.limit
-        this.pageNo = res.data.page
+        this.tableData = response.data.items
+        this.pageTotal = response.data.total
+        this.pageSize = response.data.limit
+        this.pageNo = response.data.page
       })
     }
   }

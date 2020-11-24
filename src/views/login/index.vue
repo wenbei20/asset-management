@@ -8,7 +8,7 @@
               <h3 class="title">
                 <strong>登录</strong>
                 <el-divider direction="vertical" />
-                北京创想有限公司
+                <!-- 北京创想有限公司 -->
               </h3>
             </div>
             <!--密码登录-->
@@ -170,8 +170,8 @@ export default {
               let err = ''
               // console.log('err', err.message === "Network Error")
 
-              if (!error.message) {
-                err = error
+              if (error.msg) {
+                err = error.msg
               } else if (error.message === 'Network Error') {
                 err = '网络连接失败，请稍后重试！'
               } else {

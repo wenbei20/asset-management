@@ -136,6 +136,14 @@ export function updateMerchant(data, id) {
   })
 }
 
+export function getListSysUserByChineseName(params) {
+  return request({
+    url: '/sys/regUser/listSysUserByChineseName',
+    method: 'get',
+    params
+  })
+}
+
 export function getListRegUserByChineseName(params) {
   return request({
     url: '/sys/regUser/listRegUserByChineseName',
@@ -357,6 +365,15 @@ export function saveStandardType(data) {
   })
 }
 
+// 修改密码
+
+export function updateUserPower(data) {
+  return request({
+    url: '/sys/regUser/updatePower/' + data.reguserId,
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
 // 修改规格标准
 export function updateStandardType(data) {
   return request({
