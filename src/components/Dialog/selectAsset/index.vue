@@ -17,7 +17,7 @@
     >
       <vxe-table-column type="checkbox" width="40" :resizable="false" />
       <vxe-table-column field="imageList" title="照片">
-        <template slot-scope="scope">
+        <!-- <template slot-scope="scope">
           <tempalte v-if="(scope.row.imageList || []).length">
             <el-image
               v-for="image in scope.row.imageList"
@@ -27,6 +27,10 @@
               :fit="fit"
             />
           </tempalte>
+        </template> -->
+        <template #default="{ row }">
+          <span v-if="!row.imageList || row.imageList.length === 0" class="innerTree_noimages">暂无</span>
+          <svg-icon v-else icon-class="tupian" style="height:36px;width:36px;" />
         </template>
       </vxe-table-column>
       <vxe-table-column field="assetcode" title="资产编号" />
@@ -66,7 +70,7 @@
       >
         <vxe-table-column type="checkbox" width="40" :resizable="false" />
         <vxe-table-column field="imageList" title="照片">
-          <template slot-scope="scope">
+          <!-- <template slot-scope="scope">
             <el-image
               v-for="image in scope.row.imageList"
               :key="image.url"
@@ -74,6 +78,10 @@
               :src="url"
               :fit="fit"
             />
+          </template> -->
+          <template #default="{ row }">
+            <span v-if="!row.imageList || row.imageList.length === 0" class="innerTree_noimages">暂无</span>
+            <svg-icon v-else icon-class="tupian" style="height:36px;width:36px;" />
           </template>
         </vxe-table-column>
         <vxe-table-column field="assetcode" title="资产编号" />

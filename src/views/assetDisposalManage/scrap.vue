@@ -14,7 +14,7 @@
         </el-dropdown-menu>
       </el-dropdown>
       <el-button type="default" icon="el-icon-receiving" plain :style="{ marginLeft: '5px' }">
-        打印/导出<i class="el-icon-arrow-down el-icon--right" />
+        导出
       </el-button>
     </el-row>
     <el-row style="padding-top:20px;">

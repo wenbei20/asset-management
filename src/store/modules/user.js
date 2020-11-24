@@ -1,5 +1,5 @@
 import { login, logout, getInfo } from '@/api/user'
-import { getToken, setToken, removeToken } from '@/utils/auth'
+import { getToken, setToken, removeToken, setLocalUserInfo, getLocalUserInfo, removeLocalUserInfo } from '@/utils/auth'
 import router, { resetRouter, sysContentRouters } from '@/router'
 import store from '@/store'
 
@@ -67,7 +67,11 @@ const actions = {
           // const addrouter = await dispatch('permission/getSettingRoutes')
 
           // router.addRoutes(addrouter)
-
+          setLocalUserInfo({
+            merchantName: response.data.merchantName,
+            userChname: response.data.userChname,
+            uuid: response.data.uuid
+          })
           const addrouter = await store.dispatch('permission/getSettingRoutes')
           router.options.routes = router.options.routes.concat(addrouter)
           router.addRoutes(addrouter)
@@ -109,13 +113,26 @@ const actions = {
         if (Array.isArray(roles) && roles.length > 0) {
           name = roles[0]
         }
-        // const { roles, name, avatar, introduction } = response
+        console.log('state', state)
+        const { userChname, merchantName, uuid } = getLocalUserInfo()
+        if (!state.merchantName && merchantName) {
+          commit('SET_MERCHART_NAME', merchantName)
+        }
+
+        if (!state.reguserId && uuid) {
+          commit('SET_REGUSERID', uuid)
+        }
+
+        if (!state.userChname && userChname) {
+          commit('SET_USERCHNAME', userChname)
+        }
 
         if (!roles || roles.length <= 0) {
           reject('获取用户信息失败')
         }
 
         commit('SET_ROLES', roles)
+        commit('SET_USERCHNAME', response.data.userChname)
         commit('SET_NAME', name)
         // commit('SET_AVATAR', avatar)
         // commit('SET_INTRODUCTION', introduction)
@@ -135,6 +152,7 @@ const actions = {
         removeToken() // must remove  token  first
         resetRouter()
         resolve()
+        removeLocalUserInfo()
       }).catch(error => {
         reject(error)
       })

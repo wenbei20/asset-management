@@ -1,20 +1,20 @@
 <template>
   <el-dialog title="新增" :visible.sync="xjzyxxVisible" width="1200px" @close="closeThis">
-    <el-form ref="assetForm" :model="addOption" label-position="right">
+    <el-form ref="assetForm" :model="addOption" label-position="right" :rules="addDialogRoles">
       <el-row>
         <el-col :span="11">
           <el-form-item label="退库处理人" :label-width="addOptionWidth" prop="backUserId">
-            <el-select v-model="addOption.backUserId" placeholder="请选择退库处理人" :style="{ width: '100%' }">
-              <el-option label="退库处理人一" value="1" />
-            </el-select>
+            <el-input :value="thisUserName" disabled />
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="实际退库时间" :label-width="addOptionWidth">
+          <el-form-item label="实际退库时间" :label-width="addOptionWidth" prop="backdate">
             <el-date-picker
               v-model="addOption.backdate"
               type="date"
               placeholder="请选择实际退库时间"
+              style="width:100%"
+              value-format="yyyy-MM-dd"
             />
           </el-form-item>
         </el-col>
@@ -23,33 +23,40 @@
       <el-row>
         <el-col :span="11">
           <el-form-item label="业务所属公司" :label-width="addOptionWidth">
-            <el-select v-model="addOption.receiveCompany" placeholder="请选择业务所属公司" :style="{ width: '100%' }">
-              <el-option label="公司一" value="1" />
-              <el-option label="公司2" value="2" />
-            </el-select>
+            <el-input :value="thisMerchantName" disabled />
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="退库后使用公司" :label-width="addOptionWidth">
-            <el-select v-model="addOption.useMerchantId" placeholder="请选择退库后使用公司" :style="{ width: '100%' }">
-              <el-option label="部门一" value="1" />
-              <el-option label="部门2" value="2" />
-            </el-select>
+          <el-form-item label="退库后使用公司" :label-width="addOptionWidth" prop="useMerchantId">
+            <el-dropdown ref="statusInnerDrop" trigger="click" placement="bottom-start" style="width:100%">
+              <el-input v-model="checkeduseMerchantId" size="small" placeholder="请选择资产类别" />
+
+              <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
+                <el-tree
+                  ref="statusTree"
+                  node-key="groupId"
+                  :props="CompanyProps"
+                  :data="mainSortData.groupList"
+                  :default-expand-all="true"
+                  :expand-on-click-node="false"
+                  @node-click="useMerchantIdClick"
+                />
+              </el-dropdown-menu>
+            </el-dropdown>
           </el-form-item>
         </el-col>
       </el-row>
 
       <el-row>
         <el-col :span="11">
-          <el-form-item label="退库后区域" :label-width="addOptionWidth">
+          <el-form-item label="退库后区域" :label-width="addOptionWidth" prop="areaId">
             <el-select v-model="addOption.areaId" placeholder="请选择区域" :style="{ width: '100%' }">
-              <el-option label="区域一" value="1" />
-              <el-option label="区域2" value="2" />
+              <el-option v-for="(ele , i ) in mainSortData.areaList" :key="i" :value="ele.area_id" :label="ele.area_name" />
             </el-select>
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="退库后存放地点" :label-width="addOptionWidth">
+          <el-form-item label="退库后存放地点" :label-width="addOptionWidth" prop="posname">
             <el-input v-model="addOption.posname" placeholder="请输入存放地点" />
           </el-form-item>
         </el-col>
@@ -58,7 +65,6 @@
       <el-row>
         <el-col :span="23">
           <el-form-item label="说明" :label-width="addOptionWidth">
-
             <el-input v-model="addOption.memo" placeholder="说明" />
           </el-form-item>
         </el-col>
@@ -82,6 +88,7 @@
 <script>
 import DialogSelectAsset from '@/components/Dialog/selectAsset'
 import { saveAssetBack, updateAssetBack, queryNewAssetBackList } from '@/api/assetManage'
+import { mapState } from 'vuex'
 export default {
   components: {
     DialogSelectAsset
@@ -91,9 +98,14 @@ export default {
       type: Boolean,
       default: false
     },
-    groupList: {
-      type: Array,
-      default: () => []
+    mainSortData: {
+      type: Object,
+      default: () => {
+        return {
+          groupList: [],
+          areaList: []
+        }
+      }
     },
     modalType: {
       type: String,
@@ -118,7 +130,28 @@ export default {
         memo: '',
         assetUuids: []
       },
-      assetSelected: [] // 当前选中资产
+      assetSelected: [], // 当前选中资产
+      CompanyProps: {
+        children: 'children',
+        label: 'groupName'
+      },
+      checkeduseMerchantId: '',
+      addDialogRoles: {
+        backdate: [
+          { required: true, message: '请选择实际退库时间', trigger: 'change' }
+        ],
+        useMerchantId: [
+          { required: true, message: '请选择退库后使用公司', trigger: 'change' }
+        ],
+        areaId: [
+          { required: true, message: '请选择区域', trigger: 'change' }
+        ],
+        posname: [
+          { required: true, message: '请输入存放地点', trigger: 'blur' }
+
+        ]
+
+      }
     }
   },
   computed: {
@@ -127,14 +160,26 @@ export default {
     },
     modalTitle() {
       return this.modalType === 'new' ? '新增' : '编辑'
-    }
+    },
+    ...mapState({
+      thisMerchantName: state => state.user.merchantName,
+      thisUserName: state => state.user.userChname
+
+    })
   },
+
   watch: {
     visible: {
       handler(val) {
         this.xjzyxxVisible = val
       },
       immediate: true
+    },
+    assetSelected: {
+      handler(val) {
+        this.addOption.assetUuids = val.map((item) => item.allotId).join(',')
+      },
+      deep: true
     }
   },
   methods: {
@@ -165,6 +210,23 @@ export default {
       } else if (this.modalType === 'edit') {
         return updateAssetBack(params)
       }
+    },
+    useMerchantIdClick(item) {
+      this.addOption.useMerchantId = item.groupId
+      this.checkeduseMerchantId = item.groupName
+      this.$refs.statusInnerDrop.hide()
+    },
+    changeAssetSelected(val) {
+      this.assetSelected = val
+    },
+    handleConfirm() {
+      if (!this.addOption.assetUuids.length) {
+        this.$message({ type: 'warning', message: '请选择资产' })
+        return
+      }
+    },
+    handleCancel() {
+
     }
   }
 }

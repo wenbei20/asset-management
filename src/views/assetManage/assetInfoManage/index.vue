@@ -1,14 +1,14 @@
 <template>
   <div class="app-container">
     <div id="test">
-      <div v-for="(ele , i ) in printCodeList" :key="i" class="item">
+      <div v-for="(ele , i ) in printCodeList" v-if="ele.rfidCode" :key="i" class="item">
         <div class="leftTips">
-          <div v-for="(item , idx) in ele.content" :key="idx">
+          <h5 v-for="(item , idx) in ele.content" v-if="item.key!== 'asset_id'" :key="idx">
             <span class="lt_title">{{ item.name }}：</span>
             <span class="lt_cnt">{{ item.value }}</span>
-          </div>
+          </h5>
         </div>
-        <div :id="ele.rfidCode" class="codeImg" />
+        <p :id="ele.rfidCode" class="codeImg" />
       </div>
     </div>
 
@@ -29,6 +29,7 @@
           <el-button slot="append" icon="el-icon-search" @click="searchList" />
         </el-input>
         <el-button type="primary" icon="el-icon-plus" @click="addNew">新建</el-button>
+        <el-button type="primary" icon="el-icon-plus" @click="printPreview">打印</el-button>
         <el-dropdown :style="{ marginLeft: '5px' }" trigger="click" @command="operationSelect">
           <el-button type="default" icon="el-icon-receiving" plain>
             操作<i class="el-icon-arrow-down el-icon--right" />
@@ -123,7 +124,7 @@
             </div>
           </template>
         </vxe-table-column>
-        <vxe-table-column width="80" title="状态" sortable>
+        <vxe-table-column field="statusName" width="80" title="状态" sortable>
           <template #default="{ row }">
             <span class="statuspan" :class="row.statusName | statusClass">{{ row.statusName }}</span>
           </template>
@@ -453,6 +454,7 @@ import print from 'print-js'
 import axios from 'axios'
 import { mapState } from 'vuex'
 import QRCode from 'qrcodejs2'
+import { getLodop } from '@/utils/c-lodop'
 export default {
   name: 'AssetInfoManage',
   components: { fromDialog, Pagination, cardDialog },
@@ -717,6 +719,10 @@ export default {
       }
       printTag(query).then(res => {
         if (res.code === 0) {
+          this.printCodeList = res.data
+          this.$nextTick(() => {
+            this.printFun(res.data)
+          })
           console.log('res', res)
         }
       }).catch(err => {
@@ -1211,6 +1217,15 @@ export default {
       printTag({ assetsIds: row.assetId }).then(res => {
         if (res.code === 0) {
           this.printCodeList = res.data
+          // res.data.forEach(item => {
+          //   if (item.content.length) {
+          //     const idx = item.content.findIndex(ele => ele.key === 'assetcode')
+          //     if (idx !== -1) {
+          //       item.assetcode = item.content[idx].value
+          //     }
+          //   }
+          // })
+          // console.log('res.data', res.data)
           this.$nextTick(() => {
             this.printFun(res.data)
           })
@@ -1221,20 +1236,48 @@ export default {
     },
     printFun(data) {
       data.forEach(item => {
-        const qrcode = new QRCode(item.rfidCode, {
+        if (!item.rfidCode) return
+        console.log('rfidCode', item.rfidCode)
+        console.log('document', document.getElementById(item.rfidCode))
+        item.qrcode = new QRCode(document.getElementById(item.rfidCode), {
           width: 100,
           height: 100,
           text: item.rfidCode
         })
-        console.log('qrcode', qrcode)
       })
 
-      const style = '@page { size:15.74in 11.81in;margin: 0cm 1cm 0cm 1cm; } @media print { #test .item{ display: flex; width:40cm;height:30cm;}  #test .leftTips{ width: 70%; font-size: 14px;}  #test .codeImg{ width:30%;} }'
-      print({
-        printable: 'test',
-        type: 'html',
-        style: style
-      })
+      // const style = '@page { size:15.74in 11.81in;margin: 0cm 1cm 0cm 1cm; } @media print { #test .item{ display: flex; width:40cm;height:30cm;}  #test .leftTips{ width: 70%; font-size: 14px;}  #test .codeImg{ width:30%;} }'
+      // print({
+      //   printable: 'test',
+      //   type: 'html',
+      //   style: style
+      // })
+    },
+
+    CreateOneFormPage() {
+      LODOP = getLodop()
+      // 样式
+      // var olstyle1 = '<style>' + document.getElementById('test').innerHTML + '</style>'
+      var olstyle2 = '<style>h5 { font-size:14px;font-weight:normal;margin: 8px 0 8px 0 ; } p{ margin:33px 0 18px 160px; } </style>'
+      var body = olstyle2 + '<body>' + document.getElementById('test').innerHTML + '</body>'
+      LODOP.PRINT_INIT('资产') // 打印初始化
+      LODOP.SET_PRINT_STYLE('FontSize', 14) // 设置对象风格
+      LODOP.SET_PRINT_STYLE('Bold', 1) // 设置对象风格
+      // LODOP.ADD_PRINT_TEXT(50, 521, 130, 39, '') // 增加纯文本项
+      LODOP.SET_PRINT_PAGESIZE(0, 400, 300, '') // 设定纸张大小
+      LODOP.SET_PRINT_MODE('PRINT_PAGE_PERCENT', '50%')// 设置缩放
+      // LODOP.SET_PREVIEW_WINDOW(2, 2, 0, 0, 0, '')// 设置窗口
+      // 打印二维码
+      // LODOP.ADD_PRINT_BARCODE(23, 23, 233, 233, 'QRCode', 'https://blog.csdn.net/qq_43652509')
+      // 打印网址
+      // LODOP.ADD_PRINT_URL(222,2000,2000,233,"https://blog.csdn.net/qq_43652509");
+      // 打印图片
+      // LODOP.ADD_PRINT_IMAGE(100,100,400,400,"<img border='0' src='http://s1.sinaimg.cn/middle/4fe4ba17hb5afe2caa990&690' width='345' height='250'>");
+      LODOP.ADD_PRINT_HTM(10, 0, 340, 450, body) // 增加超文本项
+    },
+    printPreview() {
+      this.CreateOneFormPage()
+      LODOP.PREVIEW()
     }
 
   }
@@ -1426,6 +1469,7 @@ export default {
     }
     .codeImg {
       width: 20%;
+      margin-top: 30px;;
     }
   }
 }

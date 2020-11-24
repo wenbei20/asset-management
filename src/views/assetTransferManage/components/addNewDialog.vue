@@ -9,7 +9,7 @@
                 v-model="addOption.sendMerchantId"
                 placeholder="请选择调出公司"
                 :options="groupList"
-                :value="addOption.sendMerchantId || null"
+                :value="addOption.sendMerchantId "
                 :normalizer="normalizer"
                 :clearable="false"
                 @select="sendMerchantIdChange"
@@ -21,10 +21,10 @@
           <el-form-item label="调入公司" prop="getMerchantId" :label-width="formLabelWidth" required>
             <el-col :span="24">
               <treeselect
-                v-model="addOption.getMerchantId"
+                v-model="addOption.getMerchantId "
                 placeholder="请选择调入公司"
                 :options="groupList"
-                :value="addOption.getMerchantId"
+                :value="addOption.getMerchantId "
                 :normalizer="normalizer"
                 :clearable="false"
                 @select="getMerchantIdChange"
@@ -35,10 +35,11 @@
         <el-col :span="12">
           <el-form-item label="调入管理员" :label-width="formLabelWidth">
             <el-col :span="24">
-              <el-select v-model="addOption.getUserId" placeholder="请选择调入管理员" :style="{ width: '100%' }">
+              <!-- <el-select v-model="addOption.getUserId" placeholder="请选择调入管理员" :style="{ width: '100%' }">
                 <el-option label="公司1" value="1" />
                 <el-option label="公司2" value="2" />
-              </el-select>
+              </el-select> -->
+              <el-input :value="thisUserName" disabled />
             </el-col>
           </el-form-item>
         </el-col>
@@ -74,6 +75,7 @@ import DialogSelectAsset from '@/components/Dialog/selectAsset'
 import Treeselect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import { queryNewAssetAllotList } from '@/api/assetManage'
+import { mapState } from 'vuex'
 export default {
   components: {
     DialogSelectAsset,
@@ -108,7 +110,7 @@ export default {
         allotId: '',
         allotcode: '',
         dataStatus: 0,
-        getMerchantId: '',
+        getMerchantId: null,
         getUserId: '',
         groupId: null,
         id: 1,
@@ -116,7 +118,7 @@ export default {
         merchantId: '',
         operdatetime: '',
         reguserId: '',
-        sendMerchantId: '',
+        sendMerchantId: null,
         statusId: 0,
         assetUuids: []
       },
@@ -145,7 +147,12 @@ export default {
     },
     modalTitle() {
       return this.modalType === 'new' ? '新增' : '编辑'
-    }
+    },
+    ...mapState({
+      thisMerchantName: state => state.user.merchantName,
+      thisUserName: state => state.user.userChname
+
+    })
   },
   watch: {
     visible: {
@@ -205,6 +212,24 @@ export default {
     // Fn: 调入公司变更
     getMerchantIdChange(val) {
       console.log('203 调出公司变更', val)
+    },
+    clearAllOptions() {
+      this.addOption = {
+        allotId: '',
+        allotcode: '',
+        dataStatus: 0,
+        getMerchantId: null,
+        getUserId: '',
+        groupId: null,
+        id: 1,
+        memo: '',
+        merchantId: '',
+        operdatetime: '',
+        reguserId: '',
+        sendMerchantId: null,
+        statusId: 0,
+        assetUuids: []
+      }
     }
   }
 }

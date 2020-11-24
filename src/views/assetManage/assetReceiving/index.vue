@@ -28,9 +28,9 @@
             <el-dropdown-item :command="3">删除</el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown> -->
-        <el-button type="default" icon="el-icon-printer" :style="{ marginLeft: '5px' }" plain>
+        <!-- <el-button type="default" icon="el-icon-printer" :style="{ marginLeft: '5px' }" plain>
           打印
-        </el-button>
+        </el-button> -->
         <el-button type="default" icon="el-icon-receiving" :style="{ marginLeft: '5px' }" plain @click="exportAllAsset">
           导出
         </el-button>
@@ -194,6 +194,7 @@
             <vxe-table-column field="imageList" title="照片" min-width="60">
               <template #default="{ row }">
                 <span v-if="!row.imageList || row.imageList.length === 0" class="innerTree_noimages">暂无</span>
+                <svg-icon v-else icon-class="tupian" style="height:36px;width:36px;" />
               </template>
             </vxe-table-column>
             <vxe-table-column field="assetcode" title="资产编号" min-width="120" />
@@ -625,7 +626,7 @@ export default {
       })
     },
     deteleAsset(row) {
-      this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+      this.$confirm('此操作将永久删除该资产领用, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'

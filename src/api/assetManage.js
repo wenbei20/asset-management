@@ -244,8 +244,9 @@ export function assetTransferList(params) {
 // 删除资产调拨信息
 export function deleteAssetAllot(id) {
   return request({
-    url: '/sys/allot/deleteAllot' + id,
-    method: 'get'
+    url: '/sys/allot/deleteAllot/' + id,
+    method: 'get',
+    params: { allotId: id }
   })
 }
 

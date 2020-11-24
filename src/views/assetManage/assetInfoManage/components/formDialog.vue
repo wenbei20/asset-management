@@ -35,7 +35,7 @@
         </el-col>
         <el-col :span="8">
           <el-form-item label="资产编号" :label-width="formLabelWidth" prop="assetcode">
-            <el-input v-model="xjzyxxForm.assetcode" size="small" placeholder="请输入资产编码" />
+            <el-input v-model="xjzyxxForm.assetcode" size="small" placeholder="请输入资产编码" :disabled="title === '编辑资源信息'" />
           </el-form-item>
         </el-col>
 
@@ -430,6 +430,10 @@ export default {
       this.postUrl = '/sys/assets/uploadpic'
     }
     console.log('mainSortData', this.mainSortData)
+
+    if (this.title === '新建资源信息') {
+      this.xjzyxxForm.statusId = '01'
+    }
   },
   methods: {
 

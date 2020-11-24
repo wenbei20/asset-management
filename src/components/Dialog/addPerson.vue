@@ -98,7 +98,7 @@
 </template>
 
 <script>
-import { getListRegUserByChineseName, getOrganizationGroup, getListRegUserByGroupId, getListSysUserByChineseName, getSysUserList, getlistMerchant } from '@/api/settings'
+import { getListRegUserByChineseName, getOrganizationGroup, getListRegUserByGroupId, getListSysUserByChineseName, getSysUserList } from '@/api/settings'
 import elDragDialog from '@/directive/el-drag-dialog'
 import searchList from '@/views/systemSettings/power/components/searchList'
 export default {
@@ -183,29 +183,49 @@ export default {
   },
   methods: {
     getTableList(data) {
-      if (this.type === 'regUser') {
-        this.getReguserList(data)
-      } else if (this.type === 'commercial') {
-        this.getCommercial(data)
+      // if (this.type === 'regUser') {
+      //   this.getReguserList(data)
+      // } else if (this.type === 'commercial') {
+      //   this.getCommercial(data)
+      // }
+      let userType = 0
+      switch (this.type) {
+        case 'regUser' :
+          userType = 2
+          break
+        case 'commercial' :
+          userType = 1
+          break
+        default :
+          userType = 0
       }
-    },
-    getCommercial(data) {
-      if (!data) data = { pageSize: 10, pageNp: 1 }
-      getlistMerchant(data).then(res => {
+
+      const refStr = this.type === 'regUser' ? 'searchList' : 'listNotRegUser'
+
+      getSysUserList({ ...data, userType }).then(res => {
         if (res.code === 0) {
           this.tableData = res.data.items
-          this.$refs.searchList.setPageTotal(res.data.total)
+          this.$refs[refStr].setPageTotal(res.data.total)
         }
       })
     },
-    getReguserList(data) {
-      getSysUserList({ ...data, userType: 2 }).then(res => {
-        if (res.code === 0) {
-          this.tableData = res.data.items
-          this.$refs.searchList.setPageTotal(res.data.total)
-        }
-      })
-    },
+    // getCommercial(data) {
+    //   if (!data) data = { pageSize: 10, pageNp: 1 }
+    //   getlistMerchant(data).then(res => {
+    //     if (res.code === 0) {
+    //       this.tableData = res.data.items
+    //       this.$refs.searchList.setPageTotal(res.data.total)
+    //     }
+    //   })
+    // },
+    // getReguserList(data) {
+    //   getSysUserList({ ...data, userType: 2 }).then(res => {
+    //     if (res.code === 0) {
+    //       this.tableData = res.data.items
+    //       this.$refs.searchList.setPageTotal(res.data.total)
+    //     }
+    //   })
+    // },
 
     confirm() {
       // this.$emit('update:dialogVisible', false)
@@ -228,6 +248,7 @@ export default {
       this.showAddPersonTree = true
       // this.$emit('refreshTableData')
       if (this.type !== 'regUser') {
+        this.checkboxLoading = true
         const query = {
           pageNo: 1,
           pageSize: 10,
@@ -320,9 +341,11 @@ export default {
       //   }
       // })
       // console.log('selectedPersons', this.selectedPersons)
-      console.log('this.$refs', this.$refs.searchList)
+      const refStr = this.type === 'regUser' ? 'searchList' : 'listNotRegUser'
+
+      console.log('refStr', refStr)
       this.$nextTick(() => {
-        const seleData = this.$refs.searchList.selectedTableData
+        const seleData = this.$refs[refStr].selectedTableData
         if (seleData && Object.keys(seleData).length) {
           for (const key in seleData) {
             this.selectedPersons.push({ ...seleData[key] })

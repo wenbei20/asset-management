@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-row>
       <el-button type="primary" icon="el-icon-plus" @click="handleNew">新建</el-button>
-      <el-button type="default" icon="el-icon-printer" plain @click="handlePrint">打印</el-button>
+      <!-- <el-button type="default" icon="el-icon-printer" plain @click="handlePrint">打印</el-button> -->
       <el-button icon="el-icon-receiving" @click="handleExport">导出</el-button>
     </el-row>
     <el-row style="padding-top:20px;">
@@ -80,6 +80,7 @@
       :visible.sync="showAddDialog"
       :modal-type="modalType"
       :form-option="formOption"
+      :main-sort-data="MainSortData"
       :group-list="groupList"
       @submit-form="submitForm"
     />
@@ -118,7 +119,8 @@ export default {
       tableData: [],
       tableSelection: [],
       tableSelectionKeys: [],
-      formOption: null
+      formOption: null,
+      MainSortData: {}
     }
   },
   mounted() {
@@ -130,8 +132,9 @@ export default {
     getBaseCode() {
       assetBackBaseCode().then(res => {
         if (res.code === 0 && res.data) {
-          this.areaList = res.data.areaList
-          this.groupList = res.data.groupList
+          for (const key in res.data) {
+            this.$set(this.MainSortData, key, res.data[key])
+          }
         }
       }).catch(err => {
         console.log('err', err)
@@ -186,6 +189,9 @@ export default {
       exportAssetBack().then((res) => {
         console.log(409, res)
       })
+    },
+    submitForm() {
+
     }
   }
 }

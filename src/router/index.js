@@ -280,6 +280,9 @@ const router = createRouter()
 export function resetRouter() {
   const newRouter = createRouter()
   router.matcher = newRouter.matcher // reset router
+  console.log('resetRouter', router)
+  router.options.routes = []
+  router.options.routes.length = 0
   router.options.routes = newRouter.options.routes // reset router
 }
 

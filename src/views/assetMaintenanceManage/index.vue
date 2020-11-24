@@ -4,7 +4,7 @@
       <el-button type="primary" icon="el-icon-plus" @click="handleNew">新建</el-button>
       <el-button disabled icon="el-icon-setting" :style="{ marginLeft: '10px' }">开始维修</el-button>
       <el-button :disabled="!tableSelection.length" icon="el-icon-setting" @click="handleFinish">完成维修</el-button>
-      <el-button icon="el-icon-printer">打印</el-button>
+      <!-- <el-button icon="el-icon-printer">打印</el-button> -->
 
     </el-row>
     <el-row style="padding-top:20px;">
