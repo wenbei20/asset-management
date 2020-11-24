@@ -2,7 +2,7 @@
   <div class="dialogSelectAsset">
     <div :style="{ margin: '10px 0' }">
       <el-button plain @click="selectAsset">选择资产</el-button>
-      <el-button :disabled="!this.assetTableData.length" @click="deleteAsset">删除所选</el-button>
+      <el-button :disabled="!assetTableData.length" @click="deleteAsset">删除所选</el-button>
     </div>
     <vxe-table
       ref="xTree"
@@ -41,12 +41,6 @@
       <vxe-table-column field="posname" title="存放地点" />
     </vxe-table>
 
-    <el-pagination
-      background
-      layout="prev, pager, next, jumper"
-      style="text-align:right;margin-top:20px;"
-      :total="pageTotal"
-    />
     <!--第二个弹出框选择资产-->
     <el-dialog
       width="1200px"
@@ -57,6 +51,7 @@
     >
       <vxe-table
         ref="xTree"
+        v-loading="innerTableLoading"
         resizable
         highlight-hover-row
         class="vxetable"
@@ -64,7 +59,7 @@
         :auto-resize="true"
         :edit-config="{trigger: 'click', mode: 'cell', showIcon: false}"
         :data="innerTableData"
-        :checkbox-config="{ checkRowKeys: this.innerTableSelectionKeys }"
+        :checkbox-config="{ checkRowKeys: innerTableSelectionKeys }"
         @checkbox-all="innerSelectionAll"
         @checkbox-change="innerSelectionChange"
       >
@@ -96,6 +91,7 @@
         layout="prev, pager, next, jumper"
         style="text-align:right;margin-top:20px;"
         :total="innerPageTotal"
+        @current-change="ChangeInnerTablePage"
       />
       <div slot="footer" class="dialog-footer">
         <el-button @click="innerCancel">取 消</el-button>
@@ -118,6 +114,14 @@ export default {
     queryAssetList: {
       type: Function,
       default: () => {}
+    },
+    isSelectedToREfresh: {
+      type: Boolean,
+      default: false
+    },
+    merchantId: {
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -126,7 +130,6 @@ export default {
       // 外层选中资产列表
       pageNo: 1,
       pageSize: 10,
-      pageTotal: 0,
       assetTableData: [],
       assetTableSelection: [],
       assetTableSelectionKeys: [],
@@ -136,30 +139,42 @@ export default {
       innerPageTotal: 0,
       innerTableData: [],
       innerTableSelection: [],
-      innerTableSelectionKeys: []
+      innerTableSelectionKeys: [],
+      innerTableLoading: false
     }
   },
   created() {
     this.assetTableData = this.assetSelected
-    // console.log(134, this.assetTableData)
   },
   mounted() {
-    this.queryAssetListFunction()
+    if (!this.isSelectedToREfresh) {
+      this.queryAssetListFunction()
+    }
   },
   methods: {
+    ChangeInnerTablePage(item) {
+      this.pageNo = item
+      this.queryAssetListFunction()
+    },
     // Fn: 获取新增页面资产列表
     queryAssetListFunction() {
+      this.innerTableLoading = true
+
       const params = {
         pageNo: this.pageNo,
         pageSize: this.pageSize
       }
+      if (this.merchantId) params.useMerchantId = this.merchantId
       this.queryAssetList(params).then((res) => {
         if (res.code === 0 && res.data && res.data.items) {
           this.innerTableData = res.data.items
-          this.pageTotal = res.data.total
+          this.innerPageTotal = res.data.total
         }
       })
         .catch((err) => { console.log('err', err) })
+        .finally(() => {
+          this.innerTableLoading = false
+        })
     },
     // Fn: 多选项转成id数组
     selection2keys(selection) {
@@ -167,6 +182,14 @@ export default {
     },
     // Fn: 选择资产
     selectAsset() {
+      if (this.isSelectedToREfresh) {
+        if (!this.merchantId) {
+          this.$message({ type: 'warning', message: '请先选择调出公司' })
+          return
+        }
+
+        this.queryAssetListFunction()
+      }
       this.innerVisible = true
     },
     // Fn: 删除资产
@@ -185,6 +208,7 @@ export default {
       this.innerTableSelectionKeys = this.selection2keys(this.innerTableSelection)
       // 外层table剩余项
       this.assetTableData = this.assetTableData.filter((item) => !selectionKeys.includes(item.assetId))
+      this.$emit('changeAssetSelected', this.assetTableData)
     },
     // Fn: 多选
     handleSelectionChange(val) {
@@ -202,7 +226,14 @@ export default {
     },
     // Fn: 确认（内层模态框）
     innerConfirm() {
-      this.assetTableData = [...this.innerTableSelection]
+      this.innerTableSelection.forEach(ele => {
+        const idx = this.assetTableData.findIndex(item => ele.assetId === item.assetId)
+        if (idx === -1) {
+          this.assetTableData.push(ele)
+        }
+      })
+
+      // this.assetTableData = [...this.innerTableSelection, ...this.assetTableData]
       this.innerVisible = false
       this.$emit('changeAssetSelected', this.assetTableData)
     },
@@ -215,6 +246,9 @@ export default {
     innerSelectionAll(val) {
       this.innerTableSelection = val.selection
       this.innerTableSelectionKeys = this.selection2keys(this.innerTableSelection)
+    },
+    clearOptions() {
+      this.assetTableData = []
     }
   }
 }

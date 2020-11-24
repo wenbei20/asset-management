@@ -27,6 +27,7 @@
         class="vxetable"
         :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
         :data="tableData"
+        @checkbox-change="handleSelectionChange"
       >
         <vxe-table-column type="checkbox" width="40" :resizable="false" />
         <vxe-table-column field="eventID" title="报废单号" />
@@ -364,6 +365,11 @@ export default {
           }
         })
         .catch((err) => { console.log('err', err) })
+    },
+
+    handleSelectionChange(val) {
+      this.tableSelection = val.selection
+      this.tableSelectionKeys = this.selection2keys(this.tableSelection)
     }
   }
 }

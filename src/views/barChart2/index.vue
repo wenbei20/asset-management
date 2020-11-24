@@ -1,6 +1,8 @@
 <template>
   <div class="app-container">
-    <div v-if="barChartVisible" id="myChart" ref="myChart" style="width: 100%; height: calc(100vh - 100px);" />
+    <div class="title">公司部门数据统计分析</div>
+    <div class="subTitle">公司部门数据统计分析</div>
+    <div v-if="barChartVisible" id="myChart" ref="myChart" style="width: 100%; height: calc(100vh - 150px);" />
     <div v-else>
       <el-table
         :data="tableData"
@@ -29,49 +31,100 @@ export default {
       myChart: null,
       option1: {
         xAxis: {
-          type: 'value'
+          type: 'value',
+          offset: 10,
+          axisLine: {
+            show: false
+          },
+          axisTick: {
+            show: false
+          },
+          axisLabel: {
+            color: '#ccc',
+            fontSize: 14
+          },
+          splitLine: {
+            show: false
+          }
         },
         yAxis: {
           type: 'category',
-          data: []
+          data: [],
+          axisLine: {
+            show: false
+          },
+          axisTick: {
+            show: false
+          }
         },
         series: [{
           data: [],
           type: 'bar',
-          showBackground: false,
+          showBackground: true,
+          backgroundStyle: {
+            color: 'rgba(0, 0, 0, .05)',
+            barBorderRadius: 10
+          },
           itemStyle: {
             normal: {
               color: (params) => {
-                const colors = ['#37a2da', '#32c5e9', '#9fe6b8', '#ffdb5c', '#ff9f7f', '#4a5bdc', '#4cd698']
-                return colors[params.dataIndex]
-              }
+                const colors = this.color
+                return colors[params.dataIndex % this.color.length]
+              },
+              barBorderRadius: 10
             }
           }
         }]
       },
       option2: {
         xAxis: {
-          type: 'value'
+          type: 'value',
+          offset: 10,
+          axisLine: {
+            show: false
+          },
+          axisTick: {
+            show: false
+          },
+          axisLabel: {
+            color: '#ccc',
+            fontSize: 14
+          },
+          splitLine: {
+            show: false
+          }
         },
         yAxis: {
           type: 'category',
-          data: ['二级1', '二级2', '二级3', '二级4', '二级5', '二级6', '二级7']
+          data: ['二级1', '二级2', '二级3', '二级4', '二级5', '二级6', '二级7'],
+          axisLine: {
+            show: false
+          },
+          axisTick: {
+            show: false
+          }
         },
         series: [{
           data: [130, 110, 70, 80, 150, 200, 120],
           type: 'bar',
-          showBackground: false,
+          showBackground: true,
+          backgroundStyle: {
+            color: '#f9f9f9',
+            barBorderRadius: 10
+          },
           itemStyle: {
             normal: {
               color: (params) => {
-                const colors = ['#37a2da', '#32c5e9', '#9fe6b8', '#ffdb5c', '#ff9f7f', '#4a5bdc', '#4cd698']
-                return colors[params.dataIndex]
-              }
+                const colors = this.color
+                return colors[params.dataIndex % this.color.length]
+              },
+              barBorderRadius: 10
             }
           }
         }]
       },
       tableData: [],
+      color: ['#324aa5', '#ed7d31', '#a5a5a5', '#ffc000'],
       arr: []
     }
   },
@@ -122,5 +175,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
+.title{ font-size: 28px; line-height: 1.8; font-weight: 600; color: #324aa5; text-align: center;}
+.subTitle{ font-size: 14px; line-height: 1.5; color: #999; text-align: center;}
 </style>

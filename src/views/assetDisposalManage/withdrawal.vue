@@ -18,52 +18,37 @@
         :data="tableData"
       >
         <vxe-table-column type="checkbox" width="40" :resizable="false" />
-        <vxe-table-column field="person" title="退库处理人">
-          <template #default="{ row }">
-            {{ row.person ? row.person : '--' }}
-          </template>
+        <vxe-table-column width="32" class="meuntd" :resizable="false" :edit-render="{}">
+          <template>
+            <div class="moreOuter">
+              <i class="el-icon-more" />
 
+            </div>
+          </template>
           <template slot="edit" slot-scope="scope">
-            <el-input v-model="scope.row.person" size="mini" />
-          </template>
+            <i class="el-icon-more" style="position:relative;top:1px;left: -1px;" />
 
+            <div class="editmenu">
+              <div class="item" @click="handleEdit(scope.row)">修改</div>
+              <div class="item" @click="handleDelete(scope.row)">删除</div>
+            </div>
+          </template>
         </vxe-table-column>
-        <vxe-table-column field="date" title="实际退库时间" />
-        <vxe-table-column field="youxian" title="业务所属单位" />
+        <vxe-table-column field="regUserId" title="退库处理人" />
+        <vxe-table-column field="operdatetime" title="实际退库时间" />
+        <vxe-table-column field="useMerchantId" title="业务所属单位" />
         <vxe-table-column field="status" title="退库后使用公司" />
-        <vxe-table-column field="eventID" title="退库后区域" />
-        <vxe-table-column field="title" title="退库后存放地点" tree-node width="300">
-          <template slot="header">
-            <i v-if="isAllExpand" class="el-icon-remove-outline biaotiicon" />
-            <i v-else class="el-icon-circle-plus-outline biaotiicon" />
-            退库后存放地点
-          </template>
+        <vxe-table-column field="posname" title="退库后区域" />
+        <vxe-table-column field="areaId" title="退库后存放地点" />
 
-          <template #default="{ row }">
-            <span class="titleText"><i /> {{ row.title }}</span>
-          </template>
+        <vxe-table-column field="memo" title="退库说明" />
 
-        </vxe-table-column>
-
-        <vxe-table-column field="startTime" title="退库说明" :edit-render="{}">
-          <template #default="{ row }">
-            {{ row.startTime ? row.startTime : '--' }}
-          </template>
-          <template slot="edit" slot-scope="scope">
-            <el-date-picker
-              v-model="scope.row.startTime"
-              type="date"
-              placeholder="选择日期"
-            />
-          </template>
-        </vxe-table-column>
-
-        <vxe-table-column title="操作">
+        <!-- <vxe-table-column title="操作">
           <template slot-scope="scope">
             <el-button size="small" plain @click="handleEdit(scope.row)">编辑</el-button>
             <el-button size="small" plain @click="handleDelete(scope.row)">删除</el-button>
           </template>
-        </vxe-table-column>
+        </vxe-table-column> -->
 
       </vxe-table>
 
@@ -87,7 +72,7 @@
   </div>
 </template>
 <script>
-import { queryAssetBackList, assetBackBaseCode, exportAssetBack, getAssetBack } from '@/api/assetManage'
+import { queryAssetBackList, assetBackBaseCode, exportAssetBack, getAssetBack, saveAssetBack, updateAssetBack, deleteAssetBack } from '@/api/assetManage'
 import addDialog from './components/addNewDialog'
 export default {
   components: { addDialog },
@@ -165,12 +150,12 @@ export default {
     handleEdit(item) {
       getAssetBack(item.backId).then((res) => {
         if (res.code === 0) {
-          const { repair, repairAssetList, repairPicList } = res.data
+          const { back, backAssetList } = res.data
           this.modalType = 'edit'
           this.formOption = {
-            formData: repair,
-            imagesList: repairPicList,
-            assetList: repairAssetList
+            formData: back,
+            assetList: backAssetList,
+            backId: item.backId
           }
           this.showAddDialog = true
         }
@@ -178,7 +163,30 @@ export default {
     },
     // Fn: 删除
     handleDelete(item) {
-      console.log('删除', item)
+      this.$confirm('此操作将永久删除该资产退运, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        deleteAssetBack(item.backId).then((res) => {
+          if (res.code === 0) {
+            this.$message({
+              showClose: true,
+              message: '删除成功！',
+              type: 'success'
+            })
+            this.getList()
+          }
+        })
+          .catch((err) => {
+            console.log('err', err)
+          })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
     },
     // Fn: 打印
     handlePrint() {
@@ -190,9 +198,32 @@ export default {
         console.log(409, res)
       })
     },
-    submitForm() {
-
+    submitForm(params, id) {
+      this.submitMethods(params, id)
+    },
+    submitMethods(params, id) {
+      const promise = this.modalType === 'new' ? saveAssetBack(params) : updateAssetBack(params, id)
+      const msg = this.modalType === 'new' ? '新增' : '编辑'
+      promise.then(res => {
+        if (res.code === 0) {
+          this.$message({ type: 'success', message: msg + '退运成功' })
+          this.pageNo = 1
+        } else {
+          this.$message({ type: 'error', message: msg + '退运失败，请稍后再试' })
+        }
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'error', message: msg + '退运失败，请稍后再试' })
+      }).finally(() => {
+        this.showAddDialog = false
+      })
     }
   }
 }
 </script>
+
+<style  scoped>
+.vxetable >>> .vxe-table--body-wrapper {
+  min-height: 350px;
+}
+</style>

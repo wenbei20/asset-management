@@ -58,8 +58,11 @@
       </el-row>
       <!--选择资产-->
       <DialogSelectAsset
+        ref="DialogSelectAsset"
         :asset-selected="assetSelected"
         :query-asset-list="queryAssetList"
+        :is-selected-to-r-efresh="true"
+        :merchant-id="addOption.sendMerchantId"
         @changeAssetSelected="changeAssetSelected"
       />
 
@@ -150,7 +153,8 @@ export default {
     },
     ...mapState({
       thisMerchantName: state => state.user.merchantName,
-      thisUserName: state => state.user.userChname
+      thisUserName: state => state.user.userChname,
+      thisReguserId: state => state.user.reguserId
 
     })
   },
@@ -163,7 +167,7 @@ export default {
     },
     assetSelected: {
       handler(val) {
-        this.addOption.assetUuids = val.map((item) => item.allotId).join(',')
+        this.addOption.assetUuids = val.map((item) => item.assetId).join(',')
       },
       deep: true
     },
@@ -192,11 +196,19 @@ export default {
     },
     // Fn: 确认
     handleConfirm() {
+      if (!this.assetSelected.length) {
+        this.$message({ type: 'warning', message: '请选择需要调拨的资产' })
+        return
+      }
+
       this.$refs.assetForm.validate((validate) => {
         if (validate) {
           const params = {
-            ...this.addOption
+            ...this.addOption,
+            getUserId: this.thisReguserId
           }
+          params.assetUuids = this.assetSelected.map(ele => ele.assetId).join(',')
+          // console.log('params', params)
           this.$emit('submit-form', params, this.addOption.id)
         }
       })
@@ -207,11 +219,11 @@ export default {
     },
     // Fn: 调出公司变更
     sendMerchantIdChange(val) {
-      console.log('203 调出公司变更', val)
+      // console.log('调出公司变更', val)
     },
     // Fn: 调入公司变更
     getMerchantIdChange(val) {
-      console.log('203 调出公司变更', val)
+      // console.log('调出公司变更', val)
     },
     clearAllOptions() {
       this.addOption = {
@@ -230,6 +242,8 @@ export default {
         statusId: 0,
         assetUuids: []
       }
+      this.assetSelected = []
+      this.$refs.DialogSelectAsset.clearOptions()
     }
   }
 }

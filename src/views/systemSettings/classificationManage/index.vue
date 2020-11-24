@@ -353,7 +353,7 @@ export default {
           this.pageNo = res.data.page
           this.pageSize = res.data.limit
         }
-      }).catch((err) => {
+      }).catch(() => {
         this.tableLoading = false
       })
     },

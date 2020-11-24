@@ -29,7 +29,7 @@
         <el-col :span="12">
           <el-form-item label="退库后使用公司" :label-width="addOptionWidth" prop="useMerchantId">
             <el-dropdown ref="statusInnerDrop" trigger="click" placement="bottom-start" style="width:100%">
-              <el-input v-model="checkeduseMerchantId" size="small" placeholder="请选择资产类别" />
+              <el-input v-model="checkeduseMerchantId" size="small" placeholder="请选择退库后使用公司" />
 
               <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
                 <el-tree
@@ -123,7 +123,6 @@ export default {
       addOption: {
         backUserId: '',
         backdate: '',
-        receiveCompany: '',
         useMerchantId: '',
         areaId: '',
         posname: '',
@@ -163,11 +162,11 @@ export default {
     },
     ...mapState({
       thisMerchantName: state => state.user.merchantName,
-      thisUserName: state => state.user.userChname
+      thisUserName: state => state.user.userChname,
+      thisReguserId: state => state.user.reguserId
 
     })
   },
-
   watch: {
     visible: {
       handler(val) {
@@ -177,12 +176,38 @@ export default {
     },
     assetSelected: {
       handler(val) {
-        this.addOption.assetUuids = val.map((item) => item.allotId).join(',')
+        this.addOption.assetUuids = val.map((item) => item.assetId).join(',')
       },
       deep: true
     }
   },
+  created() {
+    if (this.formOption) { // 当编辑，传入有数据时
+      this.addOption = { ...this.formOption.formData }
+      this.assetSelected = [...this.formOption.assetList]
+
+      const { useMerchantId } = this.formOption.formData
+
+      if (useMerchantId && this.mainSortData.groupList.length) {
+        this.checkeduseMerchantId = this.getGroupName(this.mainSortData.groupList, useMerchantId)
+      }
+    }
+  },
   methods: {
+    getGroupName(arr, id) {
+      let findID = ''
+      arr.forEach(item => {
+        if (id === item.groupId) {
+          findID = item.groupName
+        }
+
+        if (!findID && item.children && item.children.length) {
+          findID = this.getGroupName(item.children, id)
+        }
+      })
+
+      return findID
+    },
     closeThis() {
       this.xjzyxxVisible = false
       this.$emit('update:visible', false)
@@ -224,6 +249,19 @@ export default {
         this.$message({ type: 'warning', message: '请选择资产' })
         return
       }
+
+      this.$refs.assetForm.validate((validate) => {
+        if (validate) {
+          const params = {
+            ...this.addOption,
+            backUserId: this.thisReguserId
+          }
+          params.assetUuids = this.assetSelected.map(ele => ele.assetId).join(',')
+
+          const backId = this.formOption ? (this.formOption.backId ? this.formOption.backId : '') : ''
+          this.$emit('submit-form', params, backId)
+        }
+      })
     },
     handleCancel() {
 

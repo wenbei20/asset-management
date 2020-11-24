@@ -179,14 +179,14 @@ export default {
       }
       confirmAssetAllot({ allotIds: this.tableSelectionKeys.join(',') }).then((res) => {
         if (res.code === 0) {
-          this.$message({ type: 'success', message: '取消调拨成功' })
+          this.$message({ type: 'success', message: '调拨成功' })
           this.getList()
         } else {
-          this.$message({ type: 'error', message: '取消调拨失败，请稍后再试' })
+          this.$message({ type: 'error', message: '调拨失败，请稍后再试' })
         }
       }).catch(err => {
         console.log('err', err)
-        this.$message({ type: 'error', message: '取消调拨失败，请稍后再试' })
+        this.$message({ type: 'error', message: '调拨失败，请稍后再试' })
       })
     },
     // Fn: 取消调拨
@@ -252,18 +252,26 @@ export default {
     },
     // Fn: 确认提交（新建/修改）
     submitForm(params, id) {
-      this.submitMethods(params, id).then((res) => {
-        this.showAddDialog = false
-        if (res.code === 0) {
-          this.initSetting()
-          this.getList()
-        }
-      })
-        .catch((err) => { console.log('err', err) })
+      this.submitMethods(params, id)
     },
     // Fn: 确认提交方法
     submitMethods(params, id) {
-      return this.modalType === 'new' ? saveAssetAllot(params) : updateAssetAllot(params, id)
+      const promise = this.modalType === 'new' ? saveAssetAllot(params) : updateAssetAllot(params, id)
+      const msg = this.modalType === 'new' ? '新增' : '编辑'
+      promise.then(res => {
+        if (res.code === 0) {
+          this.$message({ type: 'success', message: msg + '调拨成功' })
+          this.initSetting()
+          this.getList()
+        } else {
+          this.$message({ type: 'error', message: msg + '调拨失败，请稍后再试' })
+        }
+      }).catch(err => {
+        console.log('err', err)
+        this.$message({ type: 'error', message: msg + '调拨失败，请稍后再试' })
+      }).finally(() => {
+        this.showAddDialog = false
+      })
     },
     exportAllAsset() {
 

@@ -270,7 +270,7 @@ export function saveAssetAllot(data) {
 // 修改资产调拨信息
 export function updateAssetAllot(data) {
   return request({
-    url: '/sys/allot/updateAllot',
+    url: '/sys/allot/updateAllot/' + data.allotId,
     method: 'post',
     data: data2FormData(data)
   })
@@ -344,9 +344,9 @@ export function saveAssetBack(data) {
 }
 
 // 修改资产退运信息
-export function updateAssetBack(data) {
+export function updateAssetBack(data, id) {
   return request({
-    url: '/sys/back/updateBack',
+    url: '/sys/back/updateBack/' + id,
     method: 'post',
     data: data2FormData(data)
   })
