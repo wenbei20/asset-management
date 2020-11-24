@@ -1,17 +1,28 @@
+$border-color: #d5d7de;
 .vxe-table{ font-size: 12px;
   .vxe-table--header{
-    .vxe-header--column{ background:#f3f6fd; color:#455590; font-size: 13px!important;
+    .vxe-header--column{ background:#eff3fb; color:#455590; font-size: 13px!important;
       .vxe-resizable{
         &.is--line{
           &:before{ background-color: rgba(255, 255, 255, .2);}
         }
       }
     }
+    &-wrapper{
+      .vxe-table--header-border-line{ border-color: $border-color!important;}
+    }
   }
   .vxe-body--row{
-    &.row--stripe{ background:#ebeef7;}
+    &.row--stripe{ background:#f1f3f7!important;}
   }
   .vxe-body--column, .vxe-footer--column, .vxe-header--column{
     &:not(.col--ellipsis) { padding: 10px 0!important; font-size: 14px;}
+  }
+  .vxe-table--border-line{ border-color: $border-color!important;}
+  &.border--full{
+    .vxe-body--column, .vxe-footer--column, .vxe-header--column{ background-image: linear-gradient($border-color,$border-color),linear-gradient($border-color,$border-color)!important;}
+  }
+  &.border--default, &.border--inner{
+    .vxe-body--column, .vxe-footer--column, .vxe-header--column{ background-image: linear-gradient($border-color,$border-color)!important;}
   }
 }

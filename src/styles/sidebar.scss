@@ -1,10 +1,11 @@
 
-$menuBg:#fff;
-$menuHover:#e8ebf9;
+@import './variables.scss';
 $sideBarWidth: 210px;
-$subMenuActiveText:#324aa5; //https://github.com/ElemeFE/element/issues/12951
-$subMenuBg:#fff;
-$subMenuHover:#e8ebf9;
+// $menuBg:#4782d9;
+// $menuHover:#e8ebf9;
+// $subMenuActiveText:#324aa5; //https://github.com/ElemeFE/element/issues/12951
+// $subMenuBg:#fff;
+// $subMenuHover:#e8ebf9;
 #app {
 
   .main-container {
@@ -12,7 +13,7 @@ $subMenuHover:#e8ebf9;
     transition: margin-left .28s;
     margin-left: $sideBarWidth;
     position: relative;
-    background: #f7f7f7;
+    background: #e6e9ef;
   }
 
   .sidebar-container { border-right: #eee solid 1px;
@@ -74,6 +75,9 @@ $subMenuHover:#e8ebf9;
       border: none;
       height: 100%;
       width: 100% !important;
+      &-item{
+        &.is-active{ background-color: $menuHover!important;}
+      }
     }
 
     // menu hover
@@ -93,9 +97,10 @@ $subMenuHover:#e8ebf9;
       min-width: $sideBarWidth !important;
       background-color: $subMenuBg !important;
 
-      &:hover {
+      &:hover, &.is-active {
         background-color: $subMenuHover !important;
       }
+
     }
   }
 
