@@ -16,6 +16,7 @@
         class="vxetable"
         :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
         :data="tableData"
+        border
         @checkbox-all="handleSelectionAll"
         @checkbox-change="handleSelectionChange"
       >
