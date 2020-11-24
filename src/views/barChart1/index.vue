@@ -30,6 +30,16 @@ export default {
       barChartVisible: true,
       myChart: null,
       option1: {
+         toolbox: {
+              show : true,
+              feature : {
+                  mark : {show: false},
+                  dataView : {show: false, readOnly: false},
+                  magicType : {show: true, type: ['line', 'bar']},
+                  restore : {show: false},
+                  saveAsImage : {show: true}
+              }
+          },
         grid: {
           right: 100,
           bottom: 100,
@@ -99,6 +109,7 @@ export default {
     drawChart() {
       // 绘制图表
       this.myChart = this.$echarts.init(this.$refs.myChart)
+      this.myChart.off('click') 
       this.myChart.setOption(this.option1)
       this.clickChart()
       window.addEventListener('resize', () => {
@@ -107,7 +118,7 @@ export default {
     },
     getZcfl(assetkindId) {
       // this.option4.series[0].data=[]
-      getZcfl({ 'groupId': assetkindId }).then(response => {
+      getZcfl({ 'assetKindId': assetkindId }).then(response => {
         const xdata = []
         const sdata = []
         this.arr = response.data.propAssetsCount
@@ -125,7 +136,7 @@ export default {
     // 图表点击下钻
     clickChart() {
       this.myChart.on('click', params => {
-        console.log(72, params.dataIndex)
+        //console.log(72, params.dataIndex)
         console.log(this.arr[params.dataIndex].assetkind_id)
         this.getZcfl(this.arr[params.dataIndex].assetkind_id)
         // if (params.name.includes('资产')) {
