@@ -261,7 +261,7 @@ export default {
       promise.then(res => {
         if (res.code === 0) {
           this.$message({ type: 'success', message: msg + '调拨成功' })
-          this.initSetting()
+          this.modalType === 'new' ? this.pageNo = 1 : null
           this.getList()
         } else {
           this.$message({ type: 'error', message: msg + '调拨失败，请稍后再试' })

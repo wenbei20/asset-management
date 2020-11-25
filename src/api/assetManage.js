@@ -402,11 +402,11 @@ export function deleteAssetDiscard(id) {
 }
 
 // 资产报废还原
-export function assetDiscardReturn(params) {
+export function assetDiscardReturn(data) {
   return request({
     url: '/sys/discard/returnDiscord',
-    method: 'get',
-    params
+    method: 'post',
+    data: data2FormData(data)
   })
 }
 
@@ -414,14 +414,6 @@ export function assetDiscardReturn(params) {
 export function assetDiscardBaseCode() {
   return request({
     url: '/sys/discard/baseCode',
-    method: 'post'
-  })
-}
-
-// 列表导出
-export function assetDiscardExport() {
-  return request({
-    url: '/sys/discard/export',
     method: 'post'
   })
 }
@@ -478,6 +470,12 @@ export function saveAssetRepair(data) {
     url: '/sys/repair/saveRepair',
     method: 'post',
     data: data2FormData(data)
+  })
+}
+export function repairBaseCode() {
+  return request({
+    url: '/sys/repair/baseCode ',
+    method: 'post'
   })
 }
 
@@ -554,6 +552,12 @@ export function saveAssetLendre(data) {
     url: '/sys/lendre/saveLendre',
     method: 'post',
     data: data2FormData(data)
+  })
+}
+export function getLendreBaseCode() {
+  return request({
+    url: '/sys/lendre/baseCode',
+    method: 'post'
   })
 }
 

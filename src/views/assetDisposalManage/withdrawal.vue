@@ -72,7 +72,7 @@
   </div>
 </template>
 <script>
-import { queryAssetBackList, assetBackBaseCode, exportAssetBack, getAssetBack, saveAssetBack, updateAssetBack, deleteAssetBack } from '@/api/assetManage'
+import { queryAssetBackList, assetBackBaseCode, getAssetBack, saveAssetBack, updateAssetBack, deleteAssetBack } from '@/api/assetManage'
 import addDialog from './components/addNewDialog'
 import axios from 'axios'
 import { mapState } from 'vuex'
@@ -236,7 +236,8 @@ export default {
       promise.then(res => {
         if (res.code === 0) {
           this.$message({ type: 'success', message: msg + '退运成功' })
-          this.pageNo = 1
+          this.modalType === 'new' ? this.pageNo = 1 : null
+          this.getList()
         } else {
           this.$message({ type: 'error', message: msg + '退运失败，请稍后再试' })
         }
