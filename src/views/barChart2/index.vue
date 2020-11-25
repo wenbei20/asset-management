@@ -30,6 +30,16 @@ export default {
       barChartVisible: true,
       myChart: null,
       option1: {
+            toolbox: {
+              show : true,
+              feature : {
+                  mark : {show: false},
+                  dataView : {show: false, readOnly: false},
+                  magicType : {show: true, type: ['line', 'bar']},
+                  restore : {show: false},
+                  saveAsImage : {show: true}
+              }
+          },
         xAxis: {
           type: 'value',
           offset: 10,
@@ -138,6 +148,7 @@ export default {
     drawChart() {
       // 绘制图表
       this.myChart = this.$echarts.init(this.$refs.myChart)
+      this.myChart.off('click') 
       this.myChart.setOption(this.option1)
       this.clickChart()
       window.addEventListener('resize', () => {
@@ -165,9 +176,19 @@ export default {
     },
     // 图表点击下钻
     clickChart() {
+
       this.myChart.on('click', params => {
         console.log(72, params)
-        this.getGssy(this.arr[params.dataIndex].group_id)
+        if(this.arr[params.dataIndex].group_pid!=='0'){
+          this.getGssy(this.arr[params.dataIndex].group_id)
+        }else{
+          const xdata = []
+          const sdata = []
+          this.option1.series[0].data = sdata
+          this.option1.yAxis.data = xdata
+          this.drawChart()
+        }
+        
       })
     }
   }

@@ -16,8 +16,8 @@
       <vxe-table-column field="checktime" title="盘点时间" />
       <vxe-table-column field="taskQty" title="盘点任务量" />
       <vxe-table-column field="taskCheck" title="已盘点任务量" />
-      <vxe-table-column field="taskPk" title="盘盈量" />
-      <vxe-table-column field="taskPy" title="盘亏量" />
+      <vxe-table-column field="taskPy" title="盘盈量" />
+      <vxe-table-column field="taskPk" title="盘亏量" />
 
     </vxe-table>
     <el-pagination
