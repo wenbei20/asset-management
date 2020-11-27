@@ -15,11 +15,11 @@
       <el-form-item label="资产类型">
         <el-input :value="`${currentNode.assetkindId}-${currentNode.assetkindName}`" disabled />
       </el-form-item>
-      <el-form-item label="标准规格编号" prop="standardtypeId">
-        <el-input v-model="dialogForm.standardtypeId" />
-      </el-form-item>
       <el-form-item label="资产名称" prop="assetName">
         <el-input v-model="dialogForm.assetName" />
+      </el-form-item>
+      <el-form-item label="标准规格编号" prop="standardtypeId">
+        <el-input v-model="dialogForm.standardtypeId" />
       </el-form-item>
       <el-form-item label="规格型号名称" prop="standardtypeName">
         <el-input v-model="dialogForm.standardtypeName" />

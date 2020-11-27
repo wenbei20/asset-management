@@ -72,7 +72,7 @@
               </template>
             </el-tab-pane>
             <!--标准型号-->
-            <el-tab-pane label="标准型号" name="second">
+            <el-tab-pane v-if="showStanderType" label="标准型号" name="second">
               <template v-if="currentNode.uuid">
                 <div class="clearfix" style="margin-bottom: 20px;">
                   <el-button type="primary" size="small" @click="handleNewStandardType">
@@ -204,7 +204,8 @@ export default {
       tableSelection: [], // 标准型号列表多选项
       pageNo: 1,
       pageSize: 10,
-      pageTotal: 0
+      pageTotal: 0,
+      showStanderType: false
     }
   },
   mounted() {

@@ -19,8 +19,8 @@
         <el-input v-model="dialogForm.assetkindName" />
       </el-form-item>
       <el-form-item label="上级" prop="parentAssetcode">
-        <el-input v-if="type==='sibling'" :value="currentNode.assetkindName" disabled />
-        <el-input v-else :value="parentNodeInfo.assetkindName" disabled />
+        <el-input v-if="type==='sibling'" :value="parentNodeInfo.assetkindName" disabled />
+        <el-input v-else :value="currentNode.assetkindName" disabled />
         <!-- <el-input v-model="dialogForm.parentAssetcode" disabled /> -->
       </el-form-item>
     </el-form>
