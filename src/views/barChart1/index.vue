@@ -109,7 +109,7 @@ export default {
     drawChart() {
       // 绘制图表
       this.myChart = this.$echarts.init(this.$refs.myChart)
-      this.myChart.off('click') 
+  
       this.myChart.setOption(this.option1)
       this.clickChart()
       window.addEventListener('resize', () => {
@@ -121,23 +121,40 @@ export default {
       getZcfl({ 'assetKindId': assetkindId }).then(response => {
         const xdata = []
         const sdata = []
-        this.arr = response.data.propAssetsCount
-        response.data.propAssetsCount.forEach(function(item) {
-          xdata.push(item.assetkind_name)
+     
+  
+        if(response.data.propAssetsCount!==null && response.data.propAssetsCount.length>0){
+             this.arr = response.data.propAssetsCount
+            console.log(response.data.propAssetsCount)
+            response.data.propAssetsCount.forEach(function(item) {
+              xdata.push(item.assetkind_name)
 
-          sdata.push(item.count_num)
-        })
-        console.log(91, sdata, xdata)
-        this.option1.series[0].data = sdata
-        this.option1.xAxis.data = xdata
-        this.drawChart()
+              sdata.push(item.count_num)
+            })
+
+            this.option1.series[0].data = sdata
+            this.option1.xAxis.data = xdata
+    
+            this.drawChart()
+           
+        }else{
+           
+            this.$message({
+                type: 'warning',
+                message: "已经是最后一级了",
+                duration: 2000
+              })
+        }
+     
       })
     },
     // 图表点击下钻
     clickChart() {
+      this.myChart.off('click') 
       this.myChart.on('click', params => {
         //console.log(72, params.dataIndex)
-        console.log(this.arr[params.dataIndex].assetkind_id)
+        //console.log(this.arr[params.dataIndex].assetkind_id)
+
         this.getZcfl(this.arr[params.dataIndex].assetkind_id)
         // if (params.name.includes('资产')) {
         // this.drawChart(this.option2)

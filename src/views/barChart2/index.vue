@@ -148,7 +148,7 @@ export default {
     drawChart() {
       // 绘制图表
       this.myChart = this.$echarts.init(this.$refs.myChart)
-      this.myChart.off('click') 
+
       this.myChart.setOption(this.option1)
       this.clickChart()
       window.addEventListener('resize', () => {
@@ -160,33 +160,46 @@ export default {
       getGssy({ 'groupId': group_id }).then(response => {
         const xdata = []
         const sdata = []
+        if(response.data.compCount !=='' && response.data.compCount.length>0){
+          this.arr = response.data.compCount
 
-        this.arr = response.data.compCount
-        console.log(response.data.compCount)
 
-        response.data.compCount.forEach(function(item) {
-          xdata.push(item.group_name)
-          sdata.push(item.group_num)
-        })
+          response.data.compCount.forEach(function(item) {
+            xdata.push(item.group_name)
+            sdata.push(item.group_num)
+          })
 
-        this.option1.series[0].data = sdata
-        this.option1.yAxis.data = xdata
-        this.drawChart()
+          this.option1.series[0].data = sdata
+          this.option1.yAxis.data = xdata
+          this.drawChart()
+        }else{
+           this.$message({
+                type: 'warning',
+                message: "已经是最后一级了",
+                duration: 2000
+              })
+        }
+      
       })
     },
     // 图表点击下钻
     clickChart() {
-
+      this.myChart.off('click') 
       this.myChart.on('click', params => {
-        console.log(72, params)
+      
         if(this.arr[params.dataIndex].group_pid!=='0'){
           this.getGssy(this.arr[params.dataIndex].group_id)
         }else{
-          const xdata = []
-          const sdata = []
-          this.option1.series[0].data = sdata
-          this.option1.yAxis.data = xdata
-          this.drawChart()
+           this.$message({
+                type: 'warning',
+                message: "已经是最后一级了",
+                duration: 2000
+              })
+          //const xdata = []
+          //const sdata = []
+          //this.option1.series[0].data = sdata
+          //this.option1.yAxis.data = xdata
+          //this.drawChart()
         }
         
       })

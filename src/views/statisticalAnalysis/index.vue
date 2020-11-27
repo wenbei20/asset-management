@@ -24,7 +24,7 @@
       background
       layout="prev, pager, next, jumper"
       style="text-align:right;margin-top:20px;"
-      :total="pageLogTotal"
+      :total="pageTotal"
     />
   </div>
 </template>
