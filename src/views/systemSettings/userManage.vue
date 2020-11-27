@@ -11,7 +11,7 @@
     <div :class="['container' , !navTreeShow ? 'hidetree' : '']">
       <el-row style="height:40px; margin-left:10px;padding-top:10px;">
         <el-select v-model="SearchType" placeholder="请选择搜索类型" style="padding:0 6px;width:160px;">
-          <el-option label="用户名" value="reguserName" />
+          <el-option label="用户账号" value="reguserName" />
           <el-option label="姓名" value="chineseName" />
         </el-select>
         <div class="SearchBox">
@@ -82,10 +82,10 @@
           <el-form-item label="真实姓名" :label-width="formLabelWidth" prop="chineseName">
             <el-input v-model="addUserInfo.chineseName" />
           </el-form-item>
-          <el-form-item v-if="addDialogTitle === '添加成员'" label="密码" prop="power" :label-width="formLabelWidth">
+          <el-form-item v-show="addDialogTitle === '添加成员'" label="密码" prop="power" :label-width="formLabelWidth">
             <el-input v-model="addUserInfo.power" autocomplete="off" type="password" />
           </el-form-item>
-          <el-form-item v-if="addDialogTitle === '添加成员'" label="确认密码" prop="rePower" :label-width="formLabelWidth">
+          <el-form-item v-show="addDialogTitle === '添加成员'" label="确认密码" prop="rePower" :label-width="formLabelWidth">
             <el-input v-model="addUserInfo.rePower" autocomplete="off" type="password" />
           </el-form-item>
           <el-form-item label="启用/停用" :label-width="formLabelWidth" prop="activeFlag">
@@ -120,8 +120,8 @@
         </el-form>
 
         <div slot="footer" class="dialog-footer">
-          <el-button @click="closeAddDialog">取 消</el-button>
-          <el-button type="primary" @click="createConfirm">确 定</el-button>
+          <el-button :loading="createEditBtnLoading" @click="closeAddDialog">取 消</el-button>
+          <el-button :loading="createEditBtnLoading" type="primary" @click="createConfirm">确 定</el-button>
         </div>
       </el-dialog>
 
@@ -281,6 +281,7 @@ export default {
       }
     }
     var validatePass = (rule, value, callback) => {
+      value = this.addUserInfo.power
       if (value === '') {
         callback(new Error('请输入密码'))
       } else {
@@ -291,6 +292,7 @@ export default {
       }
     }
     var validatePass2 = (rule, value, callback) => {
+      value = this.addUserInfo.rePower
       if (value === '') {
         callback(new Error('请再次输入密码'))
       } else if (value !== this.addUserInfo.power) {
@@ -401,10 +403,10 @@ export default {
           { required: true, message: '请选择补充资产字段', trigger: 'change' }
         ],
         power: [
-          { validator: validatePass, trigger: 'blur', required: true }
+          { validator: validatePass, trigger: 'change', required: true }
         ],
         rePower: [
-          { validator: validatePass2, trigger: 'blur', required: true }
+          { validator: validatePass2, trigger: 'change', required: true }
         ]
       },
       tableData: [],
@@ -451,7 +453,8 @@ export default {
       showDataPowerDialog: false,
       editingData: {},
       MainSortData: {},
-      checkedDepartTags: ''
+      checkedDepartTags: '',
+      createEditBtnLoading: false
     }
   },
   created() {
@@ -607,7 +610,9 @@ export default {
         chineseName: '',
         activeFlag: 1,
         groupId: '',
-        addFiledsFlag: 0
+        addFiledsFlag: 0,
+        power: '',
+        rePower: ''
       }
       this.showAddDialog = true
     },
@@ -759,6 +764,7 @@ export default {
     createConfirm() {
       this.$refs.addUserInfo.validate(validate => {
         if (validate) {
+          this.createEditBtnLoading = true
           this.addUserInfo.userType = 2
           if (this.addDialogTitle === '添加成员') {
             console.log('addUserInfo', this.addUserInfo)
@@ -774,7 +780,7 @@ export default {
               console.log('err', err)
               this.$message({ type: 'error', message: this.addDialogTitle + '失败，请稍后再试' })
               this.showAddDialog = false
-            })
+            }).finally(() => { this.createEditBtnLoading = false })
           } else {
             editSysUserList({ ...this.addUserInfo }, this.addUserInfo.reguserId).then(res => {
               if (res.code === 0) {
@@ -788,7 +794,7 @@ export default {
               console.log('err', err)
               this.$message({ type: 'error', message: this.addDialogTitle + '失败，请稍后再试' })
               this.showAddDialog = false
-            })
+            }).finally(() => { this.createEditBtnLoading = false })
           }
         }
       })

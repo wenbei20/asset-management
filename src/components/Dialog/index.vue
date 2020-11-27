@@ -1,5 +1,5 @@
 <template>
-  <el-dialog :visible.sync="innerVisible" :width="noFooter ? '50%' : '70%'" :fullscreen="isfullscreen" :class="{'fullscreen':isfullscreen}" :close-on-click-modal="false" @close="closeThis">
+  <el-dialog :visible.sync="innerVisible" :width="noFooter ? '50%' : '70%'" :fullscreen="isfullscreen" :class="{'fullscreen':isfullscreen}" :close-on-click-modal="false" @close="closeThis(false)">
     <div slot="title">
       {{ title }}
       <svg-icon :icon-class="isfullscreen | iconName" class-name="dialogIcon" @click="fullscreen" />
@@ -55,9 +55,8 @@ export default {
   methods: {
     closeThis(bool) {
       // if (bool) this.$emit('confirm')
-      // bool ? null : this.innerVisible = false
+      bool ? null : this.$emit('update:visible', false)
       this.$emit('confirm', bool)
-      this.$emit('update:visible', false)
     },
     fullscreen() {
       this.isfullscreen = !this.isfullscreen

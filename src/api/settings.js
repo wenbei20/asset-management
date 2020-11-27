@@ -400,3 +400,59 @@ export function batchDeleteStandardType(data) {
     data: data2FormData(data)
   })
 }
+
+// 区域
+export function getlistArea(params) {
+  return request({
+    url: '/sys/area/listArea',
+    method: 'get',
+    params
+  })
+}
+
+export function saveAreaInfo(data) {
+  return request({
+    url: '/sys/area/saveArea',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function updateArea(data) {
+  return request({
+    url: '/sys/area/updateArea/' + data.uuid,
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function updateAreaStatus(params, id) {
+  return request({
+    url: '/sys/area/updateAreaStatus/' + id,
+    method: 'get',
+    params
+  })
+}
+
+export function deleteArea(id) {
+  return request({
+    url: '/sys/area/deleteArea/' + id,
+    method: 'get'
+  })
+}
+
+export function checkAreaByAreaIdExist(data) {
+  return request({
+    url: '/sys/area/checkAreaByAreaIdExist',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}
+
+export function checkAreaByAreaNameExist(data) {
+  return request({
+    url: '/sys/area/checkAreaByAreaNameExist',
+    method: 'post',
+    data: data2FormData(data)
+  })
+}

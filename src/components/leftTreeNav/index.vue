@@ -1,7 +1,7 @@
 <template>
   <div class="navTree" :class="{'hide':!show}">
-    <div class="companyName">{{ merchantName }}</div>
-    <div class="title">{{ title }}</div>
+    <div v-if="show" class="companyName">{{ merchantName }}</div>
+    <div v-if="show" class="title">{{ title }}</div>
     <!-- :data="treeData" -->
     <el-tree
       v-if="show"
@@ -236,6 +236,8 @@ export default {
     .navTree {
         height: 100%;
         width: 240px;
+        // max-width: 300px;
+        // min-width: 240px;
         float: left;
         background-color: #fff;
         margin-right: 15px;

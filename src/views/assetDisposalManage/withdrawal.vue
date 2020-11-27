@@ -1,6 +1,36 @@
 <template>
   <div class="app-container">
     <el-row>
+      <el-select v-model="companyValue" placeholder="请选择搜索类别" style="padding:0 6px 0 0;width: 160px;">
+        <el-option label="退运单号" value="2" />
+        <el-option label="退运后使用单位" value="3" />
+      </el-select>
+      <el-dropdown v-if="companyValue === '3'" ref="statusDrop" trigger="click" placement="bottom-start" style="margin-right:20px;">
+        <el-input v-model="checkedCompany" placeholder="请选择退运后使用单位" clearable @clear="clearNavSearch" />
+
+        <el-dropdown-menu slot="dropdown" class="innerTreeForDepart" style="min-width:200px;">
+          <el-tree
+            ref="companyTree"
+            node-key="groupId"
+            :props="{children: 'children',label: 'groupName'}"
+            :data="MainSortData.groupList"
+            :default-expand-all="true"
+            :expand-on-click-node="false"
+            @node-click="companyTreeClick"
+          />
+        </el-dropdown-menu>
+      </el-dropdown>
+
+      <el-input
+        v-else
+        v-model="searchIpt"
+        :style="{ width: '200px',marginRight:'20px' }"
+        placeholder="退运单号"
+        clearable
+        @clear="clearNavSearch"
+      >
+        <el-button slot="append" icon="el-icon-search" @click="searchList" />
+      </el-input>
       <el-button type="primary" icon="el-icon-plus" @click="handleNew">新建</el-button>
       <!-- <el-button type="default" icon="el-icon-printer" plain @click="handlePrint">打印</el-button> -->
       <el-button icon="el-icon-receiving" @click="handleExport">导出</el-button>
@@ -8,14 +38,16 @@
     <el-row style="padding-top:20px;">
       <vxe-table
         ref="xTree"
+        v-loading="tableLoading"
         resizable
         highlight-hover-row
         :auto-resize="true"
         stripe
         class="vxetable"
-        :tree-config="{children: 'children',iconOpen: 'el-icon-remove-outline', iconClose: 'el-icon-circle-plus-outline',expandAll:true}"
+        :sort-config="{remote:true}"
         :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
         :data="tableData"
+        @sort-change="sortChangeEvent"
       >
         <!-- <vxe-table-column type="checkbox" width="40" :resizable="false" /> -->
         <vxe-table-column width="32" class="meuntd" :resizable="false" :edit-render="{}">
@@ -34,14 +66,14 @@
             </div>
           </template>
         </vxe-table-column>
-        <vxe-table-column field="regUserId" title="退库处理人" />
-        <vxe-table-column field="operdatetime" title="实际退库时间" />
+        <vxe-table-column field="regUserId" title="退运处理人" />
+        <vxe-table-column field="operdatetime" title="实际退运时间" sortable />
         <vxe-table-column field="merchantId" title="业务所属单位" />
-        <vxe-table-column field="useMerchantId" title="退库后使用公司" />
-        <vxe-table-column field="posname" title="退库后区域" />
-        <vxe-table-column field="areaId" title="退库后存放地点" />
+        <vxe-table-column field="useMerchantId" title="退运后使用单位" />
+        <vxe-table-column field="posname" title="退运后区域" />
+        <vxe-table-column field="areaId" title="退运后存放地点" />
 
-        <vxe-table-column field="memo" title="退库说明" />
+        <vxe-table-column field="memo" title="退运说明" />
 
         <!-- <vxe-table-column title="操作">
           <template slot-scope="scope">
@@ -52,11 +84,15 @@
 
       </vxe-table>
 
-      <el-pagination
+      <pagination
+        v-show="pageTotal>0"
         background
-        layout="prev, pager, next, jumper"
-        style="text-align:right;margin-top:20px;"
         :total="pageTotal"
+        layout="prev, pager, next, jumper"
+        :page.sync="pageQuery.pageNo"
+        :limit.sync="pageQuery.pageSize"
+        style="text-align:right;margin-top:20px;"
+        @pagination="getList"
       />
     </el-row>
     <!--新增/编辑-->
@@ -74,10 +110,11 @@
 <script>
 import { queryAssetBackList, assetBackBaseCode, getAssetBack, saveAssetBack, updateAssetBack, deleteAssetBack } from '@/api/assetManage'
 import addDialog from './components/addNewDialog'
+import Pagination from '@/components/Pagination'
 import axios from 'axios'
 import { mapState } from 'vuex'
 export default {
-  components: { addDialog },
+  components: { addDialog, Pagination },
   filters: {
     statusClass(e) {
       switch (e) {
@@ -100,14 +137,27 @@ export default {
       showAddDialog: false,
       modalType: 'new',
       groupList: [],
-      pageNo: 1,
-      pageSize: 10,
       pageTotal: 0,
       tableData: [],
       tableSelection: [],
       tableSelectionKeys: [],
       formOption: null,
-      MainSortData: {}
+      companyValue: '2',
+      searchIpt: '',
+      MainSortData: {
+        groupList: []
+      },
+      checkedCompany: '',
+      checkedGroupId: '',
+      pageQuery: {
+        pageSize: 10,
+        pageNo: 1,
+        backcode: '',
+        useMerchantId: '',
+        orderName: '',
+        orderType: ''
+      },
+      tableLoading: false
     }
   },
   computed: {
@@ -135,11 +185,11 @@ export default {
       })
     },
     // Fn: 退运列表信息
-    getList() {
+    getList(obj) {
       const params = {
-        pageNo: this.pageNo,
-        pageSize: this.pageSize
+        ...this.pageQuery
       }
+      this.tableLoading = true
       queryAssetBackList(params).then((res) => {
         if (res.code === 0) {
           this.tableData = res.data.items
@@ -148,6 +198,8 @@ export default {
       })
         .catch((err) => {
           console.log('err', err)
+        }).finally(() => {
+          this.tableLoading = false
         })
     },
     // Fn: 新建
@@ -206,25 +258,55 @@ export default {
     },
     // Fn: 导出
     handleExport() {
+      const query = {
+        ...this.pageQuery
+      }
+      delete query.pageNo
+      delete query.pageSize
+      const fd = new FormData()
+      for (const key in query) {
+        fd.append(key, query[key])
+      }
       const postUrl = process.env.NODE_ENV === 'development' ? '/dev-api/sys/back/export' : '/sys/back/export'
-      if (!this.XToken) return
       axios({
         method: 'post',
         url: postUrl,
+        data: fd,
         headers: {
           'X-Token': this.XToken
         },
         responseType: 'blob'
       })
         .then(res => {
-          console.log('response: ', res)
-          const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' }))
-          const link = document.createElement('a')
-          link.style.display = 'none'
-          link.href = url
-          // link.download = '导出资产'
-          document.body.appendChild(link)
-          link.click()
+          const file = new FileReader()
+
+          const that = this
+
+          file.onload = function() {
+            try {
+              const resData = JSON.parse(this.result)
+              console.log('resData', resData)
+              that.$message({ type: 'error', message: '导出失败，' + resData.msg })
+            } catch (err) {
+              if (window.navigator.msSaveOrOpenBlob) {
+                try {
+                  const blobObject = new Blob([res.data])
+                  window.navigator.msSaveOrOpenBlob(blobObject)
+                } catch (e) {
+                  console.log(e)
+                }
+                return
+              }
+              const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/vnd.ms-excel' }))
+              const link = document.createElement('a')
+              link.style.display = 'none'
+              link.href = url
+              // link.download = '导出资产'
+              document.body.appendChild(link)
+              link.click()
+            }
+          }
+          file.readAsText(res.data)
         })
         .catch(error => {
           console.log('error', error)
@@ -236,7 +318,7 @@ export default {
       promise.then(res => {
         if (res.code === 0) {
           this.$message({ type: 'success', message: msg + '退运成功' })
-          this.modalType === 'new' ? this.pageNo = 1 : null
+          this.modalType === 'new' ? this.pageQuery.pageNo = 1 : null
           this.getList()
         } else {
           this.$message({ type: 'error', message: msg + '退运失败，请稍后再试' })
@@ -247,6 +329,54 @@ export default {
       }).finally(() => {
         this.showAddDialog = false
       })
+    },
+    companyTreeClick(item) {
+      this.pageQuery.backcode = ''
+      this.searchIpt = ''
+      this.pageQuery.useMerchantId = item.groupId
+      this.checkedCompany = item.groupName
+      this.$refs.statusDrop.hide()
+      this.getList()
+    },
+    searchList() {
+      if (!this.searchIpt) {
+        this.$message({ type: 'warning', message: '请输入搜索单号' })
+        return
+      }
+
+      this.pageQuery = {
+        pageSize: 10,
+        pageNo: 1,
+        backcode: this.searchIpt,
+        useMerchantId: '',
+        orderName: '',
+        orderType: ''
+      }
+      this.getList()
+    },
+    clearNavSearch() {
+      this.pageQuery = {
+        pageSize: 10,
+        pageNo: 1,
+        backcode: '',
+        useMerchantId: '',
+        orderName: '',
+        orderType: ''
+      }
+      this.getList()
+    },
+    sortChangeEvent(column, property, order) {
+      if (!column.order) {
+        this.pageQuery.orderName = ''
+        this.pageQuery.orderType = ''
+        this.getList()
+        return
+      }
+      this.pageQuery.pageNo = 1
+      this.pageQuery.pageSize = 10
+      this.pageQuery.orderName = column.property
+      this.pageQuery.orderType = column.order.toUpperCase()
+      this.getList()
     }
   }
 }

@@ -1,6 +1,15 @@
 <template>
   <div class="app-container">
     <el-row>
+      <el-input
+        v-model="pageQuery.lendrecode"
+        :style="{ width: '260px',marginRight:'20px' }"
+        placeholder="借还单号"
+        clearable
+        @clear="getList"
+      >
+        <el-button slot="append" icon="el-icon-search" @click="searchList" />
+      </el-input>
       <el-button type="primary" icon="el-icon-plus" @click="handleNew">新建</el-button>
       <el-button :disabled="!tableSelection.length" icon="el-icon-printer" @click="showThisRelandDialog">归还</el-button>
 
@@ -8,6 +17,7 @@
     <el-row style="padding-top:20px;">
       <vxe-table
         ref="xTree"
+        v-loading="tableLoading"
         resizable
         highlight-hover-row
         :auto-resize="true"
@@ -15,7 +25,9 @@
         class="vxetable"
         :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
         :data="tableData"
+        :sort-config="{remote:true}"
         @checkbox-change="handleSelectionChange"
+        @sort-change="sortChangeEvent"
         @checkbox-all="handleSelectionAll"
       >
         <vxe-table-column type="checkbox" width="40" :resizable="false" />
@@ -42,9 +54,9 @@
         </vxe-table-column>
         <vxe-table-column field="lendrecode" title="借还单号" />
         <vxe-table-column field="lendreUserId" title="借用人" />
-        <vxe-table-column field="lenddate" title="借出时间" />
-        <vxe-table-column field="planReturndate" title="预计归还时间" />
-        <vxe-table-column field="returndate" title="归还时间" />
+        <vxe-table-column field="lenddate" title="借出时间" sortable />
+        <vxe-table-column field="planReturndate" title="预计归还时间" sortable />
+        <vxe-table-column field="returndate" title="归还时间" sortable />
       </vxe-table>
 
       <el-pagination
@@ -106,8 +118,6 @@ export default {
     return {
       showAddDialog: false,
       modalType: 'new',
-      pageNo: 1,
-      pageSize: 10,
       pageTotal: 0,
       tableData: [],
       tableSelection: [],
@@ -118,11 +128,19 @@ export default {
       relandOption: {
         returndate: ''
       },
+      pageQuery: {
+        pageSize: 10,
+        pageNo: 1,
+        lendrecode: '',
+        orderName: '',
+        orderType: ''
+      },
       relandOptionRoles: {
         returndate: [
           { required: true, message: '请选择预计归还时间', trigger: 'change' }
         ]
-      }
+      },
+      tableLoading: false
     }
   },
   computed: {
@@ -148,14 +166,14 @@ export default {
     },
     // Fn: 初始化请求参数
     initSetting() {
-      this.pageNo = 1
+      this.pageQuery.pageNo = 1
     },
     // Fn: 资源维修列表
     getList() {
       const params = {
-        pageNo: this.pageNo,
-        pageSize: this.pageSize
+        ...this.pageQuery
       }
+      this.tableLoading = true
       queryAssetLendreList(params).then((res) => {
         if (res.code === 0 && res.data) {
           this.tableData = res.data.items
@@ -163,6 +181,7 @@ export default {
         }
       })
         .catch((err) => { console.log('err', err) })
+        .finally(() => { this.tableLoading = false })
     },
     // Fn: 多选项转成id数组
     selection2keys(selection) {
@@ -244,7 +263,7 @@ export default {
       promise.then(res => {
         if (res.code === 0) {
           this.$message({ type: 'success', message: msg + '借还成功' })
-          this.modalType === 'new' ? this.pageNo = 1 : null
+          this.modalType === 'new' ? this.pageQuery.pageNo = 1 : null
           this.getList()
         } else {
           this.$message({ type: 'error', message: msg + '借还失败，请稍后再试' })
@@ -293,6 +312,26 @@ export default {
           })
         }
       })
+    },
+    sortChangeEvent(column, property, order) {
+      if (!column.order) {
+        this.pageQuery.orderName = ''
+        this.pageQuery.orderType = ''
+        this.getList()
+        return
+      }
+      this.pageQuery.pageNo = 1
+      this.pageQuery.pageSize = 10
+      this.pageQuery.orderName = column.property
+      this.pageQuery.orderType = column.order.toUpperCase()
+      this.getList()
+    },
+    searchList() {
+      if (!this.pageQuery.lendrecode) {
+        this.$message({ type: 'warning', message: '请输入搜索单号' })
+        return
+      }
+      this.getList()
     }
   }
 }

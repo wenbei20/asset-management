@@ -52,7 +52,6 @@ const mutations = {
 const actions = {
   // user login
   login({ commit, dispatch }, userInfo) {
-    console.log('arguments', arguments)
     const { username, password } = userInfo
     return new Promise((resolve, reject) => {
       login({ username: username.trim(), power: password }).then(async response => {
@@ -113,7 +112,6 @@ const actions = {
         if (Array.isArray(roles) && roles.length > 0) {
           name = roles[0]
         }
-        console.log('state', state)
         const { userChname, merchantName, uuid } = getLocalUserInfo()
         if (!state.merchantName && merchantName) {
           commit('SET_MERCHART_NAME', merchantName)

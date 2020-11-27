@@ -707,10 +707,10 @@ export default {
       })
     },
     searchList() {
-      if (!this.searchIpt.trim()) {
-        this.$message({ type: 'warning', message: '请输入搜索内容' })
-        return
-      }
+      // if (!this.searchIpt.trim()) {
+      //   this.$message({ type: 'warning', message: '请输入搜索内容' })
+      //   return
+      // }
       if (!this.companyValue) {
         this.$message({ type: 'warning', message: '请选择搜索类型' })
         return

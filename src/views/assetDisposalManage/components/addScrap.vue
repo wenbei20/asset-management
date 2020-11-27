@@ -15,9 +15,9 @@
         </el-col>
 
         <el-col :span="12">
-          <el-form-item label="业务所属公司" :label-width="addOptionWidth" prop="merchantId">
+          <el-form-item label="业务所属单位" :label-width="addOptionWidth" prop="merchantId">
             <el-dropdown ref="statusInnerDrop" trigger="click" placement="bottom-start" style="width:100%">
-              <el-input v-model="checkeduseMerchantId" size="small" placeholder="请选择业务所属公司" />
+              <el-input v-model="checkeduseMerchantId" size="small" placeholder="请选择业务所属单位" />
 
               <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
                 <el-tree
@@ -50,7 +50,7 @@
         :asset-selected="assetSelected"
         :query-asset-list="queryAssetList"
         :merchant-id="addOption.merchantId"
-        is-selected-to-r-efresh="业务所属公司"
+        is-selected-to-r-efresh="业务所属单位"
 
         @changeAssetSelected="changeAssetSelected"
       />
@@ -110,7 +110,7 @@ export default {
       checkeduseMerchantId: '',
       addDialogRoles: {
         merchantId: [
-          { required: true, message: '请选择业务所属公司', trigger: 'change' }
+          { required: true, message: '请选择业务所属单位', trigger: 'change' }
         ],
         discarddate: [
           { required: true, message: '请选择清理日期', trigger: 'change' }

@@ -16,7 +16,7 @@
       @checkbox-change="handleSelectionChange"
     >
       <vxe-table-column type="checkbox" width="40" :resizable="false" />
-      <vxe-table-column field="imageList" title="照片">
+      <vxe-table-column field="imageList" title="照片" width="100">
         <!-- <template slot-scope="scope">
           <tempalte v-if="(scope.row.imageList || []).length">
             <el-image
@@ -31,6 +31,11 @@
         <template #default="{ row }">
           <span v-if="!row.imageList || row.imageList.length === 0" class="innerTree_noimages">暂无</span>
           <svg-icon v-else icon-class="tupian" style="height:36px;width:36px;" />
+        </template>
+      </vxe-table-column>
+      <vxe-table-column field="statusName" width="100" title="状态">
+        <template #default="{ row }">
+          <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
         </template>
       </vxe-table-column>
       <vxe-table-column field="assetcode" title="资产编号" />
@@ -64,7 +69,7 @@
         @checkbox-change="innerSelectionChange"
       >
         <vxe-table-column type="checkbox" width="40" :resizable="false" />
-        <vxe-table-column field="imageList" title="照片">
+        <vxe-table-column field="imageList" title="照片" width="100">
           <!-- <template slot-scope="scope">
             <el-image
               v-for="image in scope.row.imageList"
@@ -77,6 +82,11 @@
           <template #default="{ row }">
             <span v-if="!row.imageList || row.imageList.length === 0" class="innerTree_noimages">暂无</span>
             <svg-icon v-else icon-class="tupian" style="height:36px;width:36px;" />
+          </template>
+        </vxe-table-column>
+        <vxe-table-column field="statusName" width="100" title="状态">
+          <template #default="{ row }">
+            <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
           </template>
         </vxe-table-column>
         <vxe-table-column field="assetcode" title="资产编号" />
@@ -106,6 +116,26 @@
 export default {
   // 资产选择组件
   name: 'DialogSelectAsset',
+  filters: {
+    statusClass(e) {
+      switch (e) {
+        case '在库':
+          return 'zaik'
+        case '在运':
+          return 'zaiy'
+        case '闲置':
+          return 'xianz'
+        case '维修':
+          return 'weix'
+        case '报废':
+          return 'baof'
+        case '退运':
+          return 'tuiy'
+        default :
+          return ' '
+      }
+    }
+  },
   props: {
     assetSelected: {
       type: Array,

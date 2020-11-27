@@ -52,7 +52,6 @@ router.beforeEach(async(to, from, next) => {
         })
 
         router.addRoutes(newrouters)
-        console.log('router', router)
       }
     }
   } else {

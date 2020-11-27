@@ -3,7 +3,7 @@
     <el-row>
       <el-col :span="18">
         <el-dropdown ref="statusDrop" trigger="click" placement="bottom-start" style="margin-right:6px;">
-          <el-input v-model="checkedCompany" placeholder="请选择领用后使用单位" clearable @clear="clearNavSearch" />
+          <el-input :value="checkedCompany" placeholder="请选择领用后使用单位" clearable @clear="clearNavSearch" />
 
           <el-dropdown-menu slot="dropdown" class="innerTreeForDepart" style="min-width:200px;">
             <el-tree
@@ -49,6 +49,8 @@
         class="outvxetable vxetable"
         :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
         :data="tableData"
+        :sort-config="{remote:true}"
+        @sort-change="sortChangeEvent"
       >
         <vxe-table-column type="checkbox" width="40" :resizable="false" />
         <vxe-table-column width="32" class="meuntd" :resizable="false" :edit-render="{}">
@@ -95,7 +97,7 @@
           <el-col :span="11">
             <el-form-item label="领用后使用单位" :label-width="addOptionWidth" prop="checkedMerchartName">
               <el-dropdown ref="mechartDrop" trigger="click" placement="bottom-start" style="width:100%">
-                <el-input v-model="addOption.checkedMerchartName" size="small" placeholder="请选择使用单位" />
+                <el-input :value="addOption.checkedMerchartName" size="small" placeholder="请选择使用单位" />
 
                 <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
 
@@ -197,6 +199,11 @@
                 <svg-icon v-else icon-class="tupian" style="height:36px;width:36px;" />
               </template>
             </vxe-table-column>
+            <vxe-table-column field="status" title="状态" min-width="120">
+              <template #default="{ row }">
+                <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
+              </template>
+            </vxe-table-column>
             <vxe-table-column field="assetcode" title="资产编号" min-width="120" />
             <vxe-table-column field="assetname" title="资产名称" min-width="120" />
             <vxe-table-column field="groupName" title="所属单位" min-width="120" />
@@ -227,6 +234,11 @@
 
               <svg-icon v-else icon-class="tupian" style="height:36px;width:36px;" />
 
+            </template>
+          </vxe-table-column>
+          <vxe-table-column field="status" title="状态" min-width="120">
+            <template #default="{ row }">
+              <span class="statuspan" :class="row.status | statusClass">{{ row.status }}</span>
             </template>
           </vxe-table-column>
           <vxe-table-column field="assetcode" title="资产编号" min-width="120" />
@@ -295,16 +307,36 @@ import axios from 'axios'
 export default {
   name: 'AssetInfoManage',
   components: { Dialog, Pagination },
-  data() {
-    var validateAssetsIds = (rule, value, callback) => {
-      value = this.addOption.assetsIds
-      console.log('lala', value.length)
-      if (!value.length) {
-        callback(new Error('请选择资产'))
-      } else {
-        callback()
+  filters: {
+    statusClass(val) {
+      switch (val) {
+        case '在库':
+          return 'zaik'
+        case '在运':
+          return 'zaiy'
+        case '闲置':
+          return 'xianz'
+        case '维修':
+          return 'weix'
+        case '报废':
+          return 'baof'
+        case '退运':
+          return 'tuiy'
+        default :
+          return ' '
       }
     }
+  },
+  data() {
+    // var validateAssetsIds = (rule, value, callback) => {
+    //   value = this.addOption.assetsIds
+    //   console.log('lala', value.length)
+    //   if (!value.length) {
+    //     callback(new Error('请选择资产'))
+    //   } else {
+    //     callback()
+    //   }
+    // }
     return {
       DetailTable: {
         data: [],
@@ -326,10 +358,10 @@ export default {
         ],
         receivePosname: [
           { required: true, message: '请输入存放地点', trigger: 'blur' }
-        ],
-        assetsIds: [
-          { validator: validateAssetsIds, trigger: 'change', required: true }
         ]
+        // assetsIds: [
+        //   { validator: validateAssetsIds, trigger: 'change', required: true }
+        // ]
       },
       mechartProps: {
         children: 'children',
@@ -399,7 +431,8 @@ export default {
   computed: {
     ...mapState({
       thisMerchantName: state => state.user.merchantName,
-      thisUserName: state => state.user.userChname
+      thisUserName: state => state.user.userChname,
+      XToken: state => state.user.token
     })
   },
   created() {
@@ -426,19 +459,22 @@ export default {
       this.selectInnerTable.loading = true
       getInnerAssetList(this.innerSelePageQuery).then(res => {
         console.log('res', res)
-        if (res.code === 0 && res.data && res.data.items) {
-          // res.data.items.forEach(ele => { ele.hasChild = true })
-          this.selectInnerTable.data = res.data.items
-          this.innerTreePageTotal = res.data.total
-          this.innerSelePageQuery.pageSize = res.data.limit
-          this.innerSelePageQuery.pageNo = res.data.page
+        if (res.code === 0) {
+          if (res.data && res.data.items) {
+            this.selectInnerTable.data = res.data.items
+            this.innerTreePageTotal = res.data.total
+            this.innerSelePageQuery.pageSize = res.data.limit
+            this.innerSelePageQuery.pageNo = res.data.page
 
-          this.$refs.innerSeleTree.reloadData(this.selectInnerTable.data)
+            this.$refs.innerSeleTree.reloadData(this.selectInnerTable.data)
+          }
+        } else {
+          this.$message({ type: 'error', message: res.msg })
         }
 
         this.selectInnerTable.loading = false
       }).catch(err => {
-        console.log('err', err)
+        this.$message({ type: 'error', message: err })
         this.selectInnerTable.loading = false
       })
     },
@@ -531,8 +567,12 @@ export default {
       this.multipleSelection = val
     },
     addNew() {
+      this.clearStatusData()
       this.showAddOrEditTitle = '新增'
       this.showAddOrEdit = true
+      this.$nextTick(() => {
+        this.$refs.addOption.clearValidate()
+      })
     },
     editClick(e) {
       if (e === 1) {
@@ -578,6 +618,7 @@ export default {
     clearStatusData() {
       this.defaultSelecteRows = []
       this.selectedTableData = {}
+      this.selectedTableDataArr = []
       this.addOption = {
         assetsIds: [],
         memo: '',
@@ -590,8 +631,14 @@ export default {
       }
     },
     CreateConfirm(bool) {
+      console.log('bool', bool)
       if (!bool) {
         this.clearStatusData()
+        return
+      }
+
+      if (!this.defaultSelecteRows || !this.defaultSelecteRows.length) {
+        this.$message({ type: 'warning', message: '请选择资产' })
         return
       }
 
@@ -621,6 +668,8 @@ export default {
           }).catch(err => {
             this.$message({ type: 'error', message: '创建领用失败，请稍后再试' })
             console.log('err', err)
+          }).finally(() => {
+            this.commitLoading = false
           })
         }
       })
@@ -717,8 +766,8 @@ export default {
       const query = {
         ...this.pageQuery
       }
-      delete query.receivecode
-      delete query.receivedate
+      delete query.pageNo
+      delete query.pageSize
 
       const fd = new FormData()
       for (const key in query) {
@@ -736,18 +785,54 @@ export default {
         responseType: 'blob'
       })
         .then(res => {
-          console.log('response: ', res)
-          const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' }))
-          const link = document.createElement('a')
-          link.style.display = 'none'
-          link.href = url
-          // link.download = '导出资产'
-          document.body.appendChild(link)
-          link.click()
+          console.log('export', res)
+          const file = new FileReader()
+
+          const that = this
+
+          file.onload = function() {
+            try {
+              const resData = JSON.parse(this.result)
+              console.log('resData', resData)
+              that.$message({ type: 'error', message: '导出失败，' + resData.msg })
+            } catch (err) {
+              if (window.navigator.msSaveOrOpenBlob) {
+                try {
+                  const blobObject = new Blob([res.data])
+                  window.navigator.msSaveOrOpenBlob(blobObject)
+                } catch (e) {
+                  console.log(e)
+                }
+                return
+              }
+              // const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' }))
+              const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/vnd.ms-excel' }))
+              const link = document.createElement('a')
+              link.style.display = 'none'
+              link.href = url
+              link.download = '导出资产.xlsx'
+              document.body.appendChild(link)
+              link.click()
+            }
+          }
+          file.readAsText(res.data)
         })
         .catch(error => {
           console.log('error', error)
         })
+    },
+    sortChangeEvent(column, property, order) {
+      if (!column.order) {
+        this.pageQuery.orderName = ''
+        this.pageQuery.orderType = ''
+        this.getList()
+        return
+      }
+      this.pageQuery.pageNo = 1
+      this.pageQuery.pageSize = 10
+      this.pageQuery.orderName = column.property
+      this.pageQuery.orderType = column.order.toUpperCase()
+      this.getList()
     }
   }
 }

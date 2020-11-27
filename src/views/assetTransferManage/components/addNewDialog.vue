@@ -1,13 +1,13 @@
 <template>
   <el-dialog :title="modalTitle" :visible.sync="xjzyxxVisible" width="1200px" @close="handleCancel">
     <el-form ref="assetForm" :model="addOption" :rules="rules" label-position="right">
-      <el-row :gutter="20">
+      <el-row>
         <el-col :span="12">
-          <el-form-item label="调出公司" prop="sendMerchantId" :label-width="formLabelWidth" required>
+          <el-form-item label="调出单位" prop="sendMerchantId" :label-width="formLabelWidth" required>
             <el-col :span="24">
               <treeselect
                 v-model="addOption.sendMerchantId"
-                placeholder="请选择调出公司"
+                placeholder="请选择调出单位"
                 :options="groupList"
                 :value="addOption.sendMerchantId "
                 :normalizer="normalizer"
@@ -18,11 +18,11 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="调入公司" prop="getMerchantId" :label-width="formLabelWidth" required>
+          <el-form-item label="调入单位" prop="getMerchantId" :label-width="formLabelWidth" required>
             <el-col :span="24">
               <treeselect
                 v-model="addOption.getMerchantId "
-                placeholder="请选择调入公司"
+                placeholder="请选择调入单位"
                 :options="groupList"
                 :value="addOption.getMerchantId "
                 :normalizer="normalizer"
@@ -36,8 +36,8 @@
           <el-form-item label="调入管理员" :label-width="formLabelWidth">
             <el-col :span="24">
               <!-- <el-select v-model="addOption.getUserId" placeholder="请选择调入管理员" :style="{ width: '100%' }">
-                <el-option label="公司1" value="1" />
-                <el-option label="公司2" value="2" />
+                <el-option label="单位1" value="1" />
+                <el-option label="单位2" value="2" />
               </el-select> -->
               <el-input :value="thisUserName" disabled />
             </el-col>
@@ -61,7 +61,7 @@
         ref="DialogSelectAsset"
         :asset-selected="assetSelected"
         :query-asset-list="queryAssetList"
-        is-selected-to-r-efresh="调出公司"
+        is-selected-to-r-efresh="调出单位"
         :merchant-id="addOption.sendMerchantId"
         @changeAssetSelected="changeAssetSelected"
       />
@@ -128,10 +128,10 @@ export default {
       assetSelected: [], // 当前选中资产
       rules: {
         sendMerchantId: [
-          { required: true, message: '请选择调出公司', trigger: 'change' }
+          { required: true, message: '请选择调出单位', trigger: 'change' }
         ],
         getMerchantId: [
-          { required: true, message: '请选择调入公司', trigger: 'change' }
+          { required: true, message: '请选择调入单位', trigger: 'change' }
         ]
       },
       tableData: [],
@@ -227,7 +227,7 @@ export default {
     changeAssetSelected(val) {
       this.assetSelected = val
     },
-    // Fn: 调出公司变更
+    // Fn: 调出单位变更
     sendMerchantIdChange(node, instanceId) {
       if (this.lastChangedGroupId !== node.groupId) {
         this.assetSelected = []
@@ -235,9 +235,9 @@ export default {
         this.lastChangedGroupId = node.groupId
       }
     },
-    // Fn: 调入公司变更
+    // Fn: 调入单位变更
     getMerchantIdChange(val) {
-      // console.log('调出公司变更', val)
+      // console.log('调出单位变更', val)
     },
     clearAllOptions() {
       this.addOption = {

@@ -1,10 +1,24 @@
 <template>
   <div class="app-container">
     <el-row>
-      <el-col :span="18">
-        <el-button type="primary" icon="el-icon-plus" @click="addNew">新建</el-button>
+      <!-- checkcode: '',
+        checkname: '' -->
+      <el-select v-model="companyValue" placeholder="请选择搜索类别" style="padding:0 6px 0 0;width: 160px;">
+        <el-option label="盘点单号" value="checkcode" />
+        <el-option label="盘点单名称" value="checkname" />
+      </el-select>
 
-      </el-col>
+      <el-input
+        v-model="searchIpt"
+        :style="{ width: '260px',marginRight:'20px' }"
+        placeholder="搜索..."
+        clearable
+        @clear="clearSearchRes"
+      >
+        <el-button slot="append" icon="el-icon-search" @click="searchList" />
+      </el-input>
+      <el-button type="primary" icon="el-icon-plus" @click="addNew">新建</el-button>
+
     </el-row>
 
     <div class="maintable">
@@ -306,11 +320,15 @@ export default {
         orderType: '',
         orderName: '',
         pageNo: 1,
-        pageSize: 10
+        pageSize: 10,
+        checkcode: '',
+        checkname: ''
       },
       pageTotal: 0,
       tableLoading: false,
-      MainSortData: {}
+      MainSortData: {},
+      searchIpt: '',
+      companyValue: ''
     }
   },
   created() {
@@ -662,8 +680,39 @@ export default {
         this.$refs.addOption.clearValidate()
       })
     },
-    handleAddNodeClick(item) {
+    clearSearchRes() {
+      this.pageQuery = {
+        orderType: '',
+        orderName: '',
+        pageNo: 1,
+        pageSize: 10,
+        checkcode: '',
+        checkname: ''
+      }
+      this.getList()
+    },
+    searchList() {
+      if (!this.companyValue) {
+        this.$message({ type: 'warning', message: '请输入查询类型' })
+        return
+      }
 
+      if (!this.searchIpt) {
+        this.$message({ type: 'warning', message: '请输入查询内容' })
+        return
+      }
+
+      this.pageQuery = {
+        orderType: '',
+        orderName: '',
+        pageNo: 1,
+        pageSize: 10,
+        checkcode: '',
+        checkname: ''
+      }
+      this.pageQuery[this.companyValue] = this.searchIpt
+
+      this.getList()
     }
 
   }
@@ -672,7 +721,7 @@ export default {
 
 <style  scoped>
 .maintable {
-  padding-top: 40px;
+  padding-top: 20px;
 }
 .UserCheckbox >>> .el-checkbox {
   display: block;

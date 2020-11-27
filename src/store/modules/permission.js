@@ -37,7 +37,6 @@ function HandleReturnRoutes(arr) {
       item.component = Layout
     } else if (item.component) {
       const tempName = 'views' + item.component + '.vue'
-      console.log('tempName', tempName)
       item.component = (resolve) => require([`@/${tempName}`], resolve)
     }
 

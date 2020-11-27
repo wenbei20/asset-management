@@ -1,15 +1,30 @@
 <template>
   <div class="app-container">
-    <div id="test">
+    <!-- <div id="test">
       <div v-for="(ele , i ) in printCodeList" v-if="ele.rfidCode" :key="i" class="item">
-        <div class="leftTips">
+        <h2 class="leftTips">
           <h5 v-for="(item , idx) in ele.content" v-if="item.key!== 'asset_id'" :key="idx">
             <span class="lt_title">{{ item.name }}：</span>
             <span class="lt_cnt">{{ item.value }}</span>
           </h5>
-        </div>
+        </h2>
         <p :id="ele.rfidCode" class="codeImg" />
       </div>
+    </div> -->
+    <div id="test">
+      <table>
+        <tr v-for="(ele , i ) in printCodeList" v-if="ele.rfidCode" :key="i" class="item">
+          <td>
+            <p v-for="(item , idx) in ele.content" v-if="item.key!== 'asset_id'" :key="idx">
+              <span class="lt_title">{{ item.name }}：</span>
+              <span class="lt_cnt">{{ item.value }}</span>
+            </p>
+          </td>
+          <td>
+            <h2 :id="ele.rfidCode" />
+          </td>
+        </tr>
+      </table>
     </div>
 
     <el-row>
@@ -29,7 +44,7 @@
           <el-button slot="append" icon="el-icon-search" @click="searchList" />
         </el-input>
         <el-button type="primary" icon="el-icon-plus" @click="addNew">新建</el-button>
-        <el-button type="primary" icon="el-icon-plus" @click="printPreview">打印</el-button>
+        <!-- <el-button type="primary" icon="el-icon-plus" @click="printPreview">打印</el-button> -->
         <el-dropdown :style="{ marginLeft: '5px' }" trigger="click" @command="operationSelect">
           <el-button type="default" icon="el-icon-receiving" plain>
             操作<i class="el-icon-arrow-down el-icon--right" />
@@ -124,12 +139,12 @@
             </div>
           </template>
         </vxe-table-column>
-        <vxe-table-column field="statusName" width="80" title="状态" sortable>
+        <vxe-table-column field="statusName" width="80" title="状态" sortable :visible="tableShowColumn.zt">
           <template #default="{ row }">
             <span class="statuspan" :class="row.statusName | statusClass">{{ row.statusName }}</span>
           </template>
         </vxe-table-column>
-        <vxe-table-column field="imageList" title="照片" width="100">
+        <vxe-table-column field="imageList" title="照片" width="100" :visible="tableShowColumn.zp">
           <template #default="{ row }">
             <span v-if="!row.imageList || row.imageList.length === 0" class="innerTree_noimages">暂无</span>
 
@@ -191,6 +206,7 @@
       :edit-asset-data="editAssetData"
       :edit-asset-dialog-loading="EditAssetDialogLoading"
       :commit-edit-loading="commitEditDialogLoading"
+      :create-data="createAssetData"
       @confirm="submitData"
       @clearEditAssetData="clearEditAssetData"
     />
@@ -247,7 +263,7 @@
             <el-form-item label="资产类别" :label-width="formLabelWidth">
 
               <el-dropdown ref="statusDrop" trigger="click" placement="bottom-start" style="width:100%" @visible-change="highSearchChangeAssetkind">
-                <el-input v-model="checkedAssetkindId" size="small" placeholder="请选择资产类别" />
+                <el-input :value="checkedAssetkindId" size="small" placeholder="请选择资产类别" />
 
                 <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
                   <el-tree
@@ -330,6 +346,7 @@
                 size="small"
                 format="yyyy 年 MM 月 dd 日"
                 value-format="yyyy-MM-dd"
+                :editable="false"
               />
             </el-form-item>
           </el-col>
@@ -355,7 +372,7 @@
                 <el-option label="使用单位" value="1" />
               </el-select> -->
               <el-dropdown ref="mechartDrop" trigger="click" placement="bottom-start" style="width:100%" @visible-change="highSearchChangeAssetkind">
-                <el-input v-model="checkedMerchartName" size="small" placeholder="请选择使用单位" />
+                <el-input :value="checkedMerchartName" size="small" placeholder="请选择使用单位" />
 
                 <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
 
@@ -445,12 +462,11 @@
 </template>
 
 <script>
-import { getAssetsList, createAssets, deleteAsset, baseCode, copyAsset, getListChild, getAllMechartUser, getRfid, getAssetInfo, printTag, sendCard, doAssetUpdate, standardtype } from '@/api/assetManage'
+import { getAssetsList, createAssets, deleteAsset, baseCode, copyAsset, getListChild, getAllMechartUser, getRfid, getAssetInfo, printTag, sendCard, doAssetUpdate, standardtype, getOpenAssetCode } from '@/api/assetManage'
 import { getListRegUserByChineseName } from '@/api/settings'
 import fromDialog from './components/formDialog'
 import cardDialog from './components/CardDialog'
 import Pagination from '@/components/Pagination'
-import print from 'print-js'
 import axios from 'axios'
 import { mapState } from 'vuex'
 import QRCode from 'qrcodejs2'
@@ -539,7 +555,9 @@ export default {
         fzr: true,
         wbsj: true,
         wbsm: true,
-        sfpd: true
+        sfpd: true,
+        zt: true,
+        zp: true
       },
       copyForTableShowColumn: {},
       isAllreadyConfirmColSetting: false,
@@ -551,6 +569,8 @@ export default {
       gjssVisible: false,
       settingVisible: false,
       popoverSwitchList: [
+        { name: '状态', model: 'zt', disabled: false },
+        { name: '照片', model: 'zp', disabled: false },
         { name: '资产编号', model: 'zcbm', disabled: false },
         { name: '资产名称', model: 'zcmc', disabled: false },
         { name: '资产类别', model: 'zclb', disabled: false },
@@ -563,7 +583,7 @@ export default {
         { name: '管理员', model: 'gly', disabled: false },
         { name: '使用人', model: 'syr', disabled: false },
         { name: '使用单位', model: 'sydw', disabled: false },
-        { name: '使用部门', model: 'sybm', disabled: false },
+        // { name: '使用部门', model: 'sybm', disabled: false },
         { name: '使用期限', model: 'syqx', disabled: false },
         { name: '区域', model: 'qy', disabled: false },
         { name: '存放地点', model: 'cfdd', disabled: false },
@@ -635,7 +655,11 @@ export default {
       checkedAssetkindId: '',
       EditingAssetData: {},
       upLoadTemplatUrl: '',
-      printCodeList: []
+      printCodeList: [],
+      createAssetData: {
+        assetCodeLoading: false,
+        assetCode: ''
+      }
     }
   },
   computed: {
@@ -671,7 +695,8 @@ export default {
 
     },
     beforeTemplateUpload(file) {
-      const isXls = file.type === 'xls/xlsx'
+      console.log('file', file.type)
+      const isXls = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
       if (!isXls) {
         this.$message.error('导入资产文件只能是xls或xlsx格式!')
@@ -680,7 +705,9 @@ export default {
       return isXls
     },
     TemplateUploadSuccess() {
-      console.log('TemplateUploadSuccess',)
+      // console.log('TemplateUploadSuccess',)
+      this.$message({ type: 'success', message: '导入资产文件成功' })
+      this.getList()
     },
     clearEditAssetData() {
       this.editAssetData = { assetId: '' }
@@ -697,14 +724,15 @@ export default {
       }
       sendCard(query).then(res => {
         if (res.code === 0) {
-          this.$message({ type: 'success', message: '发卡成功' })
+          this.$message({ type: 'success', message: '已发卡' })
           this.getList()
         } else {
-          this.$message({ type: 'error', message: '发卡失败，请稍后再试' })
+          this.$message({ type: 'error', message: '发卡失败，' + res.msg })
         }
       }).catch(err => {
         console.log('err', err)
-        this.$message({ type: 'error', message: '发卡失败，请稍后再试' })
+        this.$message({ type: 'error', message: err })
+        // this.$message({ type: 'error', message: '发卡失败，请稍后再试' })
       })
     },
     batchPrintTags() {
@@ -750,7 +778,7 @@ export default {
       this.gjssForm.assetkindId = item.assetkindId
       this.checkedAssetkindId = item.assetkindName
       this.$nextTick(() => {
-        this.$refs.statusTree.hide()
+        this.$refs.statusDrop.hide()
       })
 
       this.standardtypeLoading = true
@@ -782,7 +810,7 @@ export default {
             }
           }
         } else {
-          this.$message({ type: 'error', message: '获取资产信息失败，请稍后再试' })
+          this.$message({ type: 'error', message: '获取资产信息失败，' + res.msg })
           setTimeout(() => {
             this.EditAssetDialogLoading = false
             this.xjzyxxVisible = false
@@ -790,7 +818,8 @@ export default {
         }
       }).catch(err => {
         console.log('err', err)
-        this.$message({ type: 'error', message: '获取资产信息失败，请稍后再试' })
+        this.$message({ type: 'error', message: err })
+        // this.$message({ type: 'error', message: '获取资产信息失败，请稍后再试' })
         setTimeout(() => {
           this.EditAssetDialogLoading = false
           this.xjzyxxVisible = false
@@ -813,6 +842,7 @@ export default {
 
         this.tableLoading = false
       }).catch(err => {
+        this.$message({ type: 'error', message: err })
         console.log('err', err)
         this.tableLoading = false
       })
@@ -837,11 +867,27 @@ export default {
     addNew() {
       this.xjzyxxTitle = '新建资产信息'
       this.xjzyxxVisible = true
+      this.createAssetData.assetCodeLoading = true
+      getOpenAssetCode().then(res => {
+        if (res.data) {
+          this.createAssetData.assetCode = res.data
+        }
+      }).finally(() => {
+        this.createAssetData.assetCodeLoading = false
+      })
     },
     addNewDeputyAssets(row) {
       this.fatherAssetCode = row.assetcode
       this.xjzyxxTitle = '新建副资产信息'
       this.xjzyxxVisible = true
+      this.createAssetData.assetCodeLoading = true
+      getOpenAssetCode().then(res => {
+        if (res.data) {
+          this.createAssetData.assetCode = res.data
+        }
+      }).finally(() => {
+        this.createAssetData.assetCodeLoading = false
+      })
     },
     confirmColSetting() {
       console.log('confirmhide')
@@ -917,6 +963,7 @@ export default {
             link.click()
           })
           .catch(error => {
+            this.$message({ type: 'error', message: error })
             console.log('error', error)
           })
       } else if (command === 'dczc') {
@@ -946,16 +993,21 @@ export default {
         })
           .then(res => {
             console.log('response: ', res)
-            const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' }))
+            const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/vnd.ms-excel' }))
             const link = document.createElement('a')
             link.style.display = 'none'
             link.href = url
             // link.download = '导出资产'
+            if (res.headers && res.headers['content-disposition']) {
+              const name = res.headers['content-disposition'].replace('attachment;fileName=', '')
+              link.download = name || '导出资产'
+            }
             document.body.appendChild(link)
             link.click()
           })
           .catch(error => {
             console.log('error', error)
+            this.$message({ type: 'error', message: error })
           })
         //   (query).then(res => {
         //   if (res.code === 0) {
@@ -989,10 +1041,11 @@ export default {
             this.$message({ type: 'success', message: '删除成功!' })
             this.getList()
           } else {
-            this.$message({ type: 'error', message: '删除失败，请稍后再试' })
+            this.$message({ type: 'error', message: '删除失败，' + res.msg })
           }
         }).catch(err => {
-          this.$message({ type: 'error', message: '删除失败，请稍后再试' })
+          // this.$message({ type: 'error', message: '删除失败，请稍后再试' })
+          this.$message({ type: 'error', message: err })
           console.log('err', err)
         })
       }).catch(() => {
@@ -1024,14 +1077,14 @@ export default {
         if (res.code === 0) {
           this.$message({ type: 'success', message: '添加资产成功！' })
           this.getList()
+          this.xjzyxxVisible = false
         } else {
-          this.$message({ type: 'error', message: '添加资产失败，请稍后再试' })
+          this.$message({ type: 'error', message: '添加资产失败，' + res.msg })
         }
-        this.xjzyxxVisible = false
       }).catch(err => {
         console.log('err', err)
-        this.$message({ type: 'error', message: '添加资产失败，请稍后再试' })
-        this.xjzyxxVisible = false
+        // this.$message({ type: 'error', message: '添加资产失败，请稍后再试' })
+        this.$message({ type: 'error', message: err })
       })
     },
     commitEditThisAssetData(data) {
@@ -1041,15 +1094,15 @@ export default {
         if (res.code === 0) {
           this.$message({ type: 'success', message: '编辑资产成功！' })
           this.getList()
+          this.xjzyxxVisible = false
         } else {
-          this.$message({ type: 'error', message: '编辑资产失败，请稍后再试' })
+          this.$message({ type: 'error', message: '编辑资产失败，' + res.msg })
         }
         this.commitEditDialogLoading = false
-        this.xjzyxxVisible = false
       }).catch(err => {
         console.log('err', err)
-        this.$message({ type: 'error', message: '编辑资产失败，请稍后再试' })
-        this.xjzyxxVisible = false
+        // this.$message({ type: 'error', message: '编辑资产失败，请稍后再试' })
+        this.$message({ type: 'error', message: err })
         this.commitEditDialogLoading = false
       })
     },
@@ -1090,10 +1143,10 @@ export default {
       // this.getList()
     },
     searchList() {
-      if (!this.searchIpt.trim()) {
-        this.$message({ type: 'warning', message: '请输入搜索内容' })
-        return
-      }
+      // if (!this.searchIpt.trim()) {
+      //   this.$message({ type: 'warning', message: '请输入搜索内容' })
+      //   return
+      // }
       if (!this.companyValue) {
         this.$message({ type: 'warning', message: '请选择搜索类型' })
         return
@@ -1169,13 +1222,14 @@ export default {
             this.$message({ type: 'success', message: '复制成功！' })
             this.getList()
           } else {
-            this.$message({ type: 'error', message: '复制失败，请稍后再试！' })
+            this.$message({ type: 'error', message: '复制失败，' + res.msg })
           }
           this.assetCopyVisible = false
         }).catch(err => {
           console.log('err', err)
           this.assetCopyVisible = false
-          this.$message({ type: 'error', message: '复制失败，请稍后再试！' })
+          // this.$message({ type: 'error', message: '复制失败，请稍后再试！' })
+          this.$message({ type: 'error', message: err })
         })
       } else {
         this.$message({ type: 'warning', message: '请输入复制数量' })
@@ -1191,6 +1245,7 @@ export default {
           }
         }).catch(err => {
           console.log('err', err)
+          this.$message({ type: 'error', message: err })
           // resolve([])
         })
       })
@@ -1232,17 +1287,30 @@ export default {
         }
       }).catch(err => {
         console.log('err', err)
+        this.$message({ type: 'error', message: err })
       })
     },
     printFun(data) {
       data.forEach(item => {
         if (!item.rfidCode) return
         console.log('rfidCode', item.rfidCode)
-        console.log('document', document.getElementById(item.rfidCode))
+
+        let assetcode = ''
+        let assetname = ''
+        if (Array.isArray(item.content)) {
+          item.content.forEach(ele => {
+            if (ele.key === 'assetname') {
+              assetname = ele.value
+            } else if (ele.key === 'assetcode') {
+              assetcode = ele.value
+            }
+          })
+        }
+
         item.qrcode = new QRCode(document.getElementById(item.rfidCode), {
           width: 100,
           height: 100,
-          text: item.rfidCode
+          text: assetcode + '||' + assetname
         })
       })
 
@@ -1257,14 +1325,14 @@ export default {
     CreateOneFormPage() {
       LODOP = getLodop()
       // 样式
-      // var olstyle1 = '<style>' + document.getElementById('test').innerHTML + '</style>'
-      var olstyle2 = '<style>h5 { font-size:14px;font-weight:normal;margin: 8px 0 8px 0 ; } p{ margin:33px 0 18px 160px; } </style>'
+      // var olstyle2 = '<style> h2{ display: inline-block; background-color:rgba(255,0,0,0.2) } h5 { font-size:14px;font-weight:normal;margin: 4px 0 8px 0 ; } p{ width:100px;height:100px ; display:inline-block; } </style>'
+      var olstyle2 = '<style> h2{ background-color:rgba(255,0,0,0.2) } p{ width:400px; margin:0px 0px 4px 0;} tr{height:144px;} span{ word-break:break-all;word-wrap : break-word ;} </style>'
       var body = olstyle2 + '<body>' + document.getElementById('test').innerHTML + '</body>'
       LODOP.PRINT_INIT('资产') // 打印初始化
       LODOP.SET_PRINT_STYLE('FontSize', 14) // 设置对象风格
       LODOP.SET_PRINT_STYLE('Bold', 1) // 设置对象风格
       // LODOP.ADD_PRINT_TEXT(50, 521, 130, 39, '') // 增加纯文本项
-      LODOP.SET_PRINT_PAGESIZE(0, 400, 300, '') // 设定纸张大小
+      LODOP.SET_PRINT_PAGESIZE(0, 730, 210, '') // 设定纸张大小
       LODOP.SET_PRINT_MODE('PRINT_PAGE_PERCENT', '50%')// 设置缩放
       // LODOP.SET_PREVIEW_WINDOW(2, 2, 0, 0, 0, '')// 设置窗口
       // 打印二维码
@@ -1442,12 +1510,13 @@ export default {
   }
 }
 
- .statuspan { display: inline-block; border: 1px solid #8091a5; color: #8091a5; max-height: 66px; font-size: 12px; line-height: 20px; vertical-align: middle; border-radius: 12px; cursor: pointer; overflow: visible; padding: 2px 10px;
+ .statuspan {
+   display: inline-block; border: 1px solid #8091a5; color: #8091a5; max-height: 66px; font-size: 12px; line-height: 26px; vertical-align: middle; border-radius: 4px; cursor: pointer; overflow: visible; padding: 0px 10px;
  border-color: transparent;
             &.zaik{border-color: #71C496; color: #71C496; }
-            &.zaiy { border-color: #3582fb; background-color: #3582fb; color: #fff; }
+            &.zaiy { border-color: #409eff; background-color: #409eff; color: #fff; }
             &.xianz { border-color: #818C95; background-color: #818C95;  color: #fff;}
-            &.weix { border-color: #AD89C5; background-color: #AD89C5; color: #fff; }
+            &.weix { border-color: #e6a23c; background-color: #e6a23c; color: #fff; }
             &.baof { border-color: #D56D53; background-color: #D56D53; color: #fff; }
             &.tuiy { border-color: #EEA446; background-color: #EEA446; color: #fff; }
           }
@@ -1456,22 +1525,30 @@ export default {
     margin-right: 30px;
     cursor: pointer;
 }
+// #test {
+
+//   background-color: rgba(255,0,0,.2);
+//   .item {
+//     display: flex;
+//     align-items: center;
+//     .leftTips {
+//       width: 80%;
+//       font-size: 14px;
+//     }
+//     .codeImg {
+//       width: 20%;
+//       margin-top: 30px;;
+//     }
+//   }
+// }
 #test {
-  // height: 300px ;
-  // width: 500px ;
-  background-color: rgba(255,0,0,.2);
-  .item {
-    display: flex;
-    align-items: center;
-    .leftTips {
-      width: 80%;
-      font-size: 14px;
-    }
-    .codeImg {
-      width: 20%;
-      margin-top: 30px;;
-    }
-  }
+  background-color: rgba(0,255,255,.2);
+  height: 0px;
+  overflow: hidden;
+
+  //  h2{ display: inline-block; background-color:rgba(255,0,0,0.2) }
+  //  h5 {font-size:14px;font-weight:normal;margin: 4px 0 8px 0 ; }
+  //  p{ width:100px;height:100px ; display: inline-block; }
 }
 </style>
 <style  scoped>

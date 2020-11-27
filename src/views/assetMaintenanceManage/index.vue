@@ -1,63 +1,77 @@
 <template>
   <div class="app-container">
-    <el-row>
+    <el-row style="padding-bottom:20px;">
+      <el-input
+        v-model="pageQuery.repaircode"
+        :style="{ width: '260px',marginRight:'20px' }"
+        placeholder="维修单号"
+        clearable
+        @clear="getList"
+      >
+        <el-button slot="append" icon="el-icon-search" @click="searchList" />
+      </el-input>
       <el-button type="primary" icon="el-icon-plus" @click="handleNew">新建</el-button>
       <el-button :disabled="!tableSelection.length" icon="el-icon-setting" @click="handleFinish">完成维修</el-button>
 
     </el-row>
 
-    <el-card shadow="never" body-style="padding: 10px; min-height: calc(100vh - 160px)" style="margin-top:10px;">
-      <vxe-table
-        ref="xTree"
-        resizable
-        highlight-hover-row
-        :auto-resize="true"
-        stripe
-        class="vxetable"
-        :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
-        :data="tableData"
-        @checkbox-all="handleSelectionAll"
-        @checkbox-change="handleSelectionChange"
-      >
-        <vxe-table-column type="checkbox" width="40" :resizable="false" />
-        <vxe-table-column width="32" class="meuntd" :resizable="false" :edit-render="{}">
-          <template>
-            <div class="moreOuter">
-              <i class="el-icon-more" />
+    <vxe-table
+      ref="xTree"
+      v-loading="tableLoading"
+      resizable
+      highlight-hover-row
+      :auto-resize="true"
+      stripe
+      class="vxetable"
+      :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
+      :data="tableData"
+      :sort-config="{remote:true}"
+      @checkbox-all="handleSelectionAll"
+      @sort-change="sortChangeEvent"
+      @checkbox-change="handleSelectionChange"
+    >
+      <vxe-table-column type="checkbox" width="40" :resizable="false" />
+      <vxe-table-column width="32" class="meuntd" :resizable="false" :edit-render="{}">
+        <template>
+          <div class="moreOuter">
+            <i class="el-icon-more" />
 
-            </div>
-          </template>
-          <template slot="edit" slot-scope="scope">
-            <i class="el-icon-more" style="position:relative;top:1px;left: -1px;" />
+          </div>
+        </template>
+        <template slot="edit" slot-scope="scope">
+          <i class="el-icon-more" style="position:relative;top:1px;left: -1px;" />
 
-            <div class="editmenu">
-              <div class="item" @click="handleEdit(scope.row)">修改</div>
-              <div class="item" @click="handleDelete(scope.row)">删除</div>
-            </div>
-          </template>
-        </vxe-table-column>
-        <vxe-table-column field="repaircode" title="维修单号" width="240" />
-        <vxe-table-column field="fee" title="维修花费" />
-        <vxe-table-column field="statusId" title="状态">
-          <template #default="{row}">
-            {{ row.statusId === 0 ? '开始维修' :'完成维修' }}
-          </template>
-        </vxe-table-column>
-        <vxe-table-column field="repairdate" title="修理日期" />
-        <vxe-table-column field="reguserId" title="处理人" />
-        <vxe-table-column field="userId" title="报修人" />
-        <vxe-table-column field="content" title="维修内容" />
-        <vxe-table-column field="memo" title="备注" />
+          <div class="editmenu">
+            <div class="item" @click="handleEdit(scope.row)">修改</div>
+            <div class="item" @click="handleDelete(scope.row)">删除</div>
+          </div>
+        </template>
+      </vxe-table-column>
+      <vxe-table-column field="repaircode" title="维修单号" width="240" />
+      <vxe-table-column field="fee" title="维修花费" />
+      <vxe-table-column field="statusId" title="状态">
+        <template #default="{row}">
+          {{ row.statusId === 0 ? '开始维修' :'完成维修' }}
+        </template>
+      </vxe-table-column>
+      <vxe-table-column field="repairdate" title="修理日期" sortable />
+      <vxe-table-column field="reguserId" title="处理人" />
+      <vxe-table-column field="userId" title="报修人" />
+      <vxe-table-column field="content" title="维修内容" />
+      <vxe-table-column field="memo" title="备注" />
 
-      </vxe-table>
+    </vxe-table>
 
-      <el-pagination
-        background
-        layout="prev, pager, next, jumper"
-        style="text-align:right;margin-top:20px;"
-        :total="pageTotal"
-      />
-    </el-card>
+    <pagination
+      v-show="pageTotal>0"
+      background
+      :total="pageTotal"
+      layout="prev, pager, next, jumper"
+      :page.sync="pageQuery.pageNo"
+      :limit.sync="pageQuery.pageSize"
+      style="text-align:right;margin-top:20px;"
+      @pagination="getList"
+    />
     <!--新增/编辑-->
     <add-dialog
       v-if="showAddDialog"
@@ -74,21 +88,30 @@
 <script>
 import { queryAssetRepairList, saveAssetRepair, endAssetRepair, getAssetRepair, updateAssetRepair, deleteAssetRepair, repairBaseCode } from '@/api/assetManage'
 import addDialog from './components/addnew'
+import Pagination from '@/components/Pagination'
 export default {
   name: 'AssetMaintenanceManage',
-  components: { addDialog },
+  components: { addDialog, Pagination },
   data() {
     return {
       showAddDialog: false,
       modalType: 'new',
-      pageNo: 1,
-      pageSize: 10,
       pageTotal: 0,
       tableData: [],
       tableSelection: [],
       tableSelectionKeys: [],
       formOption: null,
-      MainSortData: {}
+      MainSortData: {},
+      searchIpt: '',
+      pageQuery: {
+        pageSize: 10,
+        pageNo: 1,
+        repaircode: '',
+        orderName: '',
+        orderType: ''
+
+      },
+      tableLoading: false
     }
   },
   mounted() {
@@ -98,7 +121,7 @@ export default {
   methods: {
     // Fn: 初始化请求参数
     initSetting() {
-      this.pageNo = 1
+      this.pageQuery.pageNo = 1
     },
     getBaseCode() {
       repairBaseCode().then(res => {
@@ -114,9 +137,9 @@ export default {
     // Fn: 资源维修列表
     getList() {
       const params = {
-        pageNo: this.pageNo,
-        pageSize: this.pageSize
+        ...this.pageQuery
       }
+      this.tableLoading = true
       queryAssetRepairList(params).then((res) => {
         if (res.code === 0 && res.data) {
           this.tableData = res.data.items
@@ -124,6 +147,7 @@ export default {
         }
       })
         .catch((err) => { console.log('err', err) })
+        .finally(() => { this.tableLoading = false })
     },
     // Fn: 多选项转成id数组
     selection2keys(selection) {
@@ -219,7 +243,7 @@ export default {
       promise.then(res => {
         if (res.code === 0) {
           this.$message({ type: 'success', message: msg + '维修成功' })
-          this.modalType === 'new' ? this.pageNo = 1 : null
+          this.modalType === 'new' ? this.pageQuery.pageNo = 1 : null
           this.getList()
         } else {
           this.$message({ type: 'error', message: msg + '维修失败，请稍后再试' })
@@ -230,6 +254,26 @@ export default {
       }).finally(() => {
         this.showAddDialog = false
       })
+    },
+    searchList() {
+      if (!this.pageQuery.repaircode) {
+        this.$message({ type: 'warning', message: '请输入搜索单号' })
+        return
+      }
+      this.getList()
+    },
+    sortChangeEvent(column, property, order) {
+      if (!column.order) {
+        this.pageQuery.orderName = ''
+        this.pageQuery.orderType = ''
+        this.getList()
+        return
+      }
+      this.pageQuery.pageNo = 1
+      this.pageQuery.pageSize = 10
+      this.pageQuery.orderName = column.property
+      this.pageQuery.orderType = column.order.toUpperCase()
+      this.getList()
     }
 
   }

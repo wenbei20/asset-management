@@ -3,16 +3,16 @@
     <el-form ref="assetForm" :model="addOption" label-position="right" :rules="addDialogRoles">
       <el-row>
         <el-col :span="11">
-          <el-form-item label="退库处理人" :label-width="addOptionWidth" prop="backUserId">
+          <el-form-item label="退运处理人" :label-width="addOptionWidth" prop="backUserId">
             <el-input :value="thisUserName" disabled />
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="实际退库时间" :label-width="addOptionWidth" prop="backdate">
+          <el-form-item label="实际退运时间" :label-width="addOptionWidth" prop="backdate">
             <el-date-picker
               v-model="addOption.backdate"
               type="date"
-              placeholder="请选择实际退库时间"
+              placeholder="请选择实际退运时间"
               style="width:100%"
               value-format="yyyy-MM-dd"
             />
@@ -22,14 +22,14 @@
 
       <el-row>
         <el-col :span="11">
-          <el-form-item label="业务所属公司" :label-width="addOptionWidth">
+          <el-form-item label="业务所属单位" :label-width="addOptionWidth">
             <el-input :value="thisMerchantName" disabled />
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="退库后使用公司" :label-width="addOptionWidth" prop="useMerchantId">
+          <el-form-item label="退运后使用单位" :label-width="addOptionWidth" prop="useMerchantId">
             <el-dropdown ref="statusInnerDrop" trigger="click" placement="bottom-start" style="width:100%">
-              <el-input v-model="checkeduseMerchantId" size="small" placeholder="请选择退库后使用公司" />
+              <el-input v-model="checkeduseMerchantId" size="small" placeholder="请选择退运后使用单位" />
 
               <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
                 <el-tree
@@ -49,14 +49,14 @@
 
       <el-row>
         <el-col :span="11">
-          <el-form-item label="退库后区域" :label-width="addOptionWidth" prop="areaId">
+          <el-form-item label="退运后区域" :label-width="addOptionWidth" prop="areaId">
             <el-select v-model="addOption.areaId" placeholder="请选择区域" :style="{ width: '100%' }">
               <el-option v-for="(ele , i ) in mainSortData.areaList" :key="i" :value="ele.area_id" :label="ele.area_name" />
             </el-select>
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="退库后存放地点" :label-width="addOptionWidth" prop="posname">
+          <el-form-item label="退运后存放地点" :label-width="addOptionWidth" prop="posname">
             <el-input v-model="addOption.posname" placeholder="请输入存放地点" />
           </el-form-item>
         </el-col>
@@ -138,10 +138,10 @@ export default {
       checkeduseMerchantId: '',
       addDialogRoles: {
         backdate: [
-          { required: true, message: '请选择实际退库时间', trigger: 'change' }
+          { required: true, message: '请选择实际退运时间', trigger: 'change' }
         ],
         useMerchantId: [
-          { required: true, message: '请选择退库后使用公司', trigger: 'change' }
+          { required: true, message: '请选择退运后使用单位', trigger: 'change' }
         ],
         areaId: [
           { required: true, message: '请选择区域', trigger: 'change' }

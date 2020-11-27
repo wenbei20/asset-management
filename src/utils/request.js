@@ -71,7 +71,7 @@ service.interceptors.response.use(
           console.log('err', err)
         })
       }
-      return Promise.reject(new Error(res.message || 'Error'))
+      return Promise.reject(new Error(res.msg || 'Error'))
     } else {
       return res
     }

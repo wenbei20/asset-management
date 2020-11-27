@@ -10,7 +10,7 @@
         <el-col :span="8">
           <el-form-item label="资产类别" :label-width="formLabelWidth" prop="assetkindId">
             <el-dropdown ref="statusInnerDrop" trigger="click" placement="bottom-start" style="width:100%">
-              <el-input v-model="checkedAssetkindId" size="small" placeholder="请选择资产类别" />
+              <el-input :value="checkedAssetkindId" size="small" placeholder="请选择资产类别" />
 
               <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
                 <el-tree
@@ -35,10 +35,11 @@
         </el-col>
         <el-col :span="8">
           <el-form-item label="资产编号" :label-width="formLabelWidth" prop="assetcode">
-            <el-input v-model="xjzyxxForm.assetcode" size="small" placeholder="请输入资产编码" :disabled="title === '编辑资源信息'" />
+            <el-input v-model="xjzyxxForm.assetcode" v-loading="createData.assetCodeLoading" size="small" placeholder="请输入资产编码" :disabled="title === '编辑资源信息'" />
           </el-form-item>
         </el-col>
-
+      </el-row>
+      <el-row :gutter="20">
         <el-col :span="8">
           <el-form-item label="资产名称" :label-width="formLabelWidth" prop="assetname">
             <el-input v-model="xjzyxxForm.assetname" size="small" placeholder="请输入资产名称" />
@@ -54,6 +55,8 @@
             <el-input v-model="xjzyxxForm.unitname" size="small" placeholder="请输入计量单位" />
           </el-form-item>
         </el-col>
+      </el-row>
+      <el-row :gutter="20">
         <el-col :span="8">
           <el-form-item label="购入日期" :label-width="formLabelWidth" prop="buydate">
             <el-date-picker
@@ -63,6 +66,7 @@
               :style="{ width: '100%' }"
               size="small"
               value-format="yyyy-MM-dd"
+              :editable="false"
             />
           </el-form-item>
         </el-col>
@@ -73,9 +77,11 @@
         </el-col>
         <el-col :span="8">
           <el-form-item label="金额" :label-width="formLabelWidth" prop="money">
-            <el-input v-model="xjzyxxForm.money" size="small" placeholder="请输入金额" />
+            <el-input-number v-model="xjzyxxForm.money" size="small" :min="0" controls-position="right" placeholder="请输入金额" style="width:100%" />
           </el-form-item>
         </el-col>
+      </el-row>
+      <el-row :gutter="20">
         <el-col :span="8">
           <el-form-item label="管理员" :label-width="formLabelWidth" prop="adminReguserId">
             <el-input :value="thisUserName" size="small" placeholder="管理员" disabled />
@@ -85,7 +91,7 @@
         <el-col :span="8">
           <el-form-item label="使用单位" :label-width="formLabelWidth" prop="useMerchantId">
             <el-dropdown ref="mechartDrop" trigger="click" placement="bottom-start" style="width:100%">
-              <el-input v-model="checkedMerchartName" size="small" placeholder="请选择使用单位" />
+              <el-input :value="checkedMerchartName" size="small" placeholder="请选择使用单位" />
 
               <el-dropdown-menu slot="dropdown" class="innerTreeForDepart">
 
@@ -109,13 +115,15 @@
             </el-select>
           </el-form-item>
         </el-col>
-        <!-- <el-col :span="8">
+      </el-row>
+      <!-- <el-col :span="8">
           <el-form-item label="使用部门" :label-width="formLabelWidth" prop="">
             <el-select v-model="xjzyxxForm." size="small" placeholder="请选择管理员" :style="{ width: '100%' }">
               <el-option label="管理员1" value="1" />
             </el-select>
           </el-form-item>
         </el-col> -->
+      <el-row :gutter="20">
         <el-col :span="8">
           <el-form-item label="使用期限" :label-width="formLabelWidth" prop="limitdate">
             <el-date-picker
@@ -125,6 +133,7 @@
               :style="{ width: '100%' }"
               size="small"
               value-format="yyyy-MM-dd"
+              :editable="false"
             />
           </el-form-item>
         </el-col>
@@ -140,6 +149,8 @@
             <el-input v-model="xjzyxxForm.posname" size="small" placeholder="请输入存放地点" />
           </el-form-item>
         </el-col>
+      </el-row>
+      <el-row :gutter="20">
         <el-col :span="8">
           <el-form-item label="物资状态" :label-width="formLabelWidth" prop="statusId">
             <el-select v-model="xjzyxxForm.statusId" size="small" placeholder="请选择资产类别" :style="{ width: '100%' }">
@@ -187,45 +198,45 @@
 
       </el-row>
       <el-row :gutter="20">
-        <el-col :span="16">
 
-          <el-col :span="12" style="padding-left:0px;">
-            <el-form-item label="负责人" :label-width="formLabelWidth" prop="chargeman">
-              <el-input v-model="xjzyxxForm.chargeman" size="small" placeholder="请输入负责人" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12" style="padding-right:0px;">
-            <el-form-item label="维保时间" :label-width="formLabelWidth" prop="repairdate">
-              <el-date-picker
-                v-model="xjzyxxForm.repairdate"
-                type="date"
-                placeholder="请选择操作时间"
-                :style="{ width: '100%' }"
-                size="small"
-                value-format="yyyy-MM-dd"
-              />
-            </el-form-item>
-          </el-col>
-
-          <el-col :span="24" style="padding:0px;">
-            <el-form-item label="维保说明" :label-width="formLabelWidth" prop="repairinfo">
-              <el-input
-                v-model="xjzyxxForm.repairinfo"
-                size="small"
-                type="textarea"
-                :rows="1"
-                placeholder="请输入维保说明"
-              />
-            </el-form-item>
-          </el-col>
+        <el-col :span="8">
+          <el-form-item label="负责人" :label-width="formLabelWidth" prop="chargeman">
+            <el-input v-model="xjzyxxForm.chargeman" size="small" placeholder="请输入负责人" />
+          </el-form-item>
         </el-col>
         <el-col :span="8">
+          <el-form-item label="维保时间" :label-width="formLabelWidth" prop="repairdate">
+            <el-date-picker
+              v-model="xjzyxxForm.repairdate"
+              type="date"
+              placeholder="请选择操作时间"
+              :style="{ width: '100%' }"
+              size="small"
+              value-format="yyyy-MM-dd"
+              :editable="false"
+            />
+          </el-form-item>
+        </el-col>
+
+        <el-col :span="8">
+          <el-form-item label="维保说明" :label-width="formLabelWidth" prop="repairinfo">
+            <el-input
+              v-model="xjzyxxForm.repairinfo"
+              size="small"
+              type="textarea"
+              :rows="1"
+              placeholder="请输入维保说明"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="16" class="uploadPicCol">
 
           <el-form-item label="上传图片" :label-width="formLabelWidth" prop="images">
             <el-upload
               ref="upload"
               class="avatar-uploader"
               list-type="picture-card"
+              multiple
               :action="postUrl"
               :auto-upload="true"
               :show-file-list="true"
@@ -320,6 +331,14 @@ export default {
     commitEditLoading: {
       type: Boolean,
       default: false
+    },
+    createData: {
+      type: Object,
+      default: () => {
+        return {
+          assetCodeLoading: false
+        }
+      }
     }
   },
   data() {
@@ -421,6 +440,14 @@ export default {
           this.copyEditData()
         }
       }
+    },
+    createData: {
+      handler(val) {
+        if (val.assetCode) {
+          this.xjzyxxForm.assetcode = val.assetCode
+        }
+      },
+      deep: true
     }
   },
   created() {
@@ -609,5 +636,14 @@ export default {
     float: right;
     margin-right: 30px;
     cursor: pointer;
+}
+.xjzyxx_dialog >>>  .el-textarea__inner {
+  position: relative;
+  top: -4px;
+}
+.uploadPicCol {
+  position: absolute;
+  top: 60px;
+  left: 0;
 }
 </style>

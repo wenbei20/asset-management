@@ -2,6 +2,7 @@
   <div class="navbar">
     <div class="logo">
       <!-- 北京创想有限公司 -->
+      资产盘点管理系统
     </div>
     <hamburger :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
 

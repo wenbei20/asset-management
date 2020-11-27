@@ -1,6 +1,15 @@
 <template>
   <div class="app-container">
     <el-row>
+      <el-input
+        v-model="searchIpt"
+        :style="{ width: '260px',marginRight:'20px' }"
+        placeholder="报废单号"
+        clearable
+        @clear="clearSearchRes"
+      >
+        <el-button slot="append" icon="el-icon-search" @click="searchList" />
+      </el-input>
       <el-button type="primary" icon="el-icon-plus" @click="handleNew">新建</el-button>
       <el-button icon="el-icon-refresh" :disabled="!tableSelection.length" @click="revert">还原</el-button>
       <el-button type="default" icon="el-icon-receiving" plain :style="{ marginLeft: '5px' }" @click="handleExport">
@@ -10,6 +19,7 @@
     <el-row style="padding-top:20px;">
       <vxe-table
         ref="xTree"
+        v-loading="tableLoading"
         resizable
         highlight-hover-row
         :auto-resize="true"
@@ -17,7 +27,9 @@
         class="vxetable"
         :edit-config="{trigger: 'click', mode: 'cell',showIcon:false}"
         :data="tableData"
+        :sort-config="{remote:true}"
         @checkbox-change="handleSelectionChange"
+        @sort-change="sortChangeEvent"
         @checkbox-all="handleSelectionAll"
       >
         <vxe-table-column type="checkbox" width="40" :resizable="false" />
@@ -38,17 +50,21 @@
           </template>
         </vxe-table-column>
         <vxe-table-column field="discardcode" title="报废单号" />
-        <vxe-table-column field="operdatetime" title="清理日期" />
+        <vxe-table-column field="operdatetime" title="清理日期" sortable />
         <vxe-table-column field="reguserId" title="清理人" />
         <vxe-table-column field="merchantId" title="业务所属单位" />
         <vxe-table-column field="memo" title="清理说明" />
       </vxe-table>
 
-      <el-pagination
+      <pagination
+        v-show="pageTotal>0"
         background
-        layout="prev, pager, next, jumper"
-        style="text-align:right;margin-top:20px;"
         :total="pageTotal"
+        layout="prev, pager, next, jumper"
+        :page.sync="pageQuery.pageNo"
+        :limit.sync="pageQuery.pageSize"
+        style="text-align:right;margin-top:20px;"
+        @pagination="getList"
       />
     </el-row>
     <add-dialog
@@ -64,11 +80,12 @@
 
 <script>
 import addDialog from './components/addScrap'
+import Pagination from '@/components/Pagination'
 import axios from 'axios'
 import { mapState } from 'vuex'
 import { assetDiscardBaseCode, queryAssetDiscardList, assetDiscardReturn, getDiscardInfo, deleteAssetDiscard, saveDiscardInfo, updateDiscardInfo } from '@/api/assetManage'
 export default {
-  components: { addDialog },
+  components: { addDialog, Pagination },
   filters: {
     statusClass(e) {
       switch (e) {
@@ -90,14 +107,21 @@ export default {
       isAllExpand: false,
       showAddDialog: false,
       selection: [],
-      pageNo: 1,
-      pageSize: 10,
       pageTotal: 0,
       tableData: [],
       MainSortData: {},
       formOption: null,
       modalType: '',
-      tableSelection: []
+      tableSelection: [],
+      searchIpt: '',
+      pageQuery: {
+        pageSize: 10,
+        pageNo: 1,
+        discardcode: '',
+        orderName: '',
+        orderType: ''
+      },
+      tableLoading: false
     }
   },
 
@@ -135,15 +159,16 @@ export default {
     // Fn: 资源报废列表
     getList() {
       const params = {
-        pageNo: this.pageNo,
-        pageSize: this.pageSize
+        ...this.pageQuery
       }
+      this.tableLoading = true
       queryAssetDiscardList(params).then((res) => {
         if (res.code === 0 && res.data) {
           this.tableData = res.data.items
           this.pageTotal = res.data.total
         }
       }).catch((err) => { console.log('err', err) })
+        .finally(() => { this.tableLoading = false })
     },
     // 还原
     revert() {
@@ -159,7 +184,7 @@ export default {
         .then((res) => {
           if (res.code === 0) {
             this.$message({ type: 'success', message: '还原成功' })
-            this.pageNo = 1
+            this.pageQuery.pageNo = 1
             this.getList()
           } else {
             this.$message({ type: 'error', message: '还原失败，请稍后再试' })
@@ -198,7 +223,7 @@ export default {
       promise.then(res => {
         if (res.code === 0) {
           this.$message({ type: 'success', message: msg + '报废成功' })
-          this.modalType === 'new' ? this.pageNo = 1 : null
+          this.modalType === 'new' ? this.pageQuery.pageNo = 1 : null
           this.getList()
         } else {
           this.$message({ type: 'error', message: msg + '报废失败，请稍后再试' })
@@ -249,7 +274,7 @@ export default {
       })
         .then(res => {
           console.log('response: ', res)
-          const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' }))
+          const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/vnd.ms-excel' }))
           const link = document.createElement('a')
           link.style.display = 'none'
           link.href = url
@@ -265,6 +290,43 @@ export default {
     handleSelectionAll(val) {
       this.tableSelection = val.selection
       this.tableSelectionKeys = this.selection2keys(this.tableSelection)
+    },
+    clearSearchRes() {
+      this.pageQuery = {
+        pageSize: 10,
+        pageNo: 1,
+        discardcode: '',
+        orderName: '',
+        orderType: ''
+      }
+      this.getList()
+    },
+    searchList() {
+      if (!this.searchIpt) {
+        this.$message({ type: 'warning', message: '请输入搜索单号' })
+        return
+      }
+      this.pageQuery = {
+        pageSize: 10,
+        pageNo: 1,
+        discardcode: this.searchIpt,
+        orderName: '',
+        orderType: ''
+      }
+      this.getList()
+    },
+    sortChangeEvent(column, property, order) {
+      if (!column.order) {
+        this.pageQuery.orderName = ''
+        this.pageQuery.orderType = ''
+        this.getList()
+        return
+      }
+      this.pageQuery.pageNo = 1
+      this.pageQuery.pageSize = 10
+      this.pageQuery.orderName = column.property
+      this.pageQuery.orderType = column.order.toUpperCase()
+      this.getList()
     }
   }
 }

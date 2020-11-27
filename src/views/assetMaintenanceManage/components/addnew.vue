@@ -32,8 +32,8 @@
         <!-- <el-col :span="7">
           <el-form-item label="状态" :label-width="addOptionWidth">
             <el-select v-model="addOption.repairCompany" placeholder="请选择状态" :style="{ width: '100%' }">
-              <el-option label="公司一" value="1" />
-              <el-option label="公司2" value="2" />
+              <el-option label="单位一" value="1" />
+              <el-option label="单位2" value="2" />
             </el-select>
           </el-form-item>
         </el-col> -->

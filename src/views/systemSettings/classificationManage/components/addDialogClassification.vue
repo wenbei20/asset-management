@@ -19,7 +19,9 @@
         <el-input v-model="dialogForm.assetkindName" />
       </el-form-item>
       <el-form-item label="上级" prop="parentAssetcode">
-        <el-input v-model="dialogForm.parentAssetcode" disabled />
+        <el-input v-if="type==='sibling'" :value="currentNode.assetkindName" disabled />
+        <el-input v-else :value="parentNodeInfo.assetkindName" disabled />
+        <!-- <el-input v-model="dialogForm.parentAssetcode" disabled /> -->
       </el-form-item>
     </el-form>
     <span slot="footer" class="dialog-footer">
@@ -45,6 +47,16 @@ export default {
     currentNode: {
       type: Object,
       default: () => {}
+    },
+    parentNodeInfo: {
+      type: Object,
+      default: () => {
+        return {
+          assetkindId: '',
+          assetkindName: '',
+          depth: ''
+        }
+      }
     }
   },
   data() {
@@ -109,11 +121,12 @@ export default {
     saveAssetKind() {
       const { assetkindId, assetkindName } = this.dialogForm
       const { depth, parentAssetcode } = this.currentNode
+      const currentAssetkindId = this.currentNode.assetkindId
       const params = {
         assetkindId,
         assetkindName,
-        depth,
-        parentAssetcode
+        depth: this.type === 'sibling' ? this.parentNodeInfo.depth : depth,
+        parentAssetcode: this.type === 'sibling' ? parentAssetcode : currentAssetkindId
       }
       saveAssetKind(params).then((res) => {
         console.log(119, res)

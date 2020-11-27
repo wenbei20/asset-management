@@ -218,6 +218,12 @@ export function getCheckInfo(checkId) {
   })
 }
 
+export function getOpenAssetCode() {
+  return request({
+    url: '/sys/operCode/zc',
+    method: 'post'
+  })
+}
 /*
 *********************
 ********* 资产调拨管理
@@ -528,7 +534,7 @@ export function getListCheck(data) {
   return request({
     url: '/sys/check/listCheck',
     method: 'post',
-    data
+    data: data2FormData(data)
   })
 }
 /*

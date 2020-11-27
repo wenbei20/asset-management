@@ -21,10 +21,11 @@
           </div>
           <el-tree
             ref="treeClassification"
-            :data="treeData"
             :props="treeDefaultProps"
-            :check-on-click-node="true"
-            node-key="id"
+            node-key="assetkindId"
+            :expand-on-click-node="false"
+            lazy
+            :load="loadNode"
             @node-click="handleNodeClick"
           >
             <span slot-scope="{ data }" class="custom-tree-node">
@@ -127,6 +128,7 @@
       :type="newClassificationType"
       :visible="newClassificationVisible"
       :current-node="currentNode"
+      :parent-node-info="parentNodeInfo"
       @changeNewClassificationVisible="changeNewClassificationVisible"
       @saveClassificationSuccess="saveClassificationSuccess"
     />
@@ -184,6 +186,7 @@ export default {
         label: 'assetkindName'
       },
       currentNode: {},
+      parentNodeInfo: {},
       activeName: 'first', // 右侧tab页签
       form: {
         assetkindId: '',
@@ -208,17 +211,36 @@ export default {
     this.getList()
   },
   methods: {
+    loadNode(node, resolve) {
+      console.log('node', node)
+      const key = node.key ? node.key : ''
+      this.getList(key).then(arr => {
+        arr.forEach(item => {
+          item.showTopMenu = false
+          if (node.level === 0) {
+            item.position = 'top'
+          } else {
+            item.position = item.nodeType === 1 ? 'department' : 'sub'
+          }
+        })
+        resolve(arr)
+      })
+    },
     // Fn: 资产类型列表
-    getList() {
-      this.treeLoading = true
-      queryAssetKindList().then((res) => {
-        if (res.code === 0) {
-          this.treeData = res.data
-        }
-        this.treeLoading = false
-      }).catch((err) => {
-        this.treeLoading = false
-        console.log('err', err)
+    getList(key) {
+      key ? null : this.treeLoading = true
+      const that = this
+      return new Promise(function(resolve, reject) {
+        queryAssetKindList({ parentCode: key }).then((res) => {
+          if (res.code === 0) {
+            resolve(res.data)
+          } else {
+            resolve([])
+          }
+        }).catch((err) => {
+          resolve([])
+          console.log('err', err)
+        }).finally(() => { key ? null : that.treeLoading = false })
       })
     },
 
@@ -257,7 +279,11 @@ export default {
     },
 
     // Fn: 点击TreeNode节点
-    handleNodeClick(data) {
+    handleNodeClick(data, node) {
+      console.log('node', node)
+      if (node.parent && node.parent.data) {
+        this.parentNodeInfo = { ...node.parent.data }
+      }
       this.currentNode = data
       // 查询分类基本信息
       getAssetKind(data.uuid).then((res) => {
@@ -452,6 +478,9 @@ export default {
 .el-tree{
   ::v-deep{
     .el-tree-node{
+      background-color: #fff;
+      color: #606266;
+      font-weight: normal;
       &.is-current{ background-color: #ebeffb; color: #324aa5; font-weight: 600;}
     }
   }

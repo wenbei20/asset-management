@@ -4,7 +4,10 @@ $border-color: #d5d7de;
     .vxe-header--column{ background:#eff3fb; color:#455590; font-size: 13px!important;
       .vxe-resizable{
         &.is--line{
-          &:before{ background-color: rgba(255, 255, 255, .2);}
+          &:before{ 
+            // background-color: rgba(255, 255, 255, .2);
+            background-color: #d9dddf;
+          }
         }
       }
     }
@@ -25,4 +28,15 @@ $border-color: #d5d7de;
   &.border--default, &.border--inner{
     .vxe-body--column, .vxe-footer--column, .vxe-header--column{ background-image: linear-gradient($border-color,$border-color)!important;}
   }
+  .statuspan {
+    display: inline-block; border: 1px solid #8091a5; color: #8091a5; max-height: 66px; font-size: 12px; line-height: 26px; vertical-align: middle; border-radius: 4px; cursor: pointer; overflow: visible; padding: 0px 10px;
+  border-color: transparent;
+             &.zaik{border-color: #71C496; color: #71C496; }
+             &.zaiy { border-color: #409eff; background-color: #409eff; color: #fff; }
+             &.xianz { border-color: #818C95; background-color: #818C95;  color: #fff;}
+             &.weix { border-color: #e6a23c; background-color: #e6a23c; color: #fff; }
+             &.baof { border-color: #D56D53; background-color: #D56D53; color: #fff; }
+             &.tuiy { border-color: #EEA446; background-color: #EEA446; color: #fff; }
+           }
 }
+
